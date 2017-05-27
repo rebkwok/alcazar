@@ -36,6 +36,10 @@ class CacheTestServer(object):
     def counter(self):
         return text_type(next(self.count)).encode('ascii')
 
+    def five_hundred(self):
+        text = "I have failed %d times" % next(self.count)
+        return {'body': text.encode('us-ascii'), 'status': 500}
+
     def fail_once(self):
         self.fail_once = lambda: b'OK'
         return {'body': b'', 'status': 404}
@@ -125,6 +129,20 @@ class CachedTests(object):
     #     with closing(self.fetch('/get_baton', stream=True)) as response:
     #         self.handler.baton = b'something else!'
     #         self.assertEqual(response.raw.read(), b'something else!')
+
+    def test_exception_response_is_cached(self):
+        with self.assertRaises(requests.HTTPError) as raised:
+            self.fetch('/five_hundred')
+        self.assertEqual(
+            raised.exception.response.text,
+            'I have failed 0 times',
+        )
+        with self.assertRaises(requests.HTTPError) as raised:
+            self.fetch('/five_hundred')
+        self.assertEqual(
+            raised.exception.response.text,
+            'I have failed 0 times',
+        )
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
