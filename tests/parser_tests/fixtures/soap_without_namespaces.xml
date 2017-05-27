@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<Envelope>
+  <Header>
+  </Header>
+  <Body>
+    <GetStockPrice>
+      <StockName>GOOGLE</StockName>
+    </GetStockPrice>
+  </Body>
+</Envelope>

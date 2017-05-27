@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Envelope
+   encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+	<Body>
+		<doubleAnInteger>
+			<param1 type="xsd:int">123</param1>
+		</doubleAnInteger>
+	</Body>
+</Envelope>
