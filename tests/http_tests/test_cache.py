@@ -144,6 +144,12 @@ class CachedTests(object):
             'I have failed 0 times',
         )
 
+    def test_manually_specify_cache_key(self):
+        self.assertEqual(self.fetch('/counter', cache_key=('zero',)).text, '0')
+        self.assertEqual(self.fetch('/counter', cache_key=('one',)).text, '1')
+        self.assertEqual(self.fetch('/counter', cache_key=('zero',)).text, '0')
+        self.assertEqual(self.fetch('/counter', cache_key=('one',)).text, '1')
+
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class CachedTestsWithCustomMethods(object):

@@ -58,11 +58,11 @@ class CacheHandler(object):
                 cache = None
         return cache, kwargs
 
-    def request(self, request, cache_life=None, **rest):
+    def request(self, request, cache_life=None, cache_key=None, **rest):
         if self.cache is None:
             return super(CacheHandler, self).request(request, **rest)
         else:
-            cache_key, entry = self._get(request, cache_life, rest.get('stream', False))
+            cache_key, entry = self._get(request, cache_life, cache_key, rest.get('stream', False))
             if entry is None:
                 entry = self._fetch(request, rest)
                 self.cache.put(cache_key, entry)
@@ -71,12 +71,13 @@ class CacheHandler(object):
             else:
                 return entry.response
 
-    def _get(self, request, cache_life, stream):
+    def _get(self, request, cache_life, cache_key, stream):
         now = time()
         if self.needs_purge:
             self.cache.purge(now - self.max_cache_life)
             self.needs_purge = False
-        cache_key = self.compute_cache_key(request)
+        if cache_key is None:
+            cache_key = self.compute_cache_key(request)
         if cache_life is None:
             cache_life = self.max_cache_life
         min_timestamp = 0 if cache_life is None else (now - cache_life)
