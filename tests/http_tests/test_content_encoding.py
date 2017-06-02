@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 from gzip import GzipFile
 from io import BytesIO
+from shutil import copyfileobj
 
 # alcazar
 from alcazar import HttpClient
@@ -24,7 +25,7 @@ class ContentEncodingTestServer(object):
     def gzipped(self):
         buffer = BytesIO()
         with GzipFile(fileobj=buffer, mode='w') as handle:
-            handle.write(b'This is the text')
+            handle.write(self.unzipped())
         return {
             'body': buffer.getvalue(),
             'headers': {'Content-Encoding': 'gzip'},
@@ -32,6 +33,18 @@ class ContentEncodingTestServer(object):
 
     def unzipped(self):
         return b'This is the text'
+
+    def identity(self):
+        return {
+            'body': self.unzipped(),
+            'headers': {'Content-Encoding': 'identity'},
+        }
+
+    def invalid(self):
+        return {
+            'body': b'This is not gzip data',
+            'headers': {'Content-Encoding': 'gzip'},
+        }
 
     def conditional(self):
         if 'gzip' in self.headers.get('Accept-Encoding', ''):
@@ -42,6 +55,7 @@ class ContentEncodingTestServer(object):
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class ContentEncodingTests(object):
+    # NB this class is also re-used as part of the caching tests. In that setup these tests will be re-run, with caching enabled
 
     # see also `test_default_accept_encoding_header` in headers.py
 
@@ -99,6 +113,31 @@ class ContentEncodingTests(object):
         )
         self.assertEqual(
             response.text,
+            'This is the text',
+        )
+
+    def test_raw_file_handle_is_undecoded(self):
+        response = self.fetch('/gzipped', stream=True)
+        buffer = BytesIO()
+        copyfileobj(response.raw, buffer)
+        buffer.seek(0)
+        with GzipFile(fileobj=buffer) as handle:
+            self.assertEqual(
+                handle.read(),
+                b'This is the text',
+            )
+
+    def test_iter_content_is_decoded(self):
+        response = self.fetch('/gzipped', stream=True)
+        self.assertEqual(
+            bytes().join(response.iter_content()),
+            b'This is the text',
+        )
+
+    def test_iter_lines_is_decoded(self):
+        response = self.fetch('/gzipped', stream=True)
+        self.assertEqual(
+            '\n'.join(response.iter_lines(decode_unicode=True)),
             'This is the text',
         )
 

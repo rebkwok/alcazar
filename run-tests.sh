@@ -19,7 +19,7 @@ for v in ${supported_versions[@]}; do
         full_version=$($cmd --version 2>&1 | sed 's/Python //')
         tested_versions+=($full_version)
         echo "Running tests for Python $full_version"
-        $cmd -m unittest discover tests "$@"
+        $cmd -m unittest discover -f tests "$@"
         if [ "$?" == "0" ]; then
             summary_entry="pass"
         else

@@ -7,9 +7,6 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-# standards
-from contextlib import contextmanager
-
 # 3rd parties
 import requests
 

@@ -13,11 +13,8 @@ from unittest import TestCase
 # alcazar
 from alcazar import HttpClient
 
-# 3rd parties
-from parameterized import parameterized
-
 # tests
-from .plumbing import FetcherFixture, ClientFixture, ServerFixture, compile_test_case_classes
+from .plumbing import FetcherFixture, ClientFixture, compile_test_case_classes
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

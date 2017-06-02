@@ -12,9 +12,9 @@ import requests
 from requests.structures import CaseInsensitiveDict
 
 # alcazar
-from .cache import CacheHandler
-from .courtesy import CourtesySleep
-from .headers import DefaultHeaders
+from .cache import CacheHandlerMixin
+from .courtesy import CourtesySleepMixin
+from .headers import DefaultHeadersMixin
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -44,9 +44,9 @@ class BaseHttpClient(object):
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class HttpClient(
-        DefaultHeaders,
-        CacheHandler,
-        CourtesySleep,
+        DefaultHeadersMixin,
+        CacheHandlerMixin,
+        CourtesySleepMixin,
         BaseHttpClient,
         ):
 

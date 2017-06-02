@@ -8,11 +8,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
-from itertools import product
 import json
-
-# 3rd parties
-from parameterized import parameterized
 
 # alcazar
 from alcazar import HttpClient

@@ -10,19 +10,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 from functools import wraps
 from os.path import dirname, join as path_join
-from random import randrange
-import re
-from threading import Event, Thread
-
-try:
-    from http.server import BaseHTTPRequestHandler, HTTPServer
-except ImportError:
-    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 # alcazar
 from alcazar.html_parser import parse_html_etree
 from alcazar.http import HttpClient
-from alcazar.utils.compatibility import bytes_type
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

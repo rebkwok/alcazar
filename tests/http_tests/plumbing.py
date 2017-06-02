@@ -23,9 +23,6 @@ from unittest import TestCase
 from alcazar import HttpClient
 from alcazar.utils.compatibility import BaseHTTPRequestHandler, HTTPServer, bytes_type, native_string, urljoin
 
-# 3rd parties
-import requests
-
 #----------------------------------------------------------------------------------------------------------------------------------
 # HTTP server
 

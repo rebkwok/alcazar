@@ -17,7 +17,7 @@ except ImportError:
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class CourtesySleep(object):
+class CourtesySleepMixin(object):
 
     max_dict_size = 10000
 
@@ -27,7 +27,7 @@ class CourtesySleep(object):
     }
 
     def __init__(self, courtesy_seconds=5, **rest):
-        super(CourtesySleep, self).__init__(**rest)
+        super(CourtesySleepMixin, self).__init__(**rest)
         self.courtesy_seconds = courtesy_seconds
         self.last_request_time = OrderedDict()
 
@@ -37,7 +37,7 @@ class CourtesySleep(object):
             key = self._key(request)
             self._courtesy_sleep(key, courtesy_seconds)
         try:
-            return super(CourtesySleep, self).request(request, **kwargs)
+            return super(CourtesySleepMixin, self).request(request, **kwargs)
         finally:
             if courtesy_seconds:
                 self.last_request_time[key] = time()

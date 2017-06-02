@@ -15,7 +15,7 @@ from alcazar import __version__
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class DefaultHeaders(object):
+class DefaultHeadersMixin(object):
 
     headers = {
         'User-Agent': 'Alcazar/%s' % __version__,
@@ -26,13 +26,13 @@ class DefaultHeaders(object):
     }
 
     def __init__(self, default_headers={}, **rest):
-        super(DefaultHeaders, self).__init__(**rest)
+        super(DefaultHeadersMixin, self).__init__(**rest)
         self.headers = CaseInsensitiveDict(self.headers)
         self.headers.update(default_headers)
 
     def request(self, request, **rest):
         for key, value in self.headers.items():
             request.headers.setdefault(key, value)
-        return super(DefaultHeaders, self).request(request, **rest)
+        return super(DefaultHeadersMixin, self).request(request, **rest)
 
 #----------------------------------------------------------------------------------------------------------------------------------
