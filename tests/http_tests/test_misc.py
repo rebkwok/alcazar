@@ -35,7 +35,7 @@ class TestMiscWithFetcher(object):
 
     def test_http_client_unknown_method_kwargs(self):
         with self.assertRaises(TypeError):
-            self.fetch(unknown='kwarg')
+            self.fetch('http://example.com/', unknown='kwarg')
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

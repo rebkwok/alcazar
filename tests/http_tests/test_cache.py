@@ -21,6 +21,7 @@ from tempfile import mkdtemp
 import requests
 
 # alcazar
+from alcazar.http import HttpClient
 from alcazar.http.cache import DiskCache
 from alcazar.utils.compatibility import native_string
 
@@ -56,13 +57,28 @@ class CacheTestServer(object):
     def echo_headers(self):
         return json.dumps(dict(self.headers)).encode('UTF-8')
 
+    def one_kilo(self):
+        char = '%d' % (next(self.count) % 10)
+        text = char * 1024
+        return text.encode('us-ascii')
+
     def redirect(self):
         return {
             'body': b'', 
-            'status': 301,
+            'status': 302,
+            'headers': {
+                'Location': '/redirect_again',
+                'Set-Cookie': 'redirect=%d; Path=/' % next(self.count),
+            },
+        }
+
+    def redirect_again(self):
+        return {
+            'body': b'', 
+            'status': 302,
             'headers': {
                 'Location': '/landing',
-                'Set-Cookie': 'redirect=%d; Path=/' % next(self.count),
+                'Set-Cookie': 'redirect_again=%d; Path=/' % next(self.count),
             },
         }
 
@@ -170,38 +186,114 @@ class CachedTests(object):
             self.assertEqual(self.fetch('/counter', cache_key=('zero',)).text, '0')
             self.assertEqual(self.fetch('/counter', cache_key=('one',)).text, '1')
 
-    # def test_cookies_are_cached(self):
-    #     for sweep in ('live', 'from-cache'):
-    #         self.client.session.cookies.clear()
-    #         response = self.fetch('/landing')
-    #         self.assertEqual(
-    #             (sweep, dict(response.cookies)),
-    #             (sweep, {'landing': '0'}),
-    #         )
-    #         self.assertEqual(
-    #             (sweep, dict(self.client.session.cookies)),
-    #             (sweep, {'landing': '0'}),
-    #         )
-
+    def test_cookies_are_cached(self):
+        for sweep in ('live', 'from-cache'):
+            self.client.session.cookies.clear()
+            response = self.fetch('/landing')
+            self.assertEqual(
+                (sweep, dict(response.cookies)),
+                (sweep, {'landing': '0'}),
+            )
+            self.assertEqual(
+                (sweep, dict(self.client.session.cookies)),
+                (sweep, {'landing': '0'}),
+            )
+    
     def test_redirects_are_cached(self):
         for sweep in ('live', 'from-cache'):
+            response = self.fetch('/redirect')
             self.assertEqual(
-                re.sub(r'^http://[^/]+', '', self.fetch('/redirect').url),
+                self._url_path(response.url),
                 '/landing',
             )
+            self.assertEqual(
+                response.text,
+                'You got redirected',
+            )
 
-    # def test_cookies_are_saved_at_every_step_of_redirection(self):
-    #     for sweep in ('live', 'from-cache'):
-    #         with self.new_client() as client:
-    #             self.assertEqual(
-    #                 dict(client.session.cookies),
-    #                 {},
-    #             )
-    #             self.fetch('/redirect', client=client)
-    #             self.assertEqual(
-    #                 (sweep, dict(client.session.cookies)),
-    #                 (sweep, {'a': '0', 'b': '1'}),
-    #             )
+    def test_cookies_are_saved_at_every_step_of_redirection(self):
+        for sweep in ('live', 'from-cache'):
+            self.client.session.cookies.clear()
+            self.assertEqual(
+                dict(self.client.session.cookies),
+                {},
+            )
+            response = self.fetch('/redirect')
+            self.assertEqual(
+                (sweep, dict(response.cookies)),
+                (sweep, {'landing': '2'}),
+            )
+            self.assertEqual(
+                (sweep, dict(self.client.session.cookies)),
+                (sweep, {'redirect': '0', 'redirect_again': '1', 'landing': '2'}),
+            )
+
+    def test_response_history_is_present(self):
+        for sweep in ('live', 'from-cache'):
+            final_response = self.fetch('/redirect')
+            self.assertEqual(
+                (sweep, [self._url_path(response.url) for response in final_response.history + [final_response]]),
+                (sweep, ['/redirect', '/redirect_again', '/landing']),
+            )
+
+    def test_refetching_a_redirect_without_allow_redirects(self):
+        response = self.fetch('/redirect')
+        self.assertEqual(self._url_path(response.url), '/landing')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(dict(response.cookies), {'landing': '2'})
+        response = self.fetch('/redirect', allow_redirects=False)
+        self.assertEqual(self._url_path(response.url), '/redirect')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(dict(response.cookies), {'redirect': '0'})
+
+    def test_can_request_with_streamTrue_a_response_that_was_saved_with_streamFalse(self):
+        self.assertEqual(
+            self.fetch('/counter').text,
+            '0',
+        )
+        self.assertEqual(
+            self.fetch('/counter', stream=True).raw.read(),
+            b'0',
+        )
+
+    def test_can_request_with_streamFalse_a_response_that_was_saved_with_streamTrue(self):
+        self.assertEqual(
+            self.fetch('/counter', stream=True).raw.read(),
+            b'0',
+        )
+        self.assertEqual(
+            self.fetch('/counter').text,
+            '0',
+        )
+
+    def test_cacheNone_means_no_cache_not_default_cache(self):
+        with HttpClient(cache=None) as client:
+            self.assertEqual(self.fetch('/counter', client=client).text, '0')
+            self.assertEqual(self.fetch('/counter', client=client).text, '1')
+
+    def test_if_you_dont_read_from_stream_its_not_cached(self):
+        for step, size, char in (
+                (0, 512, '0'),  # first, stop half way -- it won't be cached
+                (1, 1024, '1'), # then fetch it all -- it'll get cached
+                (2, 512, '1'),  # from here on any read will be from cache
+                (3, 1024, '1'), # whether partial or complete
+                ):
+            response = self.fetch('/one_kilo', stream=True)
+            args = () if size == 1024 else (size,)
+            content = response.raw.read(*args).decode('us-ascii')
+            response.close()
+            self.assertEqual(
+                (step, len(content)),
+                (step, size),
+            )
+            self.assertEqual(
+                (step, content),
+                (step, char * size),
+            )
+
+    @staticmethod
+    def _url_path(url):
+        return re.sub(r'^https?://[^/]+', '', url)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

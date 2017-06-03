@@ -10,6 +10,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 from collections import namedtuple
 from contextlib import contextmanager
+import email.message
+from functools import partial
 import gzip
 from hashlib import md5
 import json
@@ -39,10 +41,12 @@ class CacheHandlerMixin(object):
     """
 
     def __init__(self, max_cache_life=None, **kwargs):
-        self.max_cache_life = max_cache_life
-        self.cache, rest = self._build_cache_from_kwargs(**kwargs)
-        self.needs_purge = max_cache_life is not None
+        cache, rest = self._build_cache_from_kwargs(**kwargs)
         super(CacheHandlerMixin, self).__init__(**rest)
+        if cache is not None:
+            adapter = CacheAdapter(cache, max_cache_life)
+            self.session.mount('http://', adapter)
+            self.session.mount('https://', adapter)
 
     @staticmethod
     def _build_cache_from_kwargs(**kwargs):
@@ -56,14 +60,26 @@ class CacheHandlerMixin(object):
                 cache = None
         return cache, kwargs
 
-    def request(self, request, cache_life=None, cache_key=None, **rest):
-        if self.cache is None:
-            return super(CacheHandlerMixin, self).request(request, **rest)
+#----------------------------------------------------------------------------------------------------------------------------------
+
+class CacheAdapter(requests.adapters.HTTPAdapter):
+    """
+    The adapter is what requests' Session class uses to actually perform the network transaction. Here we replace the standard with
+    this subclass, which will short-circuit the transaction entirely if the request is found in the cache.
+    """
+
+    def __init__(self, cache, max_cache_life):
+        super(CacheAdapter, self).__init__()
+        self.cache = cache
+        self.max_cache_life = max_cache_life
+        self.needs_purge = max_cache_life is not None
+
+    def send(self, prepared_request, cache_life=None, cache_key=None, **rest):
         stream = rest.get('stream', False)
         rest['stream'] = True
-        cache_key, entry = self._get(request, cache_life, cache_key)
+        cache_key, entry = self._get(prepared_request, cache_life, cache_key)
         if entry is None:
-            entry = self._fetch(request, rest)
+            entry = self._fetch(prepared_request, rest)
             self.cache.put(cache_key, entry)
         if entry.response is not None and not stream:
             entry.response.content # reading the property loads it to memory
@@ -72,29 +88,29 @@ class CacheHandlerMixin(object):
         else:
             return entry.response
 
-    def _get(self, request, cache_life, cache_key):
+    def _get(self, prepared_request, cache_life, cache_key):
         now = time()
         if self.needs_purge:
             self.cache.purge(now - self.max_cache_life)
             self.needs_purge = False
         if cache_key is None:
-            cache_key = self.compute_cache_key(request)
+            cache_key = self.compute_cache_key(prepared_request)
         if cache_life is None:
             cache_life = self.max_cache_life
         min_timestamp = 0 if cache_life is None else (now - cache_life)
         entry = self.cache.get(cache_key, min_timestamp)
         return cache_key, entry
 
-    def _fetch(self, request, rest):
+    def _fetch(self, prepared_request, rest):
         exception = None
         try:
-            response = super(CacheHandlerMixin, self).request(request, **rest)
+            response = super(CacheAdapter, self).send(prepared_request, **rest)
         except Exception as _exception:
             exception = _exception
             response = getattr(exception, 'response', None)
         return CacheEntry(response, exception, time())
 
-    def compute_cache_key(self, request):
+    def compute_cache_key(self, prepared_request):
         # Notes on the use of md5 rather than something stronger:
         # * MD5 hashes are comparatively short, which is convenient when logging and debugging
         # * experience shows it's plenty good enough
@@ -102,19 +118,17 @@ class CacheHandlerMixin(object):
         hexdigest = md5(b''.join(
             repr(part).encode('UTF-8')
             for part in (
-                request.method,
-                request.url,
-                request.params,
-                request.data,
+                prepared_request.method,
+                prepared_request.url,
+                prepared_request.body,
             )
         )).hexdigest()
         hexdigest = text_type(hexdigest)
         return (hexdigest[:3], hexdigest[3:])
 
     def close(self):
-        super(CacheHandlerMixin, self).close()
-        if self.cache is not None:
-            self.cache.close()
+        super(CacheAdapter, self).close()
+        self.cache.close()
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -263,9 +277,11 @@ class FlatFileStorage(object):
         self.cache_root_path = cache_root_path
 
     def _file_path(self, key):
-        assert isinstance(key, tuple) \
-            and all(isinstance(e, text_type) for e in key), \
-            repr(key)
+        if not (
+                isinstance(key, tuple)
+                and all(isinstance(e, text_type) for e in key)
+                ):
+            raise ValueError("Invalid cache key: %r" % key)
         return path.join(self.cache_root_path, *key)
 
     @staticmethod
@@ -283,6 +299,10 @@ class FlatFileStorage(object):
     def load(self, key, response):
         file_path = self._file_path(key)
         response.raw = requests.packages.urllib3.HTTPResponse(
+            # The data that we write to disk is pre-decoding, which is good because it means in most cases we can have a gzipped
+            # cache without expanding CPU cycles for it. However it means that in order to provide the user with decoded data, we
+            # need to recreate an HTTPResponse object, since that's the object doing the decoding. Trying to pickle that got messy,
+            # so we reconstruct it like this, which isn't pretty, but works.
             headers=dict(response.headers),
             status=response.status_code,
             reason=response.reason,
@@ -291,6 +311,7 @@ class FlatFileStorage(object):
             decode_content=False,
             body=AutoClosingFile(self._open_local_file(response, file_path, 'r')),
         )
+        response.raw._original_response = MockedHttplibResponse(response)
         response._content_consumed = False
         response._content = False
 
@@ -303,7 +324,7 @@ class FlatFileStorage(object):
         response.raw._fp = AutoClosingFile(StreamTee(
             source=response.raw._fp.fp,
             sink=self._open_local_file(response, part_file_path, 'w'),
-            on_close=lambda: [
+            on_completion=lambda: [
                 rename(part_file_path, file_path),
                 on_completion(),
             ],
@@ -323,6 +344,23 @@ class FlatFileStorage(object):
             dir_path = path.dirname(dir_path)
 
 
+class MockedHttplibResponse(object):
+    """
+    Wherein we realise that under the requests library's respectable and elegant interface is a matryoshka of HTTP libraries,
+    several layers deep, peppered with a generous amount of backwards compatibility and other hacks.
+
+    We need this for requests' `extract_cookies_to_jar` to work.
+    """
+
+    def __init__(self, urllib3_response):
+        self.msg = email.message.Message()
+        self.msg._headers = list(urllib3_response.headers.items())
+        self.msg.getheaders = partial(self.msg.get_all, failobj=[])
+
+    def isclosed(self):
+        return True
+
+
 class StreamTee(object):
     """
     Readable file-like object that simply wraps around another file object (the "source") and pipes its data through, unmodified;
@@ -330,14 +368,18 @@ class StreamTee(object):
     streamed HTTP responses, without having to load the data to memory.
     """
 
-    def __init__(self, source, sink, on_close):
+    def __init__(self, source, sink, on_completion):
         self.source = source
         self.sink = sink
-        self.on_close = on_close
+        self.on_completion = on_completion
 
-    def read(self, *args, **kwargs):
-        chunk = self.source.read(*args, **kwargs)
+    def read(self, *args):
+        chunk = self.source.read(*args)
         self.sink.write(chunk)
+        want_everything = not args or (args[0] in (-1, None))
+        if want_everything or not chunk:
+            self.close()
+            self.on_completion()
         return chunk
 
     def stream(self, *args, **kwargs):
@@ -348,7 +390,6 @@ class StreamTee(object):
     def close(self):
         self.source.close()
         self.sink.close()
-        self.on_close()
 
     @property
     def closed(self):

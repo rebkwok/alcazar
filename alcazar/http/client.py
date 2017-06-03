@@ -24,10 +24,10 @@ class BaseHttpClient(object):
         self.auto_raise_for_status = auto_raise_for_status
         self.session = requests.Session()
 
-    def request(self, request, auto_raise_for_status=None, stream=False):
+    def request(self, request, auto_raise_for_status=None, **rest):
         if auto_raise_for_status is None:
             auto_raise_for_status = self.auto_raise_for_status
-        response = self.base_request(request, stream=stream)
+        response = self.base_request(request, **rest)
         if auto_raise_for_status:
             response.raise_for_status()
         return response
