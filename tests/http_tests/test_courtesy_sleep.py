@@ -31,22 +31,29 @@ class CourtesySleepTestServer(object):
         return b'You got redirected'
 
 
-class CourtesySleepTestClient(HttpClient):
-
-    def request(self, request, **rest):
-        self.actual_sleep = 0
-        return super(CourtesySleepTestClient, self).request(request, **rest)
-
-    def _sleep(self, seconds):
-        self.actual_sleep = seconds
-
-    def base_request(self, request, **ignored):
-        if '.test' in request.url:
+def make_send_base_wrapper(send_base):
+    def wrapper(prepared_request, **kwargs):
+        if '.test' in prepared_request.url:
             response = requests.Response()
             response.status_code = 0
             return response
         else:
-            return super(CourtesySleepTestClient, self).base_request(request)
+            return send_base(prepared_request, **kwargs)
+    return wrapper
+
+
+class CourtesySleepTestClient(HttpClient):
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault('logger', None)
+        super(CourtesySleepTestClient, self).__init__(**kwargs)
+        adapter = self.session.adapters['http://']
+        adapter._sleep = lambda seconds: setattr(self, 'actual_sleep', seconds)
+        adapter.send_base = make_send_base_wrapper(adapter.send_base)
+
+    def request(self, request, **kwargs):
+        self.actual_sleep = 0
+        return super(CourtesySleepTestClient, self).request(request, **kwargs)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

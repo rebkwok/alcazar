@@ -12,70 +12,105 @@ import requests
 from requests.structures import CaseInsensitiveDict
 
 # alcazar
-from .cache import CacheHandlerMixin
-from .courtesy import CourtesySleepMixin
-from .headers import DefaultHeadersMixin
+from .. import __version__
+from .cache import CacheAdapterMixin
+from .courtesy import CourtesySleepAdapterMixin
+from .log import LogEntry, LoggingAdapterMixin
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class BaseHttpClient(object):
+class AdapterBase(object):
+    """ This is only here to provide a method that tests can override """
 
-    def __init__(self, auto_raise_for_status=True):
+    def send(self, prepared_request, **kwargs):
+        return self.send_base(prepared_request, **kwargs)
+
+    def send_base(self, prepared_request, **kwargs):
+        return super(AdapterBase, self).send(prepared_request, **kwargs)
+
+
+class AlcazarHttpAdapter(
+        CacheAdapterMixin,
+        CourtesySleepAdapterMixin,
+        LoggingAdapterMixin,
+        AdapterBase,
+        requests.adapters.HTTPAdapter,
+        ):
+    pass
+
+
+class AlcazarSession(requests.Session):
+
+    default_headers = {
+        'User-Agent': 'Alcazar/%s' % __version__,
+
+        # Many servers check the presence and content of the Accept header, and use it to block non-browser clients, so it's
+        # important to use a browser-like value.
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    }
+
+    def __init__(self, **kwargs):
+        super(AlcazarSession, self).__init__()
+        self.headers.update(CaseInsensitiveDict(
+            self.default_headers,
+            **kwargs.pop('headers', {})
+        ))
+        adapter = AlcazarHttpAdapter(**kwargs)
+        self.mount('http://', adapter)
+        self.mount('https://', adapter)
+
+    def send(self, prepared_request, **kwargs):
+        # NB this calls itself via indirect recursion (in requests.Session) to handle redirects
+        kwargs['is_redirect'] = not kwargs.get('allow_redirects', True)
+        kwargs['log'] = LogEntry()
+        kwargs['log']['is_redirect'] = kwargs['is_redirect']
+        return super(AlcazarSession, self).send(prepared_request, **kwargs)
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+class HttpClient(object):
+
+    def __init__(self, auto_raise_for_status=True, **kwargs):
         self.auto_raise_for_status = auto_raise_for_status
-        self.session = requests.Session()
+        self.session = AlcazarSession(**kwargs)
 
-    def request(self, request, auto_raise_for_status=None, **rest):
-        if auto_raise_for_status is None:
-            auto_raise_for_status = self.auto_raise_for_status
-        response = self.base_request(request, **rest)
+    def request(self, request, **kwargs):
+        auto_raise_for_status = kwargs.pop('auto_raise_for_status', self.auto_raise_for_status)
+        prepared = self.session.prepare_request(request)
+        response = self.session.send(prepared, **kwargs)
         if auto_raise_for_status:
             response.raise_for_status()
         return response
 
-    def base_request(self, request, **kwargs):
-        # This is a method apart just so that tests can override it. Unlike `request` and `close`, handler mixins are not expected
-        # to override it.
-        prepared = self.session.prepare_request(request)
-        return self.session.send(prepared, **kwargs)
-            
-    def close(self):
-        self.session.close()
-
-#----------------------------------------------------------------------------------------------------------------------------------
-
-class HttpClient(
-        DefaultHeadersMixin,
-        CacheHandlerMixin,
-        CourtesySleepMixin,
-        BaseHttpClient,
-        ):
-
-    def _compile_request(self, kwargs):
-        # NB this method modifies the `kwargs' dictionary
-        return requests.Request(
-            url=kwargs.pop('url'),
-            data=kwargs.pop('data', None),
-            headers=CaseInsensitiveDict(kwargs.pop('headers', {})),
-            method=kwargs.pop('method'),
-        )
-
     def get(self, url, **kwargs):
         kwargs['url'] = url
         kwargs['method'] = 'GET'
-        request = self._compile_request(kwargs)
-        return self.request(request, **kwargs)
+        request, rest = self._compile_request(**kwargs)
+        return self.request(request, **rest)
 
     def post(self, url, data, **kwargs):
         kwargs['url'] = url
         kwargs['data'] = data
         kwargs['method'] = 'POST'
-        request = self._compile_request(kwargs)
-        return self.request(request, **kwargs)
+        request, rest = self._compile_request(**kwargs)
+        return self.request(request, **rest)
+
+    def _compile_request(self, **kwargs):
+        request = requests.Request(
+            url=kwargs.pop('url'),
+            data=kwargs.pop('data', None),
+            headers=CaseInsensitiveDict(kwargs.pop('headers', {})),
+            method=kwargs.pop('method'),
+        )
+        return request, kwargs
 
     def __enter__(self):
         return self
 
     def __exit__(self, *exception_info):
         self.close()
+            
+    def close(self):
+        self.session.close()
 
 #----------------------------------------------------------------------------------------------------------------------------------

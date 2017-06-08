@@ -49,21 +49,29 @@ class HeadersTests(object):
         )
 
     def test_default_accept_can_be_set_in_constructor(self):
-        with HttpClient(default_headers={'Accept': 'something/else'}) as client:
+        with HttpClient(headers={'Accept': 'something/else'}, logger=None) as client:
+            self.assertEqual(
+                'something/else',
+                self.fetch(client=client).json().get('Accept', ''),
+            )
+
+    def test_default_accept_can_be_set_on_clientsession(self):
+        with HttpClient(logger=None) as client:
+            client.session.headers.update({'Accept': 'something/else'})
             self.assertEqual(
                 'something/else',
                 self.fetch(client=client).json().get('Accept', ''),
             )
 
     def test_default_accept_in_constructor_is_case_insensitive(self):
-        with HttpClient(default_headers={'ACCEPT': 'something/else'}) as client:
+        with HttpClient(headers={'ACCEPT': 'something/else'}, logger=None) as client:
             self.assertEqual(
                 'something/else',
                 self.fetch(client=client).json().get('Accept', ''),
             )
 
     def test_default_accept_still_there_if_empty_dict_passed_to_constructor(self):
-        with HttpClient(default_headers={}) as client:
+        with HttpClient(headers={}, logger=None) as client:
             self.assertIn(
                 'text/html',
                 self.fetch(client=client).json().get('Accept', ''),
@@ -88,7 +96,7 @@ class HeadersTests(object):
         )
 
     def test_accept_can_be_set_per_request_even_when_constructor_sets_default(self):
-        with HttpClient(default_headers={'Accept': 'something/else'}) as client:
+        with HttpClient(headers={'Accept': 'something/else'}, logger=None) as client:
             response = self.fetch(
                 client=client,
                 headers={'Accept': 'something/other'},
@@ -99,7 +107,7 @@ class HeadersTests(object):
         )
 
     def test_accept_can_be_disabled_in_constructor_call(self):
-        with HttpClient(default_headers={'Accept': None}) as client:
+        with HttpClient(headers={'Accept': None}, logger=None) as client:
             response = self.fetch(client=client)
         self.assertNotIn(
             'Accept',

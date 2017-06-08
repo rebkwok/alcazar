@@ -160,8 +160,8 @@ class GetReq(FetcherFixture):
         client = kwargs.pop('client', self.client)
         kwargs['url'] = self.url(url)
         kwargs['method'] = 'GET'
-        request = client._compile_request(kwargs)
-        return client.request(request, **kwargs)
+        request, rest = client._compile_request(**kwargs)
+        return client.request(request, **rest)
 
 
 class PostReq(FetcherFixture):
@@ -171,8 +171,8 @@ class PostReq(FetcherFixture):
         kwargs['url'] = self.url(url)
         kwargs['data'] = b''
         kwargs['method'] = 'POST'
-        request = client._compile_request(kwargs)
-        return client.request(request, **kwargs)
+        request, rest = client._compile_request(**kwargs)
+        return client.request(request, **rest)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -187,6 +187,7 @@ class ClientFixture(object):
         return HttpClient(
             courtesy_seconds = self.courtesy_seconds,
             cache = self.cache(),
+            logger = None,
         )
 
     def setUp(self):

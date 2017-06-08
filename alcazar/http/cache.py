@@ -26,6 +26,7 @@ import requests
 from ..utils.compatibility import pickle, text_type
 
 #----------------------------------------------------------------------------------------------------------------------------------
+# data structures
 
 CacheEntry = namedtuple('CacheEntry', (
     'response',
@@ -35,54 +36,49 @@ CacheEntry = namedtuple('CacheEntry', (
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class CacheHandlerMixin(object):
+class CacheAdapterMixin(object):
     """
-    Mixin for the HttpClient that adds caching capabilities.
+    Mixin for the AlcazarHttpClient that adds caching capabilities.
     """
 
     def __init__(self, max_cache_life=None, **kwargs):
-        cache, rest = self._build_cache_from_kwargs(**kwargs)
-        super(CacheHandlerMixin, self).__init__(**rest)
-        if cache is not None:
-            adapter = CacheAdapter(cache, max_cache_life)
-            self.session.mount('http://', adapter)
-            self.session.mount('https://', adapter)
+        self.cache, rest = self._build_cache_from_kwargs(**kwargs)
+        super(CacheAdapterMixin, self).__init__(**rest)
+        self.max_cache_life = max_cache_life
+        self.needs_purge = max_cache_life is not None
 
     @staticmethod
     def _build_cache_from_kwargs(**kwargs):
         if 'cache' in kwargs:
             cache = kwargs.pop('cache')
+            if cache is None:
+                cache = NullCache()
         else:
             cache_root_path = kwargs.pop('cache_root_path', None)
             if cache_root_path is not None:
                 cache = DiskCache.build(cache_root_path)
             else:
-                cache = None
+                cache = NullCache()
         return cache, kwargs
-
-#----------------------------------------------------------------------------------------------------------------------------------
-
-class CacheAdapter(requests.adapters.HTTPAdapter):
-    """
-    The adapter is what requests' Session class uses to actually perform the network transaction. Here we replace the standard with
-    this subclass, which will short-circuit the transaction entirely if the request is found in the cache.
-    """
-
-    def __init__(self, cache, max_cache_life):
-        super(CacheAdapter, self).__init__()
-        self.cache = cache
-        self.max_cache_life = max_cache_life
-        self.needs_purge = max_cache_life is not None
 
     def send(self, prepared_request, cache_life=None, cache_key=None, **rest):
         stream = rest.get('stream', False)
         rest['stream'] = True
+        log = rest['log']
         cache_key, entry = self._get(prepared_request, cache_life, cache_key)
+        log['cache_key'] = cache_key
         if entry is None:
+            log['cache_or_courtesy'] = ''
             entry = self._fetch(prepared_request, rest)
             self.cache.put(cache_key, entry)
+        else:
+            log['cache_or_courtesy'] = 'cached'
+            log['prepared_request'] = prepared_request
+            self.logger.flush(log, end='\n')
         if entry.response is not None and not stream:
-            entry.response.content # reading the property loads it to memory
+            # Reading the `content` property loads it to memory. We do this here because internally we always require stream=True,
+            # but that might not be what the user wanted.
+            entry.response.content
         if entry.exception is not None:
             raise entry.exception
         else:
@@ -104,7 +100,7 @@ class CacheAdapter(requests.adapters.HTTPAdapter):
     def _fetch(self, prepared_request, rest):
         exception = None
         try:
-            response = super(CacheAdapter, self).send(prepared_request, **rest)
+            response = super(CacheAdapterMixin, self).send(prepared_request, **rest)
         except Exception as _exception:
             exception = _exception
             response = getattr(exception, 'response', None)
@@ -127,7 +123,7 @@ class CacheAdapter(requests.adapters.HTTPAdapter):
         return (hexdigest[:3], hexdigest[3:])
 
     def close(self):
-        super(CacheAdapter, self).close()
+        super(CacheAdapterMixin, self).close()
         self.cache.close()
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -156,7 +152,6 @@ class Cache(object):
         """
         Closes any open resources such as file handles. The cache will not be used after it has been closed.
         """
-        pass
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -246,12 +241,12 @@ class ShelfIndex(object):
     @contextmanager
     def _modify_for_pickling(self, entry):
         previous = {}
-        if entry.response:
+        if entry.response is not None:
             for key in ('_content', '_content_consumed', 'raw'):
                 previous[key] = getattr(entry.response, key)
                 setattr(entry.response, key, None)
         yield
-        if entry.response:
+        if entry.response is not None:
             for key, value in previous.items():
                 setattr(entry.response, key, value)
 
@@ -321,14 +316,15 @@ class FlatFileStorage(object):
             makedirs(path.dirname(file_path))
         assert not response._content_consumed, response._content
         part_file_path = file_path + '.part'
-        response.raw._fp = AutoClosingFile(StreamTee(
+        response.raw._fp.fp = StreamTee(
             source=response.raw._fp.fp,
             sink=self._open_local_file(response, part_file_path, 'w'),
+            length=response.raw._fp.length,
             on_completion=lambda: [
                 rename(part_file_path, file_path),
                 on_completion(),
             ],
-        ))
+        )
 
     def remove(self, key):
         file_path = self._file_path(key)
@@ -368,24 +364,34 @@ class StreamTee(object):
     streamed HTTP responses, without having to load the data to memory.
     """
 
-    def __init__(self, source, sink, on_completion):
+    def __init__(self, source, sink, length, on_completion):
         self.source = source
         self.sink = sink
+        self.remaining = length
         self.on_completion = on_completion
 
     def read(self, *args):
         chunk = self.source.read(*args)
         self.sink.write(chunk)
         want_everything = not args or (args[0] in (-1, None))
-        if want_everything or not chunk:
-            self.close()
-            self.on_completion()
+        if self.remaining is not None:
+            self.remaining -= len(chunk)
+        if want_everything or not chunk or self.remaining == 0:
+            self._complete()
         return chunk
 
-    def stream(self, *args, **kwargs):
-        for chunk in self.source.stream(*args, **kwargs):
-            self.sink.write(chunk)
-            yield chunk
+    def readinto(self, b):
+        n = self.source.readinto(b)
+        self.sink.write(b[:n])
+        if self.remaining is not None:
+            self.remaining -= n
+        if n == 0 or self.remaining == 0:
+            self._complete()
+        return n
+
+    def flush(self):
+        self.source.flush()
+        self.sink.flush()
 
     def close(self):
         self.source.close()
@@ -393,10 +399,12 @@ class StreamTee(object):
 
     @property
     def closed(self):
-        return self.sink.closed
+        return self.source.closed
 
-    def __getattr__(self, attr):
-        return getattr(self.source, attr)
+    def _complete(self):
+        if self.on_completion is not None:
+            self.on_completion()
+            self.on_completion = None
 
 
 class AutoClosingFile(object):
@@ -426,5 +434,25 @@ class AutoClosingFile(object):
     @property
     def closed(self):
         return self.wrapped.closed
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+class NullCache(Cache):
+    """
+    Cache that does not cache. It makes the code lighter to use this when the client is configured without a cache, than to have 
+    if/else checks throughout.
+    """
+
+    def get(self, key, min_timestamp):
+        pass
+
+    def put(self, key, entry):
+        pass
+
+    def purge(self, min_timestamp):
+        pass
+
+    def close(self):
+        pass
 
 #----------------------------------------------------------------------------------------------------------------------------------

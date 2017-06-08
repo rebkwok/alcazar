@@ -91,7 +91,7 @@ class ContentEncodingTests(object):
         )
 
     def test_unzipped_content_can_be_selected_in_constructor(self):
-        with HttpClient(default_headers={'Accept-Encoding': None}) as client:
+        with HttpClient(headers={'Accept-Encoding': None}, logger=None) as client:
             response = self.fetch('/conditional', client=client)
         self.assertNotIn(
             'Content-Encoding',

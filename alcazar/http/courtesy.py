@@ -17,7 +17,7 @@ except ImportError:
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class CourtesySleepMixin(object):
+class CourtesySleepAdapterMixin(object):
 
     max_dict_size = 10000
 
@@ -27,41 +27,47 @@ class CourtesySleepMixin(object):
     }
 
     def __init__(self, courtesy_seconds=5, **rest):
-        super(CourtesySleepMixin, self).__init__(**rest)
+        super(CourtesySleepAdapterMixin, self).__init__(**rest)
         self.courtesy_seconds = courtesy_seconds
         self.last_request_time = OrderedDict()
 
-    def request(self, request, **kwargs):
+    def send(self, prepared_request, **kwargs):
         courtesy_seconds = kwargs.pop('courtesy_seconds', self.courtesy_seconds)
+        if kwargs.pop('is_redirect'):
+            courtesy_seconds = 0
         if courtesy_seconds:
-            key = self._key(request)
-            self._courtesy_sleep(key, courtesy_seconds)
+            key = self._key(prepared_request)
+            self._courtesy_sleep(key, courtesy_seconds, kwargs['log'])
         try:
-            return super(CourtesySleepMixin, self).request(request, **kwargs)
+            return super(CourtesySleepAdapterMixin, self).send(prepared_request, **kwargs)
         finally:
             if courtesy_seconds:
                 self.last_request_time[key] = time()
                 while len(self.last_request_time) > self.max_dict_size:
                     self.last_request_time.popitem(last=False)
 
-    def _key(self, request):
-        parsed = urlparse(request.url)
+    def _key(self, prepared_request):
+        parsed = urlparse(prepared_request.url)
         hostname = parsed.hostname
         port = parsed.port or self.default_ports.get(parsed.scheme) or '?'
         return '%s:%s' % (hostname, port)
 
-    def _courtesy_sleep(self, key, courtesy_seconds):
+    def _courtesy_sleep(self, key, courtesy_seconds, log):
         last_request_time = self.last_request_time.get(key)
         if last_request_time:
             earliest_allowed_time = last_request_time + courtesy_seconds
             delay = earliest_allowed_time - time()
-            if delay > 0:
-                # if delay > 0.5:
-                #     print('sleeping %ds courtesy seconds', int(delay+0.5))
-                self._sleep(delay)
+        else:
+            delay = 0
+        if delay > 0:
+            printable_delay = int(delay + 0.5)
+            if printable_delay:
+                log['cache_or_courtesy'] = '%ds' % printable_delay
+            self.logger.flush(log)
+            self._sleep(delay)
 
     def _sleep(self, delay):
-        # This is in its own method so that tests can override this to check how long we sleep without actually sleeping
+        # This is in its own method so that tests can override it to check how long we intended to sleep, without actually sleeping
         sleep(delay)
 
 #----------------------------------------------------------------------------------------------------------------------------------

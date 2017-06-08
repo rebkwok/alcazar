@@ -267,7 +267,7 @@ class CachedTests(object):
         )
 
     def test_cacheNone_means_no_cache_not_default_cache(self):
-        with HttpClient(cache=None) as client:
+        with HttpClient(cache=None, courtesy_seconds=0, logger=None) as client:
             self.assertEqual(self.fetch('/counter', client=client).text, '0')
             self.assertEqual(self.fetch('/counter', client=client).text, '1')
 
@@ -388,7 +388,9 @@ class CachedContentEncodingTests(ContentEncodingTestsDoubled):
         root_path = self.cache().storage.cache_root_path
         for dirpath, dirnames, filenames in walk(root_path):
             if dirpath != root_path:
-                all_files.extend(path.join(dirpath, f) for f in filenames)
+                for f in filenames:
+                    if not f.endswith('.part'):
+                        all_files.append(path.join(dirpath, f))
         self.assertEqual(len(all_files), 1)
         return all_files[0]
 
@@ -398,8 +400,12 @@ class CachedContentEncodingTests(ContentEncodingTestsDoubled):
         content = self.fetch('/gzipped').content
         self.assertEqual(content, b"This is the text")
         file_path = self._find_cached_data_file()
-        with gzip.open(file_path, 'r') as handle:
-            self.assertEqual(handle.read(), content)
+        try:
+            with gzip.open(file_path, 'r') as handle:
+                self.assertEqual(handle.read(), content)
+        except OSError:
+            from subprocess import check_output
+            raise ValueError(check_output(['zcat', file_path]))
 
     def test_unzipped_contents_also_stored_gzipped(self):
         content = self.client.get(self.server_url('/unzipped')).content
