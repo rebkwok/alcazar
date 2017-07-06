@@ -12,41 +12,24 @@ import requests
 
 # alcazar
 from .html_parser import parse_html_etree
+from .http import HttpClient
 from .husker import ElementHusker
+from .utils.compatibility import string_types
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class Fetcher(object):
 
-    def __init__(self):
-        self.http = requests.Session()
-        # SimpleHTTPClient(
-        #     cache_path = here(__file__, '..', '..', 'cache', cache_id),
-        #     courtesy_delay = 5,
-        #     timeout = config.http_timeout,
-        #     user_agent = config.user_agent,
-        # )
+    html_encoding = None
+    html_encoding_errors = 'replace'
 
-    def _compile_request(self, url_or_request, **kwargs):
-        if isinstance(url_or_request, requests.Request):
-            if kwargs:
-                raise TypeError("Can't specify parameters AND a compiled request: %r, %r" % (url, kwargs))
-            return url_or_request
-        else:
-            kwargs['url'] = url_or_request
-            kwargs.setdefault('method', 'GET' if kwargs.get('data') is None else 'POST')
+    def __init__(self, http=None):
+        self.http = http if http is not None else HttpClient()
 
-            # HACK until the session is implemented
-            kwargs.pop('cache_life', None)
-
-            return requests.Request(**kwargs)
-
-    def fetch_response(self, *args, **kwargs):
-        request = self._compile_request(*args, **kwargs)
+    def fetch_response(self, request):
+        if isinstance(request, string_types):
+            request = requests.Request(method='GET', url=request)
         return self.http.request(request)
-
-    # def fetch_bytes(self, *args, **kwargs):
-    #     return self.http.request(*args, **kwargs).content
 
     def fetch_html(self, *args, **kwargs):
         encoding = kwargs.pop('encoding', None)
@@ -66,9 +49,10 @@ class Fetcher(object):
                 or self.html_encoding
                 or response.encoding # declared
                 or response.apparent_encoding # autodetected
-                # NB if we really have no idea what encoding to use, we fall back on UTF-8, since it's pretty hard to decode as
-                # UTF-8 data that's actually in another encoding, and we'd rather error out than silently decode using the wrong
-                # encoding.
+                # NB if we really have no idea what encoding to use, we fall back on UTF-8, which feels safe because it's pretty
+                # hard to decode as UTF-8 data that's actually in another, incompatible encoding. We'd rather error out than
+                # silently decode using the wrong encoding, and this is what's basically guaranteed to happen if the data isn't
+                # UTF-8.
                 or 'UTF-8'
             ),
             errors=encoding_errors or self.html_encoding_errors,

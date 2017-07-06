@@ -55,7 +55,6 @@ class Husker(object):
 
     def __getattr__(self, name):
         if name == 'url':
-            # NB http_response.url is a text object, not bytes
             return self.build(self.http_response.url)
         elif name == 'text':
             return self._text()
@@ -94,8 +93,8 @@ class Selector(object):
         raise NotImplementedError
 
     def options_from_kwargs(**reference):
-        # Since we target both Python 2 and 3 we don't have keyword-only arguments, so to lighten up the code a bit, rather than
-        # manually parsing **kwargs we use this:
+        # Since we target both Python 2 and 3 we don't have keyword-only arguments, to lighten up the code a bit we use this rather
+        # than manually parsing **kwargs
         def make_wrapper(function):
             @wraps(function)
             def wrapper(self, *args, **kwargs):

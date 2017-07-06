@@ -11,6 +11,7 @@ __version__ = '0.1'
 
 # alcazar
 from .datastructures import HttpRequest
+from .fetcher import Fetcher
 from .http import HttpClient
 from .husker import Husker
 from .scraper import Scraper
