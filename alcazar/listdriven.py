@@ -15,7 +15,7 @@ from record import Record, dict_of, nullable, seq_of
 import requests
 
 # alcazar
-from .datastructures import HttpRequest
+from .datastructures import ScraperRequest
 from .exceptions import retry_upon_scraper_error
 from .husker import Husker
 from .scraper import Scraper
@@ -25,20 +25,20 @@ from .utils.compatibility import text_type
 # data structures
 
 class ItemList(Record):
-    starting_point = object
     item_huskers = seq_of(Husker)
     expected_total_items = nullable(int)
-    next_page = nullable(HttpRequest)
+    next_page = nullable(ScraperRequest)
 
 class Item(Record):
     starting_point = object
-    request = HttpRequest
+    response = requests.Response
+    request = ScraperRequest
     extra_data = dict_of(text_type, object)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # exceptions
 
-class SkipThisOffer(Exception):
+class SkipThisItem(Exception):
     pass
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -48,27 +48,23 @@ class ListDrivenScraper(Scraper):
     ### subclasses are expected to override these:
 
     # This should be set to a sequence of whatever values `starting_point_request` accepts as its `starting_point` parameter. By
-    # default this would be HttpRequest objects (so, URLs or request.Request objects)
+    # default this would be URLs or request.Request objects
     #
     starting_points = NotImplemented
 
-    def item_list_parts(self, starting_point, husker):
+    def item_list_parts(self, starting_point, response, husker):
         """ Returns a sequence of key/value pairs that are cleaned before being passed to the ItemList constructor """
         raise NotImplementedError
 
-    def build_item(self, starting_point, item_husker):
+    def item_parts(self, starting_point, response, husker):
         """ Returns a sequence of key/value pairs that are cleaned before being passed to the Item constructor """
-        raise NotImplementedError
-
-    def build_payload(self, item, husker):
-        """ Returns one instance of whatever payload this scraper's `scrape_all` is meant to churn out """
         raise NotImplementedError
 
 
     ### these may be overriden, but they have defaults
 
     def cache_key_for_item(self, item):
-        return None # let http.py pick the cache key the usual way, based on the offer URL
+        return None # let http.py pick the cache key the usual way, based on the item URL
 
     def get_starting_points(self):
         """ Override this as a more flexible alternative to just setting `self.starting_points` """
@@ -81,11 +77,25 @@ class ListDrivenScraper(Scraper):
         """
         return starting_point
 
-    def build_item_list(self, starting_point, husker):
-        return self.build(ItemList, self.item_list_parts(starting_point, husker))
+    def build_item_list(self, starting_point, response, husker):
+        parts = {
+            'starting_point': starting_point,
+            'response': response,
+        }
+        parts.update(self.item_list_parts(starting_point, response, husker))
+        return self.build(ItemList, parts)
 
-    def build_item(self, starting_point, item_husker):
-        return self.build(Item, self.item_parts(starting_point, husker))
+    def build_item(self, starting_point, response, item_husker):
+        parts = {
+            'starting_point': starting_point,
+            'response': response,
+        }
+        parts = self.item_parts(starting_point, response, husker)
+        return self.build(Item, parts)
+
+    def build_payload(self, item, husker):
+        """ Returns one instance of whatever payload this scraper's `scrape_all` is meant to churn out """
+        raise NotImplementedError
 
 
     ### the rest won't need to be overriden in the simple case
@@ -95,7 +105,7 @@ class ListDrivenScraper(Scraper):
             for item in self.iter_all_items(starting_point):
                 try:
                     payload = self.fetch_and_build_payload(starting_point, item)
-                except SkipThisOffer as reason:
+                except SkipThisItem as reason:
                     logging.info("  %s -- skipped", reason)
                 else:
                     yield payload
@@ -120,8 +130,8 @@ class ListDrivenScraper(Scraper):
         page_results = []
         for item_husker in item_list.item_huskers:
             try:
-                item = self.build_item(starting_point, item_husker)
-            except SkipThisOffer as reason:
+                item = self.build_item(starting_point, response, item_husker)
+            except SkipThisItem as reason:
                 logging.info('  %s -- skipped a search result', reason)
                 item = None
             page_results.append(None)
@@ -142,9 +152,11 @@ class ListDrivenScraper(Scraper):
 
     def fetch_and_build_item_list(self, starting_point, request, **http_kwargs):
         http_kwargs.setdefault('cache_life', self.refresh_interval)
+        response = self.fetch_response(request, **http_kwargs)
         return self.build_item_list(
             starting_point,
-            self.fetch_html(request, **http_kwargs),
+            response,
+            self.parse_html(response),
         )
 
     @retry_upon_scraper_error
@@ -157,5 +169,13 @@ class ListDrivenScraper(Scraper):
             item,
             self.fetch_html(item.request, **http_kwargs),
         )
+
+    def build(self, record_cls, raw_values):
+        if not isinstance(raw_values, dict):
+            raw_values = dict(raw_values)
+        return record_cls(**{
+            key: self.clean(key, field_def.type, raw_values.get(key))
+            for key, field_def in record_cls.record_fields.items()
+        })
 
 #----------------------------------------------------------------------------------------------------------------------------------

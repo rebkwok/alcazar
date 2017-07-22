@@ -21,7 +21,7 @@ from .utils.compatibility import string_types
 class Fetcher(object):
 
     html_encoding = None
-    html_encoding_errors = 'replace'
+    html_encoding_errors = 'strict'
 
     def __init__(self, http=None):
         self.http = http if http is not None else HttpClient()
@@ -35,12 +35,12 @@ class Fetcher(object):
         encoding = kwargs.pop('encoding', None)
         encoding_errors = kwargs.pop('encoding_errors', None)
         response = self.fetch_response(*args, **kwargs)
-        html = self.parse_html(
+        return self.parse_html(
             response,
             encoding=encoding,
             encoding_errors=encoding_errors,
         )
-        return ElementHusker(response, html)
+        return html
 
     def parse_html(self, response, encoding=None, encoding_errors=None):
         html_string = response.content.decode(
@@ -57,6 +57,6 @@ class Fetcher(object):
             ),
             errors=encoding_errors or self.html_encoding_errors,
         )
-        return parse_html_etree(html_string)
+        return ElementHusker(parse_html_etree(html_string))
 
 #----------------------------------------------------------------------------------------------------------------------------------

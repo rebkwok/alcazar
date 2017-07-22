@@ -10,14 +10,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 from functools import wraps
 from os.path import dirname, join as path_join
+from unittest import TestCase
 
 # alcazar
 from alcazar.html_parser import parse_html_etree
 from alcazar.http import HttpClient
+from alcazar.utils.compatibility import text_type
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class AlcazarTest(object):
+class AlcazarTest(TestCase):
 
     def fixture_path(self, *relative_path):
         return path_join(
