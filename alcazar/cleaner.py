@@ -13,14 +13,18 @@ from .utils.compatibility import bytes_type, text_type
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class Cleaner(object):
+    """
+    Turns huskers (i.e. the bits of raw data in an input document that contain the information we're after) into the data that we
+    want, in the correct type.
+    """
 
-    def clean(self, key, expected_type, value):
-        for subkey in (key, self._type_name(expected_type)):
-            if value is not None:
+    def clean(self, key, expected_type, husker):
+        if husker:
+            for subkey in (key, self._type_name(expected_type)):
                 cleaner = getattr(self, 'clean_%s' % subkey, None)
                 if callable(cleaner):
-                    value = cleaner(value)
-        return value
+                    return cleaner(husker)
+        return husker.raw()
 
     @staticmethod
     def _type_name(cls):
@@ -31,17 +35,19 @@ class Cleaner(object):
         else:
             return cls.__name__
 
-    def clean_text(self, value, encoding='us-ascii'):
-        if isinstance(value, bytes_type):
-            value = value.decode(encoding)
-        return value
+    def clean_text(self, husker, multiline=False):
+        return husker.text(multiline=multiline).raw()
 
-    def clean_bytes(self, value, encoding='us-ascii'):
-        if isinstance(value, text_type):
-            value = value.encode(encoding)
-        return value
+    def clean_bytes(self, husker):
+        return self.clean_text(husker).encode('UTF-8')
 
-    def clean_int(self, value):
-        return int(self.clean_text(value))
+    def clean_int(self, husker):
+        return int(self.clean_text(husker))
+
+    def clean_float(self, husker):
+        return float(self.clean_text(husker))
+
+    def clean_Decimal(self, husker):
+        return Decimal(self.clean_text(husker))
 
 #----------------------------------------------------------------------------------------------------------------------------------

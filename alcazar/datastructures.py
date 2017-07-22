@@ -14,19 +14,20 @@ from abc import ABCMeta
 import requests
 
 # alcazar
-from .utils.compatibility import bytes_type, native_string
+from .utils.compatibility import bytes_type, native_string, text_type
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-# In this module, an `HttpRequest` is either a URL (as bytes) or a `requests.Request` object
+# A `ScraperRequest` is either a URL (as bytes) or a `requests.Request` object
 
-HttpRequest = ABCMeta(
-    native_string('HttpRequest'),
+ScraperRequest = ABCMeta(
+    native_string('ScraperRequest'),
     (object,),
     {}
 )
 
-HttpRequest.register(bytes_type)
-HttpRequest.register(requests.Request)
+ScraperRequest.register(bytes_type)
+ScraperRequest.register(text_type)
+ScraperRequest.register(requests.Request)
 
 #----------------------------------------------------------------------------------------------------------------------------------

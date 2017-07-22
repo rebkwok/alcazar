@@ -38,12 +38,6 @@ class Scraper(Cleaner, Fetcher):
             self.cache_id = self.id
         super(Scraper, self).__init__()
 
-    def build(self, cls, iter_values):
-        return cls(**{
-            key: self.clean(value)
-            for key, value in iter_values
-        })
-
     def scrape_all(self):
         raise NotImplementedError
 
