@@ -547,6 +547,28 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         root = self.husker.one('section').get('missing')
         self.assertFalse(root)
 
+    def test_text_on_valued_text(self):
+        root = self.husker.one('#one').text()
+        self.assertEqual(root.text(), 'It begins.')
+
+    def test_text_on_null_text(self):
+        root = self.husker.some('#zone').text()
+        self.assertFalse(root)
+
+    def test_text_on_valued_list(self):
+        root = self.husker.all('#discourse p')
+        self.assertEqual(
+            root.text(),
+            ['It begins.', 'It runs.', 'It ends.'],
+        )
+
+    def test_text_on_empty_list(self):
+        root = self.husker.find('#zone')
+        self.assertEqual(
+            root.text(),
+            [],
+        )
+
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class TextHuskerStringMethodsTest(AlcazarTest):
