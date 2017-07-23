@@ -476,7 +476,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#three',
         )
         self.assertEqual(
-            list(map(text_type, root)),
+            root.text(),
             ['It begins.', 'It runs.', 'It ends.'],
         )
 
@@ -486,7 +486,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p.greater-than-one',
         )
         self.assertEqual(
-            list(map(text_type, root)),
+            root.text(),
             ['It begins.', 'It runs.', 'It ends.'],
         )
 
@@ -496,7 +496,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p.discourse',
         )
         self.assertEqual(
-            list(map(text_type, root)),
+            root.text(),
             ['It begins.', 'It begins.', 'It runs.', 'It ends.'],
         )
 
@@ -514,7 +514,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#three',
         )
         self.assertEqual(
-            list(map(text_type, root)),
+            root.text(),
             ['It runs.', 'It begins.', 'It ends.'],
         )
 

@@ -165,6 +165,24 @@ class Selector(object):
         )
 
 #----------------------------------------------------------------------------------------------------------------------------------
+# utils
+
+def _forward_to_value(method_name, return_type):
+    def method(self, *args, **kwargs):
+        if return_type is text_type:
+            convert = TextHusker
+        elif return_type is list:
+            convert = lambda values: ListHusker(map(TextHusker, values))
+        else:
+            convert = return_type
+        wrapped = getattr(self.value, method_name, None)
+        if callable(wrapped):
+            return convert(wrapped(*args, **kwargs))
+        else:
+            raise NotImplementedError((self.value.__class__.__name__, method_name))
+    return method
+
+#----------------------------------------------------------------------------------------------------------------------------------
 
 class Husker(Selector):
     """
@@ -212,6 +230,13 @@ class Husker(Selector):
 
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.value)
+
+    __hash__ = _forward_to_value('__hash__', int)
+    __eq__ = _forward_to_value('__eq__', bool)
+    __lt__ = _forward_to_value('__lt__', bool)
+    __le__ = _forward_to_value('__le__', bool)
+    __gt__ = _forward_to_value('__gt__', bool)
+    __ge__ = _forward_to_value('__ge__', bool)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -320,82 +345,7 @@ class ElementHusker(Husker):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-FORWARDED_STRING_METHODS = {
-    'capitalize': text_type,
-    'casefold': text_type,
-    'center': text_type,
-    'count': int,
-    'endswith': bool,
-    # TODO find, once the above `find' is renamed
-    'format': text_type,
-    'format_map': text_type,
-    'index': int,
-    'isalnum': bool,
-    'isalpha': bool,
-    'isdecimal': bool,
-    'isdigit': bool,
-    'isidentifier': bool,
-    'islower': bool,
-    'isnumeric': bool,
-    'isprintable': bool,
-    'isspace': bool,
-    'istitle': bool,
-    'isupper': bool,
-    'join': text_type,
-    'ljust': text_type,
-    'lower': text_type,
-    'lstrip': text_type,
-    'replace': text_type,
-    # TODO rfind
-    'rindex': int,
-    'rjust': text_type,
-    'rsplit': list,
-    'rstrip': text_type,
-    'split': list,
-    'splitlines': list,
-    'startswith': bool,
-    'strip': text_type,
-    'swapcase': text_type,
-    'title': text_type,
-    'translate': text_type,
-    'upper': text_type,
-    'zfill': text_type,
-    '__hash__': int,
-    '__eq__': bool,
-    '__cmp__': bool,
-    '__lt__': bool,
-    '__le__': bool,
-    '__gt__': bool,
-    '__ge__': bool,
-}
-
-def _forward(method_name, return_type):
-    def method(self, *args, **kwargs):
-        if return_type is text_type:
-            convert = TextHusker
-        elif return_type is list:
-            convert = lambda values: ListHusker(map(TextHusker, values))
-        else:
-            convert = return_type
-        return convert(getattr(self.value, method_name)(*args, **kwargs))
-    return method
-
-BehavesAsString = type(
-    native_string("BehavesAsString"),
-    (object,),
-    dict(
-        (name, _forward(
-            method_name=name,
-            return_type=cls,
-        ))
-        for name, cls in FORWARDED_STRING_METHODS.items()
-        if hasattr(text_type, name)
-    ),
-)
-
-#----------------------------------------------------------------------------------------------------------------------------------
-
-class TextHusker(Husker, BehavesAsString):
+class TextHusker(Husker):
 
     def __init__(self, value):
         assert value is not None
@@ -437,6 +387,49 @@ class TextHusker(Husker, BehavesAsString):
 
     def __str__(self):
         return self.value
+
+    capitalize = _forward_to_value('capitalize', text_type)
+    if not PY2:
+        casefold = _forward_to_value('casefold', text_type)
+    center = _forward_to_value('center', text_type)
+    count = _forward_to_value('count', int)
+    endswith = _forward_to_value('endswith', bool)
+    # TODO find, once the above `find' is renamed
+    format = _forward_to_value('format', text_type)
+    format_map = _forward_to_value('format_map', text_type)
+    index = _forward_to_value('index', int)
+    isalnum = _forward_to_value('isalnum', bool)
+    isalpha = _forward_to_value('isalpha', bool)
+    isdecimal = _forward_to_value('isdecimal', bool)
+    isdigit = _forward_to_value('isdigit', bool)
+    if not PY2:
+        isidentifier = _forward_to_value('isidentifier', bool)
+    islower = _forward_to_value('islower', bool)
+    isnumeric = _forward_to_value('isnumeric', bool)
+    if not PY2:
+        isprintable = _forward_to_value('isprintable', bool)
+    isspace = _forward_to_value('isspace', bool)
+    istitle = _forward_to_value('istitle', bool)
+    isupper = _forward_to_value('isupper', bool)
+    join = _forward_to_value('join', text_type)
+    ljust = _forward_to_value('ljust', text_type)
+    lower = _forward_to_value('lower', text_type)
+    lstrip = _forward_to_value('lstrip', text_type)
+    replace = _forward_to_value('replace', text_type)
+    # TODO rfind
+    rindex = _forward_to_value('rindex', int)
+    rjust = _forward_to_value('rjust', text_type)
+    rsplit = _forward_to_value('rsplit', list)
+    rstrip = _forward_to_value('rstrip', text_type)
+    split = _forward_to_value('split', list)
+    splitlines = _forward_to_value('splitlines', list)
+    startswith = _forward_to_value('startswith', bool)
+    strip = _forward_to_value('strip', text_type)
+    swapcase = _forward_to_value('swapcase', text_type)
+    title = _forward_to_value('title', text_type)
+    translate = _forward_to_value('translate', text_type)
+    upper = _forward_to_value('upper', text_type)
+    zfill = _forward_to_value('zfill', text_type)
 
     @staticmethod
     def _compile(regex, flags):
