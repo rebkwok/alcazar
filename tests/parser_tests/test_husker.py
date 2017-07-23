@@ -118,7 +118,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_find_on_valued_elem(self):
         root = self.husker.one('section#discourse')
         self.assertEqual(
-            list(map(text_type, root.find('./p'))),
+            root.find('./p').text(),
             ["It begins.", "It runs.", "It ends."],
         )
         self.assertFalse(root.find('./missing'))
@@ -290,14 +290,14 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_all_match_many(self):
         root = self.husker.all('section p')
         self.assertEqual(
-            list(map(text_type, root)),
+            root.text(),
             ["It begins.", "It runs.", "It ends."],
         )
 
     def test_all_match_one(self):
         root = self.husker.all('section p#two')
         self.assertEqual(
-            list(map(text_type, root)),
+            root.text(),
             ["It runs."],
         )
 
