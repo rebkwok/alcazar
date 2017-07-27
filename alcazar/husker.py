@@ -50,14 +50,14 @@ class Selector(object):
     def id(self):
         return self.__class__.__name__
 
-    def find(self, *spec):
+    def selection(self, *spec):
         """
         Runs a search for the given spec, and returns the results, as a ListHusker
         """
         raise NotImplementedError
 
-    def __call__(self, *args, **kwargs):
-        return self.one(*args, **kwargs)
+    # def __call__(self, *args, **kwargs):
+    #     return self.one(*args, **kwargs)
 
     def parts(self, **fields):
         for key, husker in fields.items():
@@ -66,49 +66,49 @@ class Selector(object):
             yield key, husker
 
     def one(self, *spec):
-        found = self.find(*spec)
-        if len(found) == 0:
+        selected = self.selection(*spec)
+        if len(selected) == 0:
             raise HuskerMismatch('%s found no matches for %s' % (self.id, self.repr_spec(*spec)))
-        elif len(found) > 1:
-            raise HuskerNotUnique('%s expected 1 match for %s, found %d' % (self.id, self.repr_spec(*spec), len(found)))
+        elif len(selected) > 1:
+            raise HuskerNotUnique('%s expected 1 match for %s, found %d' % (self.id, self.repr_spec(*spec), len(selected)))
         else:
-            return found[0]
+            return selected[0]
 
     def some(self, *spec):
-        found = self.find(*spec)
-        if len(found) == 0:
+        selected = self.selection(*spec)
+        if len(selected) == 0:
             return NULL_HUSKER
-        elif len(found) > 1:
-            raise HuskerNotUnique('%s expected 1 match for %s, found %d' % (self.id, self.repr_spec(*spec), len(found)))
+        elif len(selected) > 1:
+            raise HuskerNotUnique('%s expected 1 match for %s, found %d' % (self.id, self.repr_spec(*spec), len(selected)))
         else:
-            return found[0]
+            return selected[0]
 
     def first(self, *spec):
-        found = self.find(*spec)
-        if len(found) == 0:
+        selected = self.selection(*spec)
+        if len(selected) == 0:
             raise HuskerMismatch('%s found no matches for %s' % (self.id, self.repr_spec(*spec)))
         else:
-            return found[0]
+            return selected[0]
 
     def last(self, *spec):
-        found = self.find(*spec)
-        if len(found) == 0:
+        selected = self.selection(*spec)
+        if len(selected) == 0:
             raise HuskerMismatch('%s found no matches for %s' % (self.id, self.repr_spec(*spec)))
         else:
-            return found[-1]
+            return selected[-1]
 
     def any(self, *spec):
-        found = self.find(*spec)
-        if len(found) == 0:
+        selected = self.selection(*spec)
+        if len(selected) == 0:
             return NULL_HUSKER
         else:
-            return found[0]
+            return selected[0]
 
     def all(self, *spec):
-        found = self.find(*spec)
-        if not found:
+        selected = self.selection(*spec)
+        if not selected:
             raise HuskerMismatch('%s found no matches for %s' % (self.id, self.repr_spec(*spec)))
-        return found
+        return selected
 
     def one_of(self, *all_specs):
         match = self.some_of(*all_specs)
@@ -124,10 +124,10 @@ class Selector(object):
         for spec in all_specs:
             if not isinstance(spec, (list, tuple)):
                 spec = [spec]
-            found = self.some(*spec)
-            if found:
+            selected = self.some(*spec)
+            if selected:
                 if matching_spec is None:
-                    match, matching_spec = found, spec
+                    match, matching_spec = selected, spec
                 else:
                     raise HuskerMultipleSpecMatch('%s: both %s and %s matched' % (
                         self.id,
@@ -140,9 +140,9 @@ class Selector(object):
         for spec in all_specs:
             if not isinstance(spec, (list, tuple)):
                 spec = [spec]
-            found = self.any(*spec)
-            if found:
-                return found
+            selected = self.any(*spec)
+            if selected:
+                return selected
         raise HuskerMismatch("%s: none of the specified specs matched: %s" % (
             self.id,
             ', '.join('"%s"' % spec for spec in all_specs),
@@ -152,9 +152,9 @@ class Selector(object):
         for spec in all_specs:
             if not isinstance(spec, (list, tuple)):
                 spec = [spec]
-            found = self.any(*spec)
-            if found:
-                return found
+            selected = self.any(*spec)
+            if selected:
+                return selected
         return NULL_HUSKER
 
     def all_of(self, *all_specs):
@@ -162,6 +162,13 @@ class Selector(object):
             element
             for spec in all_specs
             for element in self.all(spec)
+        )
+
+    def selection_of(self, *all_specs):
+        return ListHusker(
+            element
+            for spec in all_specs
+            for element in self.selection(spec)
         )
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -265,17 +272,17 @@ class ElementHusker(Husker):
         else:
             return TextHusker(value)
 
-    def find(self, path):
+    def selection(self, path):
         is_xpath = '/' in path or path == '.'
         xpath = path if is_xpath else self._css_path_to_xpath(path)
-        found = ET.XPath(
+        selected = ET.XPath(
             xpath,
             # you can use regexes in your paths, e.g. '//a[re:test(text(),"reg(?:ular)?","i")]'
             namespaces = {'re':'http://exslt.org/regular-expressions'},
         )(self.value)
         return ListHusker(
             husk(self._ensure_decoded(v))
-            for v in found
+            for v in selected
         )
 
     @staticmethod
@@ -351,18 +358,18 @@ class TextHusker(Husker):
         assert value is not None
         super(TextHusker, self).__init__(value)
 
-    def find(self, regex, flags=''):
+    def selection(self, regex, flags=''):
         regex = self._compile(regex, flags)
-        found = regex.finditer(self.value)
+        selected = regex.finditer(self.value)
         if regex.groups < 2:
             return ListHusker(
                 TextHusker(m.group(regex.groups))
-                for m in found
+                for m in selected
             )
         else:
             return ListHusker(
                 ListHusker(TextHusker(g) for g in m.groups())
-                for m in found
+                for m in selected
             )
 
     def sub(self, regex, replacement, flags=''):
@@ -394,7 +401,7 @@ class TextHusker(Husker):
     center = _forward_to_value('center', text_type)
     count = _forward_to_value('count', int)
     endswith = _forward_to_value('endswith', bool)
-    # TODO find, once the above `find' is renamed
+    find = _forward_to_value('find', int)
     format = _forward_to_value('format', text_type)
     format_map = _forward_to_value('format_map', text_type)
     index = _forward_to_value('index', int)
@@ -416,7 +423,7 @@ class TextHusker(Husker):
     lower = _forward_to_value('lower', text_type)
     lstrip = _forward_to_value('lstrip', text_type)
     replace = _forward_to_value('replace', text_type)
-    # TODO rfind
+    rfind = _forward_to_value('rfind', int)
     rindex = _forward_to_value('rindex', int)
     rjust = _forward_to_value('rjust', text_type)
     rsplit = _forward_to_value('rsplit', list)
@@ -472,10 +479,10 @@ class ListHusker(Husker):
     def __add__(self, other):
         return ListHusker(self.value + other.value)
 
-    def find(self, test=None):
+    def selection(self, test=None):
         if test is not None and not callable(test):
             spec = test
-            test = lambda child: child.find(spec)
+            test = lambda child: child.selection(spec)
         return ListHusker(
             child
             for child in self.value
@@ -516,7 +523,7 @@ class NullHusker(Husker):
     def __init__(self):
         super(NullHusker, self).__init__(None)
 
-    def find(self, *spec_ignored):
+    def selection(self, *spec_ignored):
         return EMPTY_LIST_HUSKER
 
     def text(self, multiline=False):

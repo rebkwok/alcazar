@@ -115,57 +115,57 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertTrue(empty)
 
 
-    def test_find_on_valued_elem(self):
+    def test_selection_on_valued_elem(self):
         root = self.husker.one('section#discourse')
         self.assertEqual(
-            root.find('./p').text(),
+            root.selection('./p').text(),
             ["It begins.", "It runs.", "It ends."],
         )
-        self.assertFalse(root.find('./missing'))
+        self.assertFalse(root.selection('./missing'))
 
-    def test_find_on_null_elem(self):
+    def test_selection_on_null_elem(self):
         root = self.husker.any('missing')
-        self.assertFalse(root.find('./*'))
+        self.assertFalse(root.selection('./*'))
 
-    def test_find_on_valued_getted_attrib(self):
+    def test_selection_on_valued_getted_attrib(self):
         root = self.husker.one('section').get('id')
         self.assertEqual(
-            ''.join(map(text_type, root.find(r'[^aeiou]'))),
+            ''.join(map(text_type, root.selection(r'[^aeiou]'))),
             'dscrs',
         )
 
-    def test_find_on_null_getted_attrib(self):
+    def test_selection_on_null_getted_attrib(self):
         root = self.husker.one('section').get('missing')
         self.assertEqual(
-            ''.join(root.find(r'[^aeiou]')),
+            ''.join(root.selection(r'[^aeiou]')),
             '',
         )
 
-    def test_find_on_valued_text(self):
+    def test_selection_on_valued_text(self):
         root = self.husker.one('p#one').text()
         self.assertEqual(
-            ''.join(map(text_type, root.find(r'[^aeiou]', flags='i'))),
+            ''.join(map(text_type, root.selection(r'[^aeiou]', flags='i'))),
             't bgns.',
         )
 
-    def test_find_on_null_text(self):
+    def test_selection_on_null_text(self):
         root = self.husker.some('p#missing').text()
         self.assertEqual(
-            ''.join(root.find(r'.')),
+            ''.join(root.selection(r'.')),
             '',
         )
 
-    def test_find_on_list(self):
+    def test_selection_on_list(self):
         root = self.husker.all('p')
         self.assertEqual(
-            '+'.join(text_type(p['id']) for p in root.find(lambda p: p['id'].startswith('t'))),
+            '+'.join(text_type(p['id']) for p in root.selection(lambda p: p['id'].startswith('t'))),
             'two+three',
         )
 
-    def test_find_on_empty_list(self):
-        root = self.husker.find('missing')
+    def test_selection_on_empty_list(self):
+        root = self.husker.selection('missing')
         self.assertEqual(
-            len(root.find('./*')),
+            len(root.selection('./*')),
             0,
         )
 
@@ -223,7 +223,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         )
 
     def test_one_on_empty_list(self):
-        root = self.husker.find('missing')
+        root = self.husker.selection('missing')
         with self.assertRaises(HuskerMismatch):
             root.one(lambda p: True)
 
@@ -527,6 +527,68 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             )
 
 
+    def test_selection_of_single_match_per_path(self):
+        root = self.husker.selection_of(
+            'p#one',
+            'p#two',
+            'p#three',
+        )
+        self.assertEqual(
+            root.text(),
+            ['It begins.', 'It runs.', 'It ends.'],
+        )
+
+    def test_selection_of_many_matches_per_path(self):
+        root = self.husker.selection_of(
+            'p#one',
+            'p.greater-than-one',
+        )
+        self.assertEqual(
+            root.text(),
+            ['It begins.', 'It runs.', 'It ends.'],
+        )
+
+    def test_selection_of_overlapping_matches(self):
+        root = self.husker.selection_of(
+            'p#one',
+            'p.discourse',
+        )
+        self.assertEqual(
+            root.text(),
+            ['It begins.', 'It begins.', 'It runs.', 'It ends.'],
+        )
+
+    def test_selection_of_single_path_matches(self):
+        root = self.husker.selection_of(
+            'p#zero',
+            'p#two',
+        )
+        self.assertEqual(
+            root.text(),
+            ['It runs.'],
+        )
+
+    def test_selection_of_many_paths_match_paths_in_diff_order_from_document(self):
+        root = self.husker.selection_of(
+            'p#two',
+            'p#one',
+            'p#three',
+        )
+        self.assertEqual(
+            root.text(),
+            ['It runs.', 'It begins.', 'It ends.'],
+        )
+
+    def test_selection_of_mismatch(self):
+        root = self.husker.selection_of(
+            'p#four',
+            'p#five',
+            'p#six',
+        )
+        self.assertEqual(root, [])
+        self.assertFalse(root)
+
+
     def test_text_on_valued_element(self):
         self.assertEqual(
             self.husker.one('tr#first-row').text(),
@@ -563,11 +625,39 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         )
 
     def test_text_on_empty_list(self):
-        root = self.husker.find('#zone')
-        self.assertEqual(
-            root.text(),
-            [],
-        )
+        root = self.husker.selection('#zone')
+        self.assertEqual(root.text(), [])
+        self.assertFalse(root.text())
+        self.assertFalse(root)
+
+
+    def test_bool_on_valued_element(self):
+        self.assertTrue(self.husker.one('#empty'))
+
+    def test_bool_on_null_element(self):
+        self.assertFalse(self.husker.some('#missing'))
+
+    def test_bool_on_valued_attribute(self):
+        self.assertTrue(self.husker.one('#one').get('class'))
+
+    def test_bool_on_null_attribute(self):
+        self.assertFalse(self.husker.one('#one').get('missing'))
+
+    def test_bool_on_valued_text(self):
+        self.assertTrue(self.husker.one('#one').text())
+
+    def test_bool_on_valued_but_empty_text(self):
+        # 2017-07-26 - is this a gotcha?
+        self.assertTrue(self.husker.one('#empty').text())
+
+    def test_bool_on_null_text(self):
+        self.assertFalse(self.husker.some('#missing').text())
+
+    def test_bool_on_valued_list(self):
+        self.assertTrue(self.husker.all('p'))
+
+    def test_bool_on_empty_list(self):
+        self.assertFalse(self.husker.selection('missing'))
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -598,11 +688,17 @@ class TextHuskerStringMethodsTest(AlcazarTest):
     def test_endswith(self):
         self.assertTrue(TextHusker('hello').endswith('lo'))
 
+    def test_find(self):
+        self.assertIntEqual(TextHusker('hello').find('l'), 2)
+        self.assertIntEqual(TextHusker('hello').find('z'), -1)
+
     def test_format(self):
         self.assertTextEqual(TextHusker('hello {}').format('world!'), 'hello world!')
 
     def test_index(self):
         self.assertIntEqual(TextHusker('hello').index('l'), 2)
+        with self.assertRaises(ValueError):
+            TextHusker('hello').index('z')
 
     def test_isalnum(self):
         self.assertTrue(TextHusker('h').isalnum())
@@ -669,10 +765,14 @@ class TextHuskerStringMethodsTest(AlcazarTest):
     def test_replace(self):
         self.assertTextEqual(TextHusker('hello').replace('o', '!'), 'hell!')
 
-    # TODO rfind
+    def test_rfind(self):
+        self.assertIntEqual(TextHusker('hello').rfind('l'), 3)
+        self.assertIntEqual(TextHusker('hello').rfind('z'), -1)
 
     def test_rindex(self):
         self.assertIntEqual(TextHusker('hello').rindex('l'), 3)
+        with self.assertRaises(ValueError):
+            TextHusker('hello').rindex('z')
 
     def test_rjust(self):
         self.assertTextEqual(TextHusker('hello').rjust(10), '     hello')
