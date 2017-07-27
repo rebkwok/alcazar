@@ -20,12 +20,17 @@ from .log import LogEntry, LoggingAdapterMixin
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class AdapterBase(object):
-    """ This is only here to provide a method that tests can override """
+
+    def __init__(self, **kwargs):
+        self.timeout = kwargs.pop('timeout', None)
+        super(AdapterBase, self).__init__(**kwargs)
 
     def send(self, prepared_request, **kwargs):
+        kwargs.setdefault('timeout', self.timeout)
         return self.send_base(prepared_request, **kwargs)
 
     def send_base(self, prepared_request, **kwargs):
+        """ This is only here so that tests can override it """
         return super(AdapterBase, self).send(prepared_request, **kwargs)
 
 
