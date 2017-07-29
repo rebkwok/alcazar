@@ -8,6 +8,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # alcazar
+from .husker import Husker
 from .utils.compatibility import bytes_type, text_type
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -24,7 +25,10 @@ class Cleaner(object):
                 cleaner = getattr(self, 'clean_%s' % subkey, None)
                 if callable(cleaner):
                     return cleaner(husker)
-        return husker.raw()
+        if issubclass(expected_type, Husker):
+            return husker
+        else:
+            return husker.raw()
 
     @staticmethod
     def _type_name(cls):
