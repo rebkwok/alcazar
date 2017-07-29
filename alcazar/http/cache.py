@@ -231,7 +231,7 @@ class ShelfIndex(object):
 
     def lookup(self, key, min_timestamp=None):
         entry = self.db.get(self._key_to_string(key))
-        if entry is not None and entry.timestamp >= min_timestamp:
+        if entry is not None and min_timestamp and entry.timestamp >= min_timestamp:
             return entry
 
     def insert(self, key, entry):
