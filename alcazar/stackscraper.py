@@ -22,9 +22,9 @@ from .utils.compatibility import string_types
 
 class Query(object):
 
-    def __init__(self, stage, request, extras={}):
-        self.stage = stage
+    def __init__(self, request, stage='default', extras={}):
         self.request = request
+        self.stage = stage
         self.extras = extras
 
     def __str__(self):
@@ -78,7 +78,7 @@ class StackScraper(Scraper):
     def get_initial_queries(self):
         for query in self.initial_queries:
             if not isinstance(query, Query):
-                query = Query(self.initial_stage, request=query)
+                query = Query(query, self.initial_stage)
             yield query
 
 

@@ -74,8 +74,8 @@ class CatalogScraper(StackScraper):
             seen_entries += 1
         if listing.next_page:
             yield Query(
-                'listing',
                 listing.next_page,
+                'listing',
                 extras={
                     'expected_total_entries': listing.expected_total_entries or page.extras.get('expected_total_entries'),
                     'seen_entries': seen_entries,
@@ -90,8 +90,8 @@ class CatalogScraper(StackScraper):
     def parse_entry(self, page, entry):
         entry = self.build(CatalogEntry, self.husk_entry(page, entry))
         return Query(
-            'payload',
             entry.request,
+            'payload',
             entry.extras,
         )
 
