@@ -56,9 +56,6 @@ class Selector(object):
         """
         raise NotImplementedError
 
-    # def __call__(self, *args, **kwargs):
-    #     return self.one(*args, **kwargs)
-
     def parts(self, **fields):
         for key, husker in fields.items():
             if not isinstance(husker, Husker):
@@ -68,7 +65,7 @@ class Selector(object):
     def one(self, *spec):
         selected = self.selection(*spec)
         if len(selected) == 0:
-            raise HuskerMismatch('%s found no matches for %s' % (self.id, self.repr_spec(*spec)))
+            raise HuskerMismatch('%s found no matches for %s in %r' % (self.id, self.repr_spec(*spec), str(self)))
         elif len(selected) > 1:
             raise HuskerNotUnique('%s expected 1 match for %s, found %d' % (self.id, self.repr_spec(*spec), len(selected)))
         else:
@@ -334,6 +331,9 @@ class ElementHusker(Husker):
     def repr_spec(self, path):
         return "'%s'" % path
 
+    def __str__(self):
+        return '<%s element>' % self.value.tag
+
     @staticmethod
     def _css_path_to_xpath(path):
         if CSSSelector is NotImplemented:
@@ -373,12 +373,12 @@ class TextHusker(Husker):
             )
 
     def sub(self, regex, replacement, flags=''):
-        return TextElement(re.sub(
-            regex,
-            replacement,
-            self,
-            flags = self._compile_flags(flags),
-        ))
+        return TextHusker(
+            self._compile(regex, flags).sub(
+                replacement,
+                self.value,
+            )
+        )
 
     def text(self, multiline=False):
         return self
