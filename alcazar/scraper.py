@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # standards
 from datetime import timedelta
+from os import path
 
 # alcazar
 from .cleaner import Cleaner
@@ -28,6 +29,11 @@ class Scraper(Cleaner, Fetcher):
             self.id = self.__class__.__name__
         if self.cache_id is None:
             self.cache_id = self.id
+        if self.cache_id and self.http_cache_root_path:
+            self.http_cache_root_path = path.join(
+                self.http_cache_root_path,
+                self.cache_id,
+            )
         super(Scraper, self).__init__()
 
     def scrape_all(self):
