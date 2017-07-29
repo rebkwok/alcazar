@@ -15,23 +15,29 @@ from record import Record, dict_of, nullable, seq_of
 
 # alcazar
 from .datastructures import ScraperRequest
-from .husker import Husker
+from .husker import ListHusker
 from .stackscraper import Query, StackScraper
 from .utils.compatibility import text_type
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class CatalogListing(Record):
-    entries = seq_of(Husker)
+    entries = ListHusker
     expected_total_entries = nullable(int)
     next_page = nullable(ScraperRequest)
 
 class CatalogEntry(Record):
     id = text_type
     request = ScraperRequest
-    extras = dict_of(text_type, object)
+    extras = nullable(
+        dict_of(text_type, object),
+        default={},
+    )
 
 class FewerEntriesThanExpected(Exception):
+    pass
+
+class SkipThisEntry(Exception):
     pass
 
 #----------------------------------------------------------------------------------------------------------------------------------
