@@ -14,9 +14,14 @@ import re
 from .utils.compatibility import text_type
 
 # 3rd parties
+#
+# NB this file should be the only place where we explicitly specify the etree library we use, so that we have a shot at perhaps one
+# day swapping them.
+#
 import lxml.etree as ET
 
 #----------------------------------------------------------------------------------------------------------------------------------
+# parse HTML
 
 def parse_html_etree(html_string, remove_comments=True):
     """
@@ -94,5 +99,10 @@ def _repair_self_closing_html_tag(html_string):
         html_string,
         flags=re.I|re.X
     )
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+def parse_xml_etree(xml_bytes):
+    return ET.XML(xml_bytes)
 
 #----------------------------------------------------------------------------------------------------------------------------------

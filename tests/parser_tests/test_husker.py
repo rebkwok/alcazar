@@ -29,21 +29,21 @@ class SinaiPeninsulaTest(HtmlHuskerTest, AlcazarTest):
     fixture_file = "wikipedia_sinai_peninsula.html"
     fixture_encoding = 'UTF-8'
 
-    def test_title(self):
-        self.assertEqual(
-            text_type(self.husker.one('//title')),
-            'Sinai Peninsula - Wikipedia',
-        )
+    # def test_title(self):
+    #     self.assertEqual(
+    #         text_type(self.husker.one('//title')),
+    #         'Sinai Peninsula - Wikipedia',
+    #     )
 
     def test_title_text(self):
         self.assertEqual(
-            self.husker.one('//title').text(),
+            self.husker.one('//title').text,
             'Sinai Peninsula - Wikipedia',
         )
 
     def test_title_value(self):
         self.assertEqual(
-            self.husker.one('//title').text(),
+            self.husker.one('//title').text,
             'Sinai Peninsula - Wikipedia',
         )
 
@@ -55,13 +55,13 @@ class SinaiPeninsulaTest(HtmlHuskerTest, AlcazarTest):
 
     def test_title_text_xpath_text(self):
         self.assertEqual(
-            self.husker.one('//title/text()').text(),
+            self.husker.one('//title/text()').text,
             'Sinai Peninsula - Wikipedia',
         )
 
     def test_language_names(self):
         language_names = {
-            language.get('lang'): language.text()
+            language.get('lang'): language.text
             for language in (
                 item.one('a')
                 for item in self.husker.one('#p-lang').all('li.interlanguage-link')
@@ -80,7 +80,7 @@ class SinaiPeninsulaBgTest(HtmlHuskerTest, AlcazarTest):
 
     def test_title(self):
         self.assertEqual(
-            self.husker.one('//title').text(),
+            self.husker.one('//title').text,
             'Синайски полуостров – Уикипедия',
         )
 
@@ -110,7 +110,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertTrue(empty)
 
     def test_empty_texthusker_truthy(self):
-        empty = self.husker.one('p#empty').text()
+        empty = self.husker.one('p#empty').text
         self.assertEqual(empty, "")
         self.assertTrue(empty)
 
@@ -118,7 +118,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_selection_on_valued_elem(self):
         root = self.husker.one('section#discourse')
         self.assertEqual(
-            root.selection('./p').text(),
+            root.selection('./p').text,
             ["It begins.", "It runs.", "It ends."],
         )
         self.assertFalse(root.selection('./missing'))
@@ -142,14 +142,14 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         )
 
     def test_selection_on_valued_text(self):
-        root = self.husker.one('p#one').text()
+        root = self.husker.one('p#one').text
         self.assertEqual(
             ''.join(map(text_type, root.selection(r'[^aeiou]', flags='i'))),
             't bgns.',
         )
 
     def test_selection_on_null_text(self):
-        root = self.husker.some('p#missing').text()
+        root = self.husker.some('p#missing').text
         self.assertEqual(
             ''.join(root.selection(r'.')),
             '',
@@ -173,7 +173,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_one_on_valued_elem(self):
         root = self.husker.one('section#discourse')
         self.assertEqual(
-            root.one('p#one').text(),
+            root.one('p#one').text,
             "It begins.",
         )
         with self.assertRaises(HuskerMismatch):
@@ -197,28 +197,28 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             root.one(r'.')
 
     def test_one_on_valued_text(self):
-        root = self.husker.one('p#one').text()
+        root = self.husker.one('p#one').text
         self.assertEqual(
             root.one(r' (\w+)'),
             'begins',
         )
 
     def test_one_on_null_text(self):
-        root = self.husker.some('p#missing').text()
+        root = self.husker.some('p#missing').text
         with self.assertRaises(HuskerMismatch):
             root.one(r'.')
 
     def test_one_on_list(self):
         root = self.husker.all('p')
         self.assertEqual(
-            root.one(lambda p: p['id'] == 'two').text(),
+            root.one(lambda p: p['id'] == 'two').text,
             'It runs.',
         )
 
     def test_one_without_args_on_list(self):
         root = self.husker.all('p#one')
         self.assertEqual(
-            root.one().text(),
+            root.one().text,
             'It begins.',
         )
 
@@ -231,7 +231,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_some_match(self):
         root = self.husker.some('p#one')
         self.assertEqual(
-            root.text(),
+            root.text,
             'It begins.',
         )
 
@@ -247,7 +247,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_first_match(self):
         root = self.husker.first('section p')
         self.assertEqual(
-            root.text(),
+            root.text,
             'It begins.',
         )
 
@@ -259,7 +259,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_last_match(self):
         root = self.husker.last('section p')
         self.assertEqual(
-            root.text(),
+            root.text,
             'It ends.',
         )
 
@@ -271,14 +271,14 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_any_match(self):
         root = self.husker.any('p#two')
         self.assertEqual(
-            root.text(),
+            root.text,
             'It runs.',
         )
 
     def test_any_not_unique(self):
         root = self.husker.any('section p')
         self.assertEqual(
-            root.text(),
+            root.text,
             'It begins.',
         )
 
@@ -290,14 +290,14 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_all_match_many(self):
         root = self.husker.all('section p')
         self.assertEqual(
-            root.text(),
+            root.text,
             ["It begins.", "It runs.", "It ends."],
         )
 
     def test_all_match_one(self):
         root = self.husker.all('section p#two')
         self.assertEqual(
-            root.text(),
+            root.text,
             ["It runs."],
         )
 
@@ -313,7 +313,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#four',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             'It runs.',
         )
 
@@ -348,12 +348,12 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             ['p#one'],
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             'It begins.',
         )
 
     def test_one_of_list_spec_on_text(self):
-        root = self.husker.one('p#one').text()
+        root = self.husker.one('p#one').text
         self.assertEqual(
             root.one_of(
                 [r'b e g i n s', 'x'],
@@ -370,7 +370,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#four',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             'It runs.',
         )
 
@@ -381,7 +381,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#four',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             'It begins.',
         )
 
@@ -392,7 +392,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#two',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             'It begins.',
         )
 
@@ -403,7 +403,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#one',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             'It runs.',
         )
 
@@ -423,7 +423,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#four',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             'It runs.',
         )
 
@@ -434,7 +434,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#four',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             'It begins.',
         )
 
@@ -445,7 +445,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#two',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             'It begins.',
         )
 
@@ -456,7 +456,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#one',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             'It runs.',
         )
 
@@ -476,7 +476,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#three',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             ['It begins.', 'It runs.', 'It ends.'],
         )
 
@@ -486,7 +486,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p.greater-than-one',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             ['It begins.', 'It runs.', 'It ends.'],
         )
 
@@ -496,7 +496,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p.discourse',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             ['It begins.', 'It begins.', 'It runs.', 'It ends.'],
         )
 
@@ -514,7 +514,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#three',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             ['It runs.', 'It begins.', 'It ends.'],
         )
 
@@ -534,7 +534,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#three',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             ['It begins.', 'It runs.', 'It ends.'],
         )
 
@@ -544,7 +544,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p.greater-than-one',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             ['It begins.', 'It runs.', 'It ends.'],
         )
 
@@ -554,7 +554,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p.discourse',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             ['It begins.', 'It begins.', 'It runs.', 'It ends.'],
         )
 
@@ -564,7 +564,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#two',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             ['It runs.'],
         )
 
@@ -575,7 +575,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#three',
         )
         self.assertEqual(
-            root.text(),
+            root.text,
             ['It runs.', 'It begins.', 'It ends.'],
         )
 
@@ -591,12 +591,12 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
     def test_text_on_valued_element(self):
         self.assertEqual(
-            self.husker.one('tr#first-row').text(),
+            self.husker.one('tr#first-row').text,
             'One Uno',
         )
 
     def test_text_on_null_element(self):
-        self.assertFalse(self.husker.some('#missing').text())
+        self.assertFalse(self.husker.some('#missing').text)
 
     def test_text_on_valued_getted_attrib(self):
         root = self.husker.one('section').get('id')
@@ -610,24 +610,24 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertFalse(root)
 
     def test_text_on_valued_text(self):
-        root = self.husker.one('#one').text()
-        self.assertEqual(root.text(), 'It begins.')
+        root = self.husker.one('#one').text
+        self.assertEqual(root.text, 'It begins.')
 
     def test_text_on_null_text(self):
-        root = self.husker.some('#zone').text()
+        root = self.husker.some('#zone').text
         self.assertFalse(root)
 
     def test_text_on_valued_list(self):
         root = self.husker.all('#discourse p')
         self.assertEqual(
-            root.text(),
+            root.text,
             ['It begins.', 'It runs.', 'It ends.'],
         )
 
     def test_text_on_empty_list(self):
         root = self.husker.selection('#zone')
-        self.assertEqual(root.text(), [])
-        self.assertFalse(root.text())
+        self.assertEqual(root.text, [])
+        self.assertFalse(root.text)
         self.assertFalse(root)
 
 
@@ -644,20 +644,24 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertFalse(self.husker.one('#one').get('missing'))
 
     def test_bool_on_valued_text(self):
-        self.assertTrue(self.husker.one('#one').text())
+        self.assertTrue(self.husker.one('#one').text)
 
     def test_bool_on_valued_but_empty_text(self):
         # 2017-07-26 - is this a gotcha?
-        self.assertTrue(self.husker.one('#empty').text())
+        self.assertTrue(self.husker.one('#empty').text)
 
     def test_bool_on_null_text(self):
-        self.assertFalse(self.husker.some('#missing').text())
+        self.assertFalse(self.husker.some('#missing').text)
 
     def test_bool_on_valued_list(self):
         self.assertTrue(self.husker.all('p'))
 
     def test_bool_on_empty_list(self):
         self.assertFalse(self.husker.selection('missing'))
+
+    # def test_iter_on_valued_list(self):
+    #     self.assertEqual(
+    #         '/'.join(elem.text for elem in self.husker.all
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

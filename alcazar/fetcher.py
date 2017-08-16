@@ -7,14 +7,18 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+# standards
+from contextlib import closing
+import re
+
 # 3rd parties
 import requests
 
 # alcazar
-from .html_parser import parse_html_etree
+from .etree_parser import parse_html_etree, parse_xml_etree
 from .http import HttpClient
 from .husker import ElementHusker
-from .utils.compatibility import string_types
+from .utils.compatibility import string_types, urljoin
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -38,21 +42,33 @@ class Fetcher(object):
             },
         )
 
+    def compile_request(self, request, referer=None):
+        if not isinstance(request, requests.Request):
+            request = requests.Request('GET', request)
+        request.url = self.compile_url(request.url, referer)
+        return request
+
+    def compile_url(self, url, referer=None):
+        if referer and not re.search(r'^[a-z]+://', url):
+            if hasattr(referer, 'url'):
+                referer = referer.url
+            url = urljoin(referer, url)
+        return url
+
     def fetch_response(self, request):
-        if isinstance(request, string_types):
-            request = requests.Request(method='GET', url=request)
+        request = self.compile_request(request)
         return self.http.request(request)
 
     def fetch_html(self, *args, **kwargs):
         encoding = kwargs.pop('encoding', None)
         encoding_errors = kwargs.pop('encoding_errors', None)
-        response = self.fetch_response(*args, **kwargs)
-        return self.parse_html(
-            response,
-            encoding=encoding,
-            encoding_errors=encoding_errors,
-        )
-        return html
+        with closing(self.fetch_response(*args, **kwargs)) as response:
+            return self.parse_html(
+                response,
+                encoding=encoding,
+                encoding_errors=encoding_errors,
+            )
+            return html
 
     def parse_html(self, response, encoding=None, encoding_errors=None):
         html_string = response.content.decode(
@@ -70,5 +86,24 @@ class Fetcher(object):
             errors=encoding_errors or self.html_encoding_errors,
         )
         return ElementHusker(parse_html_etree(html_string))
+
+    def fetch_xml(self, *args, **kwargs):
+        with closing(self.fetch_response(*args, **kwargs)) as response:
+            return self.parse_xml(response)
+
+    def parse_xml(self, response):
+        # NB we let lxml do the character decoding
+        xml_bytes = response.content
+        return ElementHusker(parse_xml_etree(xml_bytes))
+
+    def fetch(self, *args, **kwargs):
+        with closing(self.fetch_response(*args, **kwargs)) as response:
+            content_type = re.sub(r'\s*;.*', '', response.headers.get('Content-Type') or '')
+            if content_type == 'text/html':
+                return self.parse_html(response)
+            elif content_type == 'text/xml':
+                return self.parse_xml(response)
+            else:
+                raise ValueError("Don't know how to parse %s" % content_type)
 
 #----------------------------------------------------------------------------------------------------------------------------------

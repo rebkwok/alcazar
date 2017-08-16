@@ -24,7 +24,12 @@ class Scraper(Cleaner, Fetcher):
 
     refresh_interval = timedelta(days=1)
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise TypeError("Unknown kwarg: %s" % key)
         if self.id is None:
             self.id = self.__class__.__name__
         if self.cache_id is None:
@@ -36,7 +41,7 @@ class Scraper(Cleaner, Fetcher):
             )
         super(Scraper, self).__init__()
 
-    def scrape_all(self):
-        raise NotImplementedError
+    def __call__(self, *args, **kwarg):
+        return self.fetch(*args, **kwarg)
 
 #----------------------------------------------------------------------------------------------------------------------------------

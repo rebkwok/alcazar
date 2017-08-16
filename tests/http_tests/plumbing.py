@@ -21,7 +21,7 @@ from unittest import TestCase
 
 # alcazar
 from alcazar import HttpClient
-from alcazar.utils.compatibility import BaseHTTPRequestHandler, HTTPServer, bytes_type, native_string, urljoin
+from alcazar.utils.compatibility import PY2, BaseHTTPRequestHandler, HTTPServer, bytes_type, native_string, urljoin
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # HTTP server
@@ -42,7 +42,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         method = getattr(
             self.handler,
             method_name,
-            lambda: self._respond(method_name.encode('ascii'), status=404, reason=b'Not Here'),
+            lambda: self._send_response(method_name.encode('ascii'), status=404, reason=b'Not Here'),
         )
         response_parts = method()
         if isinstance(response_parts, bytes_type):
@@ -208,6 +208,13 @@ class ClientFixture(object):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
+class AlcazarTestCase(TestCase):
+
+    if PY2:
+        def assertRegex(self, *args, **kwargs):
+            return self.assertRegexpMatches(*args, **kwargs)
+
+
 def compile_test_case_classes(namespace):
     for symbol in tuple(namespace):
         if isinstance(namespace[symbol], type) \
@@ -222,7 +229,7 @@ def compile_test_case_classes(namespace):
                 assert name not in namespace, name
                 namespace[native_string(name)] = type(
                     native_string(name),
-                    (test_class,) + fixture_combo + (TestCase,),
+                    (test_class,) + fixture_combo + (AlcazarTestCase,),
                     {}
                 )
 

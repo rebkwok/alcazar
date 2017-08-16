@@ -13,7 +13,7 @@ from os.path import dirname, join as path_join
 from unittest import TestCase
 
 # alcazar
-from alcazar.html_parser import parse_html_etree
+from alcazar.etree_parser import parse_html_etree
 from alcazar.http import HttpClient
 from alcazar.utils.compatibility import text_type
 

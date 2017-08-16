@@ -19,16 +19,16 @@ class Cleaner(object):
     want, in the correct type.
     """
 
-    def clean(self, key, expected_type, husker):
-        if husker:
+    def clean(self, key, expected_type, unclean):
+        if unclean:
             for subkey in (key, self._type_name(expected_type)):
                 cleaner = getattr(self, 'clean_%s' % subkey, None)
                 if callable(cleaner):
-                    return cleaner(husker)
+                    return cleaner(unclean)
         if issubclass(expected_type, Husker):
-            return husker
+            return unclean
         else:
-            return husker.raw()
+            return unclean.raw()
 
     @staticmethod
     def _type_name(cls):
@@ -39,19 +39,19 @@ class Cleaner(object):
         else:
             return cls.__name__
 
-    def clean_text(self, husker, multiline=False):
-        return husker.text(multiline=multiline).raw()
+    def clean_text(self, unclean):
+        if callable(getattr(unclean, 'text', None)):
+            return unclean.text.raw()
+        else:
+            return text_type(unclean)
 
-    def clean_bytes(self, husker):
-        return self.clean_text(husker).encode('UTF-8')
+    def clean_int(self, unclean):
+        return int(self.clean_text(unclean))
 
-    def clean_int(self, husker):
-        return int(self.clean_text(husker))
+    def clean_float(self, unclean):
+        return float(self.clean_text(unclean))
 
-    def clean_float(self, husker):
-        return float(self.clean_text(husker))
-
-    def clean_Decimal(self, husker):
-        return Decimal(self.clean_text(husker))
+    def clean_Decimal(self, unclean):
+        return Decimal(self.clean_text(unclean))
 
 #----------------------------------------------------------------------------------------------------------------------------------

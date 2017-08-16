@@ -231,7 +231,7 @@ class ShelfIndex(object):
 
     def lookup(self, key, min_timestamp=None):
         entry = self.db.get(self._key_to_string(key))
-        if entry is not None and min_timestamp and entry.timestamp >= min_timestamp:
+        if entry is not None and entry.timestamp >= (min_timestamp or 0):
             return entry
 
     def insert(self, key, entry):
@@ -388,6 +388,15 @@ class StreamTee(object):
         if n == 0 or self.remaining == 0:
             self._complete()
         return n
+
+    # def readline(self, size=-1):
+    #     line = self.source.readline(size)
+    #     self.sink.write(line)
+    #     if self.remaining is not None:
+    #         self.remaining -= len(line)
+    #         if self.remaining == 0:
+    #             self._complete()
+    #     return line
 
     def flush(self):
         self.source.flush()

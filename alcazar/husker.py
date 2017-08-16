@@ -9,7 +9,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # standards
 from functools import reduce
-from itertools import chain
 import operator
 import re
 from types import GeneratorType
@@ -23,7 +22,7 @@ except ImportError:
 
 # alcazar
 from .exceptions import ScraperError
-from .utils.compatibility import PY2, bytes_type, native_string, text_type
+from .utils.compatibility import PY2, bytes_type, text_type
 from .utils.text import normalize_spaces
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -49,6 +48,9 @@ class Selector(object):
     @property
     def id(self):
         return self.__class__.__name__
+
+    def __call__(self, *args, **kwargs):
+        return self.one(*args, **kwargs)
 
     def selection(self, *spec):
         """
@@ -110,8 +112,9 @@ class Selector(object):
     def one_of(self, *all_specs):
         match = self.some_of(*all_specs)
         if not match:
-            raise HuskerMismatch("%s: none of the specified specs matched: %s" % (
+            raise HuskerMismatch("%s: none of the specified specs matched %r: %s" % (
                 self.id,
+                self.value,
                 ', '.join('"%s"' % spec for spec in all_specs),
             ))
         return match
@@ -198,12 +201,18 @@ class Husker(Selector):
     def __init__(self, value):
         self.value = value
 
-    def text(self, multiline=False):
-        """ Returns a TextHusker with this husker's value, converted to a string. If `multiline` is true, preserve line breaks """
+    @property
+    def text(self):
+        """ Returns a TextHusker with this husker's value, converted to a string. """
+        raise NotImplementedError(repr(self))
+
+    @property
+    def multiline(self):
+        """ Same as `text`, but preserves line breaks """
         raise NotImplementedError(repr(self))
 
     def json(self):
-        return lenient_json_loads(self.text().raw())
+        return lenient_json_loads(self.text.raw())
 
     def raw(self):
         """
@@ -211,6 +220,15 @@ class Husker(Selector):
         ListHusker, a list; etc.
         """
         return self.value
+
+    def map(self, function):
+        return function(self.raw())
+
+    def map_const(self, value):
+        return value
+
+    def then(self, function):
+        return function(self)
 
     def __bool__(self):
         """
@@ -230,7 +248,7 @@ class Husker(Selector):
             return repr(spec)
 
     def __str__(self):
-        return self.text().value
+        return self.text.value
 
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.value)
@@ -289,11 +307,13 @@ class ElementHusker(Husker):
             value = value.decode('us-ascii')
         return value
 
-    def text(self, multiline=False):
-        if multiline:
-            return TextHusker(self._multiline_text())
-        else:
-            return TextHusker(normalize_spaces(''.join(self.value.itertext())))
+    @property
+    def text(self):
+        return TextHusker(normalize_spaces(''.join(self.value.itertext())))
+
+    @property
+    def multiline(self):
+        return TextHusker(self._multiline_text())
 
     def _multiline_text(self):
         def visit(node, inside_pre=False):
@@ -380,7 +400,12 @@ class TextHusker(Husker):
             )
         )
 
-    def text(self, multiline=False):
+    @property
+    def text(self):
+        return self
+
+    @property
+    def multiline(self):
         return self
 
     def repr_spec(self, regex, flags=''):
@@ -393,7 +418,7 @@ class TextHusker(Husker):
         return TextHusker(self.value + other.value)
 
     def __str__(self):
-        return self.value
+        return self.text.value
 
     capitalize = _forward_to_value('capitalize', text_type)
     if not PY2:
@@ -499,6 +524,12 @@ class ListHusker(Husker):
                 deduped.append(child)
         return ListHusker(deduped)
 
+    def _mapped_property(name):
+        return property(lambda self: self.__class__(
+            getattr(child, name)
+            for child in self.value
+        ))
+
     def _mapped_operation(name, cls=None):
         def operation(self, *args, **kwargs):
             list_cls = cls or self.__class__
@@ -508,11 +539,23 @@ class ListHusker(Husker):
             )
         return operation
 
-    text = _mapped_operation('text')
+    text = _mapped_property('text')
     js = _mapped_operation('js')
     json = _mapped_operation('json')
     sub = _mapped_operation('sub')
     raw = _mapped_operation('raw', cls=list)
+
+    def map(self, function):
+        return [function(element.raw()) for element in self]
+
+    def map_const(self, value):
+        return value
+
+    def then(self, function):
+        return [function(element) for element in self]
+
+    def __str__(self):
+        return repr(self.value)
 
 EMPTY_LIST_HUSKER = ListHusker([])
 
@@ -526,8 +569,25 @@ class NullHusker(Husker):
     def selection(self, *spec_ignored):
         return EMPTY_LIST_HUSKER
 
-    def text(self, multiline=False):
+    @property
+    def text(self):
         return NULL_HUSKER
+
+    @property
+    def multiline(self):
+        return NULL_HUSKER
+
+    def map(self, function):
+        return None
+
+    def map_const(self, value):
+        return None
+
+    def then(self, function):
+        return None
+
+    def __str__(self):
+        return '<Null>'
 
 NULL_HUSKER = NullHusker()
 
