@@ -92,6 +92,10 @@ class CacheTestServer(object):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
+class NoCacheFixture(object):
+    pass
+
+
 class CacheFixture(object):
     pass
 

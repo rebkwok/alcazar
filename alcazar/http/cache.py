@@ -315,6 +315,23 @@ class FlatFileStorage(object):
         if not path.isdir(path.dirname(file_path)):
             makedirs(path.dirname(file_path))
         assert not response._content_consumed, response._content
+        if response.raw.chunked:
+            # 2017-08-19 - chunked responses can't be streamed to the user and cached simultaneously with the same StreamTee trick
+            # that we use below for other responses. This dichotomy is a bit ugly, though, and I'm starting to think a better
+            # solution is needed. This works for now, but I think the whole thing needs refactored at some point.
+            self._first_download_then_read_from_cache(file_path, response, on_completion)
+        else:
+            self._download_and_save_to_cache_simultaneously(file_path, response, on_completion)
+
+    def _first_download_then_read_from_cache(self, file_path, response, on_completion):
+        with self._open_local_file(response, file_path, 'w') as cache_out:
+            for chunk in response.raw.stream(decode_content=False):
+                cache_out.write(chunk)
+        on_completion()
+        response.raw.chunked = False
+        response.raw._fp = self._open_local_file(response, file_path, 'r')
+
+    def _download_and_save_to_cache_simultaneously(self, file_path, response, on_completion):
         part_file_path = file_path + '.part'
         response.raw._fp.fp = StreamTee(
             source=response.raw._fp.fp,

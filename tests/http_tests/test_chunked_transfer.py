@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # tests
 from .plumbing import FetcherFixture, ClientFixture, ServerFixture, compile_test_case_classes
+from .test_cache import CacheFixture, NoCacheFixture
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -34,6 +35,7 @@ class ChunkedTransferTestServer(object):
 class ChunkedTransferTests(object):
 
     __fixtures__ = [
+        [NoCacheFixture] + CacheFixture.__subclasses__(),
         FetcherFixture.__subclasses__(),
         [ClientFixture],
         [ServerFixture],
@@ -41,17 +43,29 @@ class ChunkedTransferTests(object):
 
     new_server = ChunkedTransferTestServer
 
-    def test_chunked_content_is_understood(self):
+    def test_chunked_content_text(self):
         self.assertEqual(
             self.fetch('/chunked').text,
             'look: 16 octets\noh wow: 16 more\n',
         )
 
-    def test_natrail(self):
-        self.assertRegex(
-            self.client.get('http://ojp.nationalrail.co.uk/service/timesandfares/EDB/GLQ/110817/1500/dep').text,
-            r'^\s*<!DOCTYPE',
+    def test_chunked_content_read(self):
+        self.assertEqual(
+            self.fetch('/chunked', stream=True).raw.read(),
+            b'look: 16 octets\noh wow: 16 more\n',
         )
+
+    def test_chunked_content_iter_content(self):
+        self.assertEqual(
+            bytes().join(self.fetch('/chunked', stream=True).iter_content()),
+            b'look: 16 octets\noh wow: 16 more\n',
+        )
+
+    # def test_natrail(self):
+    #     self.assertRegex(
+    #         self.client.get('http://ojp.nationalrail.co.uk/service/timesandfares/EDB/GLQ/110817/1500/dep').text,
+    #         r'^\s*<!DOCTYPE',
+    #     )
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
