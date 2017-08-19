@@ -212,8 +212,9 @@ class Husker(Selector):
         raise NotImplementedError(repr(self))
 
     def json(self):
-        return lenient_json_loads(self.text.raw())
+        return lenient_json_loads(self.text.raw)
 
+    @property
     def raw(self):
         """
         Returns the underlying value. For ElementHusker instances, this would be an ETree Element; for TextHusker, a string; for
@@ -222,7 +223,7 @@ class Husker(Selector):
         return self.value
 
     def map(self, function):
-        return function(self.raw())
+        return function(self.raw)
 
     def map_const(self, value):
         return value
@@ -418,7 +419,7 @@ class TextHusker(Husker):
         return TextHusker(self.value + other.value)
 
     def __str__(self):
-        return self.text.value
+        return self.value
 
     capitalize = _forward_to_value('capitalize', text_type)
     if not PY2:
@@ -546,7 +547,7 @@ class ListHusker(Husker):
     raw = _mapped_operation('raw', cls=list)
 
     def map(self, function):
-        return [function(element.raw()) for element in self]
+        return [function(element.raw) for element in self]
 
     def map_const(self, value):
         return value
