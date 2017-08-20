@@ -9,15 +9,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # standards
 from contextlib import contextmanager
-import re
 
 # 3rd parties
 import requests
 
 # alcazar
-from .husker import Husker, TextHusker
+from .husker import TextHusker
 from .scraper import Scraper
-from .utils.compatibility import string_types, text_type
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # data structures

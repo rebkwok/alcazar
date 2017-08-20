@@ -353,7 +353,12 @@ class ElementHusker(Husker):
         return "'%s'" % path
 
     def __str__(self):
-        return '<%s element>' % self.value.tag
+        return ET.tostring(
+            self.value,
+            pretty_print=True,
+            method='HTML',
+            encoding=text_type,
+        )
 
     @staticmethod
     def _css_path_to_xpath(path):

@@ -18,7 +18,7 @@ import requests
 from .etree_parser import parse_html_etree, parse_xml_etree
 from .http import HttpClient
 from .husker import ElementHusker
-from .utils.compatibility import string_types, urljoin
+from .utils.compatibility import urljoin
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

@@ -9,7 +9,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # 3rd parties
 from record import Record, nullable
-import requests
 
 # alcazar
 from .crawler import Crawler, Query
