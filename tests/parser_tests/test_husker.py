@@ -61,7 +61,7 @@ class SinaiPeninsulaTest(HtmlHuskerTest, AlcazarTest):
 
     def test_language_names(self):
         language_names = {
-            language.get('lang'): language.text
+            language.get('lang'): language.str
             for language in (
                 item.one('a')
                 for item in self.husker.one('#p-lang').all('li.interlanguage-link')
@@ -112,8 +112,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_empty_texthusker_truthy(self):
         empty = self.husker.one('p#empty').text
         self.assertEqual(empty, "")
-        self.assertTrue(empty)
-
+        self.assertFalse(empty)
 
     def test_selection_on_valued_elem(self):
         root = self.husker.one('section#discourse')
@@ -158,7 +157,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_selection_on_list(self):
         root = self.husker.all('p')
         self.assertEqual(
-            '+'.join(text_type(p['id']) for p in root.selection(lambda p: p['id'].startswith('t'))),
+            '+'.join(text_type(p['id']) for p in root.selection(lambda p: p['id'].str.startswith('t'))),
             'two+three',
         )
 
@@ -647,8 +646,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertTrue(self.husker.one('#one').text)
 
     def test_bool_on_valued_but_empty_text(self):
-        # 2017-07-26 - is this a gotcha?
-        self.assertTrue(self.husker.one('#empty').text)
+        self.assertFalse(self.husker.one('#empty').text)
 
     def test_bool_on_null_text(self):
         self.assertFalse(self.husker.some('#missing').text)
@@ -665,156 +663,156 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class TextHuskerStringMethodsTest(AlcazarTest):
+# class TextHuskerStringMethodsTest(AlcazarTest):
 
-    def assertTextEqual(self, husker, reference_text):
-        self.assertIsInstance(husker, TextHusker)
-        self.assertEqual(husker.value, reference_text)
-        self.assertEqual(husker, reference_text)
+#     def assertTextEqual(self, husker, reference_text):
+#         self.assertIsInstance(husker, TextHusker)
+#         self.assertEqual(husker.value, reference_text)
+#         self.assertEqual(husker, reference_text)
 
-    def assertIntEqual(self, value, reference_value):
-        self.assertIsInstance(value, int)
-        self.assertEqual(value, reference_value)
+#     def assertIntEqual(self, value, reference_value):
+#         self.assertIsInstance(value, int)
+#         self.assertEqual(value, reference_value)
 
-    def test_capitalize(self):
-        self.assertTextEqual(TextHusker('hello').capitalize(), 'Hello')
+#     def test_capitalize(self):
+#         self.assertTextEqual(TextHusker('hello').capitalize(), 'Hello')
 
-    if not PY2:
-        def test_casefold(self):
-            self.assertTextEqual(TextHusker('HELLO').casefold(), 'hello')
+#     if not PY2:
+#         def test_casefold(self):
+#             self.assertTextEqual(TextHusker('HELLO').casefold(), 'hello')
 
-    def test_center(self):
-        self.assertTextEqual(TextHusker('hello').center(9), '  hello  ')
+#     def test_center(self):
+#         self.assertTextEqual(TextHusker('hello').center(9), '  hello  ')
 
-    def test_count(self):
-        self.assertIntEqual(TextHusker('hello').count('l'), 2)
+#     def test_count(self):
+#         self.assertIntEqual(TextHusker('hello').count('l'), 2)
 
-    def test_endswith(self):
-        self.assertTrue(TextHusker('hello').endswith('lo'))
+#     def test_endswith(self):
+#         self.assertTrue(TextHusker('hello').endswith('lo'))
 
-    def test_find(self):
-        self.assertIntEqual(TextHusker('hello').find('l'), 2)
-        self.assertIntEqual(TextHusker('hello').find('z'), -1)
+#     def test_find(self):
+#         self.assertIntEqual(TextHusker('hello').find('l'), 2)
+#         self.assertIntEqual(TextHusker('hello').find('z'), -1)
 
-    def test_format(self):
-        self.assertTextEqual(TextHusker('hello {}').format('world!'), 'hello world!')
+#     def test_format(self):
+#         self.assertTextEqual(TextHusker('hello {}').format('world!'), 'hello world!')
 
-    def test_index(self):
-        self.assertIntEqual(TextHusker('hello').index('l'), 2)
-        with self.assertRaises(ValueError):
-            TextHusker('hello').index('z')
+#     def test_index(self):
+#         self.assertIntEqual(TextHusker('hello').index('l'), 2)
+#         with self.assertRaises(ValueError):
+#             TextHusker('hello').index('z')
 
-    def test_isalnum(self):
-        self.assertTrue(TextHusker('h').isalnum())
-        self.assertTrue(TextHusker('0').isalnum())
-        self.assertFalse(TextHusker(' ').isalnum())
+#     def test_isalnum(self):
+#         self.assertTrue(TextHusker('h').isalnum())
+#         self.assertTrue(TextHusker('0').isalnum())
+#         self.assertFalse(TextHusker(' ').isalnum())
 
-    def test_isalpha(self):
-        self.assertTrue(TextHusker('h').isalpha())
-        self.assertFalse(TextHusker('0').isalpha())
-        self.assertFalse(TextHusker(' ').isalpha())
+#     def test_isalpha(self):
+#         self.assertTrue(TextHusker('h').isalpha())
+#         self.assertFalse(TextHusker('0').isalpha())
+#         self.assertFalse(TextHusker(' ').isalpha())
 
-    def test_isdecimal(self):
-        self.assertFalse(TextHusker('h').isdecimal())
-        self.assertTrue(TextHusker('0').isdecimal())
-        self.assertFalse(TextHusker(' ').isdecimal())
+#     def test_isdecimal(self):
+#         self.assertFalse(TextHusker('h').isdecimal())
+#         self.assertTrue(TextHusker('0').isdecimal())
+#         self.assertFalse(TextHusker(' ').isdecimal())
 
-    def test_isdigit(self):
-        self.assertFalse(TextHusker('h').isdigit())
-        self.assertTrue(TextHusker('0').isdigit())
-        self.assertFalse(TextHusker(' ').isdigit())
+#     def test_isdigit(self):
+#         self.assertFalse(TextHusker('h').isdigit())
+#         self.assertTrue(TextHusker('0').isdigit())
+#         self.assertFalse(TextHusker(' ').isdigit())
 
-    if not PY2:
-        def test_isidentifier(self):
-            self.assertTrue(TextHusker('h').isidentifier())
-            self.assertFalse(TextHusker('0').isidentifier())
-            self.assertTrue(TextHusker('_').isidentifier())
+#     if not PY2:
+#         def test_isidentifier(self):
+#             self.assertTrue(TextHusker('h').isidentifier())
+#             self.assertFalse(TextHusker('0').isidentifier())
+#             self.assertTrue(TextHusker('_').isidentifier())
 
-    def test_islower(self):
-        self.assertTrue(TextHusker('hello').islower())
-        self.assertFalse(TextHusker('hEllo').islower())
+#     def test_islower(self):
+#         self.assertTrue(TextHusker('hello').islower())
+#         self.assertFalse(TextHusker('hEllo').islower())
 
-    def test_isnumeric(self):
-        self.assertFalse(TextHusker('h').isdigit())
-        self.assertTrue(TextHusker('0').isdigit())
-        self.assertFalse(TextHusker(' ').isdigit())
+#     def test_isnumeric(self):
+#         self.assertFalse(TextHusker('h').isdigit())
+#         self.assertTrue(TextHusker('0').isdigit())
+#         self.assertFalse(TextHusker(' ').isdigit())
 
-    if not PY2:
-        def test_isprintable(self):
-            self.assertTrue(TextHusker('hello').isprintable())
+#     if not PY2:
+#         def test_isprintable(self):
+#             self.assertTrue(TextHusker('hello').isprintable())
 
-    def test_isspace(self):
-        self.assertTrue(TextHusker(' ').isspace())
-        self.assertFalse(TextHusker('_').isspace())
+#     def test_isspace(self):
+#         self.assertTrue(TextHusker(' ').isspace())
+#         self.assertFalse(TextHusker('_').isspace())
 
-    def test_istitle(self):
-        self.assertTrue(TextHusker('Hello World').istitle())
+#     def test_istitle(self):
+#         self.assertTrue(TextHusker('Hello World').istitle())
 
-    def test_isupper(self):
-        self.assertTrue(TextHusker('HELLO').isupper())
-        self.assertFalse(TextHusker('hEllo').isupper())
+#     def test_isupper(self):
+#         self.assertTrue(TextHusker('HELLO').isupper())
+#         self.assertFalse(TextHusker('hEllo').isupper())
 
-    def test_join(self):
-        self.assertTextEqual(TextHusker('+').join(['a','b','c']), 'a+b+c')
+#     def test_join(self):
+#         self.assertTextEqual(TextHusker('+').join(['a','b','c']), 'a+b+c')
 
-    def test_ljust(self):
-        self.assertTextEqual(TextHusker('hello').ljust(10), 'hello     ')
+#     def test_ljust(self):
+#         self.assertTextEqual(TextHusker('hello').ljust(10), 'hello     ')
 
-    def test_lower(self):
-        self.assertTextEqual(TextHusker('hEllo').lower(), 'hello')
+#     def test_lower(self):
+#         self.assertTextEqual(TextHusker('hEllo').lower(), 'hello')
 
-    def test_lstrip(self):
-        self.assertTextEqual(TextHusker(' hello').lstrip(), 'hello')
+#     def test_lstrip(self):
+#         self.assertTextEqual(TextHusker(' hello').lstrip(), 'hello')
 
-    def test_replace(self):
-        self.assertTextEqual(TextHusker('hello').replace('o', '!'), 'hell!')
+#     def test_replace(self):
+#         self.assertTextEqual(TextHusker('hello').replace('o', '!'), 'hell!')
 
-    def test_rfind(self):
-        self.assertIntEqual(TextHusker('hello').rfind('l'), 3)
-        self.assertIntEqual(TextHusker('hello').rfind('z'), -1)
+#     def test_rfind(self):
+#         self.assertIntEqual(TextHusker('hello').rfind('l'), 3)
+#         self.assertIntEqual(TextHusker('hello').rfind('z'), -1)
 
-    def test_rindex(self):
-        self.assertIntEqual(TextHusker('hello').rindex('l'), 3)
-        with self.assertRaises(ValueError):
-            TextHusker('hello').rindex('z')
+#     def test_rindex(self):
+#         self.assertIntEqual(TextHusker('hello').rindex('l'), 3)
+#         with self.assertRaises(ValueError):
+#             TextHusker('hello').rindex('z')
 
-    def test_rjust(self):
-        self.assertTextEqual(TextHusker('hello').rjust(10), '     hello')
+#     def test_rjust(self):
+#         self.assertTextEqual(TextHusker('hello').rjust(10), '     hello')
 
-    # def test_rsplit(self):
-    #     self.assertEqual(TextHusker('hello').rsplit('l'), ['hel', 'o'])
+#     # def test_rsplit(self):
+#     #     self.assertEqual(TextHusker('hello').rsplit('l'), ['hel', 'o'])
 
-    def test_rstrip(self):
-        self.assertTextEqual(TextHusker(' hello ').rstrip(), ' hello')
+#     def test_rstrip(self):
+#         self.assertTextEqual(TextHusker(' hello ').rstrip(), ' hello')
 
-    # def test_split(self):
-    #     self.assertEqual(TextHusker('hello').split(), 'hello')
+#     # def test_split(self):
+#     #     self.assertEqual(TextHusker('hello').split(), 'hello')
 
-    # def test_splitlines(self):
-    #     self.assertEqual(TextHusker('hello').splitlines(), 'hello')
+#     # def test_splitlines(self):
+#     #     self.assertEqual(TextHusker('hello').splitlines(), 'hello')
 
-    def test_startswith(self):
-        self.assertTrue(TextHusker('hello').startswith('hell'))
+#     def test_startswith(self):
+#         self.assertTrue(TextHusker('hello').startswith('hell'))
 
-    def test_strip(self):
-        self.assertTextEqual(TextHusker(' hello ').strip(), 'hello')
+#     def test_strip(self):
+#         self.assertTextEqual(TextHusker(' hello ').strip(), 'hello')
 
-    def test_swapcase(self):
-        self.assertTextEqual(TextHusker('hEllo').swapcase(), 'HeLLO')
+#     def test_swapcase(self):
+#         self.assertTextEqual(TextHusker('hEllo').swapcase(), 'HeLLO')
 
-    def test_title(self):
-        self.assertTextEqual(TextHusker('hello world').title(), 'Hello World')
+#     def test_title(self):
+#         self.assertTextEqual(TextHusker('hello world').title(), 'Hello World')
 
-    def test_translate(self):
-        self.assertTextEqual(
-            TextHusker('hello').translate({ord('h'):'z', ord('l'):'p'}),
-            'zeppo',
-        )
+#     def test_translate(self):
+#         self.assertTextEqual(
+#             TextHusker('hello').translate({ord('h'):'z', ord('l'):'p'}),
+#             'zeppo',
+#         )
 
-    def test_upper(self):
-        self.assertTextEqual(TextHusker('hello').upper(), 'HELLO')
+#     def test_upper(self):
+#         self.assertTextEqual(TextHusker('hello').upper(), 'HELLO')
 
-    def test_zfill(self):
-        self.assertTextEqual(TextHusker('hello').zfill(10), '00000hello')
+#     def test_zfill(self):
+#         self.assertTextEqual(TextHusker('hello').zfill(10), '00000hello')
 
 #----------------------------------------------------------------------------------------------------------------------------------

@@ -8,6 +8,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
+from datetime import datetime
 from functools import reduce
 import operator
 import re
@@ -26,7 +27,12 @@ from .utils.compatibility import PY2, bytes_type, text_type
 from .utils.text import normalize_spaces
 
 #----------------------------------------------------------------------------------------------------------------------------------
-# excecptions
+# globals
+
+_builtin_int = int
+
+#----------------------------------------------------------------------------------------------------------------------------------
+# exceptions
 
 class HuskerError(ScraperError):
     pass
@@ -203,7 +209,10 @@ class Husker(Selector):
 
     @property
     def text(self):
-        """ Returns a TextHusker with this husker's value, converted to a string. """
+        """
+        Returns a TextHusker, whose value is this husker's text contents. The definition of what constitutes "this husker's text
+        contents" is up to the implementing subclass.
+        """
         raise NotImplementedError(repr(self))
 
     @property
@@ -212,15 +221,22 @@ class Husker(Selector):
         raise NotImplementedError(repr(self))
 
     def json(self):
-        return lenient_json_loads(self.text.raw)
+        return lenient_json_loads(self.str)
 
     @property
-    def raw(self):
-        """
-        Returns the underlying value. For ElementHusker instances, this would be an ETree Element; for TextHusker, a string; for
-        ListHusker, a list; etc.
-        """
-        return self.value
+    def str(self):
+        return self.text.value
+
+    @property
+    def int(self):
+        return int(self.str)
+
+    @property
+    def float(self):
+        return float(self.str)
+
+    def datetime(self, fmt):
+        return datetime.strptime(self.str, fmt)
 
     def map(self, function):
         return function(self.raw)
@@ -230,6 +246,12 @@ class Husker(Selector):
 
     def then(self, function):
         return function(self)
+
+    def filter(self, function):
+        if function(self):
+            return self
+        else:
+            return NULL_HUSKER
 
     def __bool__(self):
         """
@@ -254,7 +276,7 @@ class Husker(Selector):
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.value)
 
-    __hash__ = _forward_to_value('__hash__', int)
+    __hash__ = _forward_to_value('__hash__', _builtin_int)
     __eq__ = _forward_to_value('__eq__', bool)
     __lt__ = _forward_to_value('__lt__', bool)
     __le__ = _forward_to_value('__le__', bool)
@@ -423,51 +445,11 @@ class TextHusker(Husker):
     def __add__(self, other):
         return TextHusker(self.value + other.value)
 
+    def __bool__(self):
+        return bool(self.value)
+
     def __str__(self):
         return self.value
-
-    capitalize = _forward_to_value('capitalize', text_type)
-    if not PY2:
-        casefold = _forward_to_value('casefold', text_type)
-    center = _forward_to_value('center', text_type)
-    count = _forward_to_value('count', int)
-    endswith = _forward_to_value('endswith', bool)
-    find = _forward_to_value('find', int)
-    format = _forward_to_value('format', text_type)
-    format_map = _forward_to_value('format_map', text_type)
-    index = _forward_to_value('index', int)
-    isalnum = _forward_to_value('isalnum', bool)
-    isalpha = _forward_to_value('isalpha', bool)
-    isdecimal = _forward_to_value('isdecimal', bool)
-    isdigit = _forward_to_value('isdigit', bool)
-    if not PY2:
-        isidentifier = _forward_to_value('isidentifier', bool)
-    islower = _forward_to_value('islower', bool)
-    isnumeric = _forward_to_value('isnumeric', bool)
-    if not PY2:
-        isprintable = _forward_to_value('isprintable', bool)
-    isspace = _forward_to_value('isspace', bool)
-    istitle = _forward_to_value('istitle', bool)
-    isupper = _forward_to_value('isupper', bool)
-    join = _forward_to_value('join', text_type)
-    ljust = _forward_to_value('ljust', text_type)
-    lower = _forward_to_value('lower', text_type)
-    lstrip = _forward_to_value('lstrip', text_type)
-    replace = _forward_to_value('replace', text_type)
-    rfind = _forward_to_value('rfind', int)
-    rindex = _forward_to_value('rindex', int)
-    rjust = _forward_to_value('rjust', text_type)
-    rsplit = _forward_to_value('rsplit', list)
-    rstrip = _forward_to_value('rstrip', text_type)
-    split = _forward_to_value('split', list)
-    splitlines = _forward_to_value('splitlines', list)
-    startswith = _forward_to_value('startswith', bool)
-    strip = _forward_to_value('strip', text_type)
-    swapcase = _forward_to_value('swapcase', text_type)
-    title = _forward_to_value('title', text_type)
-    translate = _forward_to_value('translate', text_type)
-    upper = _forward_to_value('upper', text_type)
-    zfill = _forward_to_value('zfill', text_type)
 
     @staticmethod
     def _compile(regex, flags):
@@ -530,8 +512,8 @@ class ListHusker(Husker):
                 deduped.append(child)
         return ListHusker(deduped)
 
-    def _mapped_property(name):
-        return property(lambda self: self.__class__(
+    def _mapped_property(name, cls=None):
+        return property(lambda self: (cls or self.__class__)(
             getattr(child, name)
             for child in self.value
         ))
@@ -549,7 +531,7 @@ class ListHusker(Husker):
     js = _mapped_operation('js')
     json = _mapped_operation('json')
     sub = _mapped_operation('sub')
-    raw = _mapped_operation('raw', cls=list)
+    raw = _mapped_property('raw', cls=list)
 
     def map(self, function):
         return [function(element.raw) for element in self]
@@ -559,6 +541,13 @@ class ListHusker(Husker):
 
     def then(self, function):
         return [function(element) for element in self]
+
+    def filter(self, function):
+        return ListHusker(
+            element
+            for element in self
+            if function(element)
+        )
 
     def __str__(self):
         return repr(self.value)
