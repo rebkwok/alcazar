@@ -253,6 +253,11 @@ class Husker(Selector):
         else:
             return NULL_HUSKER
 
+    @property
+    def raw(self):
+        # In the default case, return .value, but some subclasses override this
+        return self.value
+
     def __bool__(self):
         """
         A husker evaluates as truthy iff it holds a value at all, irrespective of what that value's truthiness is.
@@ -297,13 +302,13 @@ class ElementHusker(Husker):
     def __len__(self):
         return len(self.value)
 
-    def __getitem__(self, item):
-        value = self.get(item)
-        if value is None:
-            raise KeyError(item)
-        return value
+    # def __getitem__(self, item):
+    #     value = self.get(item)
+    #     if value is None:
+    #         raise KeyError(item)
+    #     return value
 
-    def get(self, item, default=None):
+    def attrib(self, item, default=None):
         value = self._ensure_decoded(self.value.get(item, default))
         if value is None:
             return NULL_HUSKER
@@ -531,6 +536,7 @@ class ListHusker(Husker):
     js = _mapped_operation('js')
     json = _mapped_operation('json')
     sub = _mapped_operation('sub')
+    attrib = _mapped_operation('attrib')
     raw = _mapped_property('raw', cls=list)
 
     def map(self, function):
@@ -548,6 +554,10 @@ class ListHusker(Husker):
             for element in self
             if function(element)
         )
+
+    @property
+    def raw(self):
+        return [element.raw for element in self.value]
 
     def __str__(self):
         return repr(self.value)

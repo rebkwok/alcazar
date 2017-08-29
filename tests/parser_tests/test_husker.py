@@ -61,7 +61,7 @@ class SinaiPeninsulaTest(HtmlHuskerTest, AlcazarTest):
 
     def test_language_names(self):
         language_names = {
-            language.get('lang'): language.str
+            language.attrib('lang'): language.str
             for language in (
                 item.one('a')
                 for item in self.husker.one('#p-lang').all('li.interlanguage-link')
@@ -127,14 +127,14 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertFalse(root.selection('./*'))
 
     def test_selection_on_valued_getted_attrib(self):
-        root = self.husker.one('section').get('id')
+        root = self.husker.one('section').attrib('id')
         self.assertEqual(
             ''.join(map(text_type, root.selection(r'[^aeiou]'))),
             'dscrs',
         )
 
     def test_selection_on_null_getted_attrib(self):
-        root = self.husker.one('section').get('missing')
+        root = self.husker.one('section').attrib('missing')
         self.assertEqual(
             ''.join(root.selection(r'[^aeiou]')),
             '',
@@ -157,7 +157,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_selection_on_list(self):
         root = self.husker.all('p')
         self.assertEqual(
-            '+'.join(text_type(p['id']) for p in root.selection(lambda p: p['id'].str.startswith('t'))),
+            '+'.join(text_type(p.attrib('id')) for p in root.selection(lambda p: p.attrib('id').str.startswith('t'))),
             'two+three',
         )
 
@@ -184,14 +184,14 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             root.one('./*')
 
     def test_one_on_valued_getted_attrib(self):
-        root = self.husker.one('section').get('id')
+        root = self.husker.one('section').attrib('id')
         self.assertEqual(
             root.one(r'^.'),
             'd',
         )
 
     def test_one_on_null_getted_attrib(self):
-        root = self.husker.one('section').get('missing')
+        root = self.husker.one('section').attrib('missing')
         with self.assertRaises(HuskerMismatch):
             root.one(r'.')
 
@@ -210,7 +210,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     def test_one_on_list(self):
         root = self.husker.all('p')
         self.assertEqual(
-            root.one(lambda p: p['id'] == 'two').text,
+            root.one(lambda p: p.attrib('id') == 'two').text,
             'It runs.',
         )
 
@@ -598,14 +598,14 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertFalse(self.husker.some('#missing').text)
 
     def test_text_on_valued_getted_attrib(self):
-        root = self.husker.one('section').get('id')
+        root = self.husker.one('section').attrib('id')
         self.assertEqual(
             root,
             'discourse',
         )
 
     def test_text_on_null_getted_attrib(self):
-        root = self.husker.one('section').get('missing')
+        root = self.husker.one('section').attrib('missing')
         self.assertFalse(root)
 
     def test_text_on_valued_text(self):
@@ -637,10 +637,10 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertFalse(self.husker.some('#missing'))
 
     def test_bool_on_valued_attribute(self):
-        self.assertTrue(self.husker.one('#one').get('class'))
+        self.assertTrue(self.husker.one('#one').attrib('class'))
 
     def test_bool_on_null_attribute(self):
-        self.assertFalse(self.husker.one('#one').get('missing'))
+        self.assertFalse(self.husker.one('#one').attrib('missing'))
 
     def test_bool_on_valued_text(self):
         self.assertTrue(self.husker.one('#one').text)
