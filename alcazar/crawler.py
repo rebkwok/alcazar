@@ -20,53 +20,6 @@ from .scraper import Scraper
 #----------------------------------------------------------------------------------------------------------------------------------
 # data structures
 
-class Query(object):
-
-    def __init__(self, request, methods, extras):
-        self.request = request
-        # `methods` is a dict of method pointers, mapping action names (e.g. "parse") to method names (e.g. "parse_details_page").
-        # The name must be that of a method of the crawler instance. The values are strings, not callable objects, so that
-        # scheduler implementations have the possibility of serialising them, storing them to a DB, distributing them across
-        # processes or hosts, etc.
-        self.methods = methods
-        self.extras = extras
-
-    @property
-    def url(self):
-        return self.request.url
-
-    def __repr__(self):
-        return "Query(%r, %r, %r)" % (
-            self.request,
-            self.methods,
-            self.extras,
-        )
-
-
-class Page(object):
-
-    def __init__(self, query, response, husker):
-        self.query = query
-        self.response = response
-        self.husker = husker
-
-    @property
-    def extras(self):
-        return self.query.extras
-
-    @property
-    def url(self):
-        return TextHusker(self.response.url)
-
-    def __getattr__(self, attr):
-        try:
-            return getattr(self.husker, attr)
-        except AttributeError:
-            return super(Page, self).__getattr__(attr)
-
-    def __repr__(self):
-        return "Page(%r)" % (self.query,)
-
 
 class SkipThisPage(Exception):
     pass

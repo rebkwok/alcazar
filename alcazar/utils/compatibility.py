@@ -24,7 +24,7 @@ if PY2:
     import anydbm as dbm
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
     import cPickle as pickle
-    from urlparse import urljoin
+    from urlparse import urljoin, urlparse, ParseResult as UrlParseResult
 
 else:
     text_type = str
@@ -35,7 +35,7 @@ else:
     import dbm
     from http.server import BaseHTTPRequestHandler, HTTPServer
     import pickle
-    from urllib.parse import urljoin
+    from urllib.parse import urljoin, urlparse, ParseResult as UrlParseResult
 
 native_string = str
 
