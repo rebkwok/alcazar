@@ -33,6 +33,9 @@ class Scraper(object):
         )))
         self.cleaner = Cleaner()
 
+    def fetch(self, *args, **kwargs):
+        return self.fetcher.fetch(*args, **kwargs)
+
     @classmethod
     def _compile_kwargs(cls, init_kwargs, keys):
         """
