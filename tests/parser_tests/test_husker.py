@@ -20,7 +20,7 @@ class HtmlHuskerTest(HtmlFixture):
 
     def setUp(self):
         super(HtmlHuskerTest, self).setUp()
-        self.husker = ElementHusker(self.html)
+        self.husker = ElementHusker(self.html, is_full_document=True)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -660,5 +660,27 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
     # def test_iter_on_valued_list(self):
     #     self.assertEqual(
     #         '/'.join(elem.text for elem in self.husker.all
+
+    def test_absolute_xpath_on_root(self):
+        self.assertEqual(self.husker.one('/html/head/title/text()'), 'Comprehensive Test')
+
+    def unprefixed_xpath_on_root(self):
+        self.assertEqual(self.husker.one('title/text()'), 'Comprehensive Test')
+
+    def test_absolute_xpath_on_internal_node(self):
+        node = self.husker.one('section')
+        self.assertEqual(node.one('/p[@id="one"]/@class'), 'discourse')
+
+    def test_double_slash_xpath_on_internal_node(self):
+        node = self.husker.one('tr[@id="first-row"]')
+        self.assertEqual(node.one('//th/text()'), 'One')
+
+    def test_unprefixed_xpath_on_internal_node(self):
+        node = self.husker.one('tr[@id="first-row"]')
+        self.assertEqual(node.one('th/text()'), 'One')
+
+    def test_absolute_xpath_cant_break_out_of_subtree(self):
+        node = self.husker.one('table')
+        self.assertFalse(node.some('//section'))
 
 #----------------------------------------------------------------------------------------------------------------------------------

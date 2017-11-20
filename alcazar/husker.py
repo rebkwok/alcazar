@@ -75,7 +75,7 @@ class Selector(object):
     def one(self, *spec):
         selected = self.selection(*spec)
         if len(selected) == 0:
-            raise HuskerMismatch('%s found no matches for %s in %r' % (self.id, self.repr_spec(*spec), str(self)))
+            raise HuskerMismatch('%s found no matches for %s in %s' % (self.id, self.repr_spec(*spec), self.repr_value()))
         elif len(selected) > 1:
             raise HuskerNotUnique('%s expected 1 match for %s, found %d' % (self.id, self.repr_spec(*spec), len(selected)))
         else:
@@ -277,6 +277,9 @@ class Husker(Selector):
         else:
             return repr(spec)
 
+    def repr_value(self):
+        return repr(self.text.value)
+
     def __str__(self):
         return self.text.value
 
@@ -326,9 +329,10 @@ NULL_HUSKER = NullHusker()
 
 class ElementHusker(Husker):
 
-    def __init__(self, value):
+    def __init__(self, value, is_full_document=False):
         assert value is not None
         super(ElementHusker, self).__init__(value)
+        self.is_full_document = is_full_document
 
     def __iter__(self):
         return iter(self.value)
@@ -351,8 +355,7 @@ class ElementHusker(Husker):
         return ListHusker(map(ElementHusker, self.value))
 
     def selection(self, path):
-        is_xpath = '/' in path or path == '.'
-        xpath = path if is_xpath else self._css_path_to_xpath(path)
+        xpath = self._compile_xpath(path)
         selected = ET.XPath(
             xpath,
             # you can use regexes in your paths, e.g. '//a[re:test(text(),"reg(?:ular)?","i")]'
@@ -362,6 +365,19 @@ class ElementHusker(Husker):
             husk(self._ensure_decoded(v))
             for v in selected
         )
+
+    def _compile_xpath(self, path):
+        if re.search(r'(?:^\.|/|@|^\w+$)', path):
+            return re.sub(
+                r'^(\.?)(/{,2})',
+                lambda m: '%s%s' % (
+                    m.group(1) if self.is_full_document else '.',
+                    m.group(2) or '//',
+                ),
+                path
+            )
+        else:
+            return self._css_path_to_xpath(path)
 
     @staticmethod
     def _ensure_decoded(value):
@@ -415,7 +431,14 @@ class ElementHusker(Husker):
         detach_node(self.value, reattach_tail=reattach_tail)
 
     def repr_spec(self, path):
-        return "'%s'" % path
+        xpath = self._compile_xpath(path)
+        if path == xpath:
+            return "'%s'" % path
+        else:
+            return "'%s' (compiled to '%s')" % (path, xpath)
+
+    def repr_value(self):
+        return 'HTML:\n' + self.html_source()
 
     def html_source(self):
         return ET.tostring(

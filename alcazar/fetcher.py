@@ -89,7 +89,10 @@ class Fetcher(object):
             ),
             errors=encoding_errors or self.encoding_errors,
         )
-        husker = ElementHusker(parse_html_etree(html_string))
+        husker = ElementHusker(
+            parse_html_etree(html_string),
+            is_full_document=True,
+        )
         return Page(query, response, husker)
 
     def xml_page(self, query, response):
