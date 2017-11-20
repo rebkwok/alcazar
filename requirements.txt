@@ -1,2 +1,4 @@
-lxml>=4
-requests>=2
+lxml >= 3
+cssselect >= 1.0
+requests >= 2
+urllib3 >= 1.17
