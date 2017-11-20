@@ -22,8 +22,6 @@ class Scraper(Cleaner, Fetcher):
     id = None
     cache_id = None
 
-    refresh_interval = timedelta(days=1)
-
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             if hasattr(self, key):
