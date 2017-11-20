@@ -10,11 +10,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __version__ = '0.1'
 
 # alcazar
-from .catalogcrawler import CatalogCrawler
-from .crawler import Crawler
 from .fetcher import Fetcher
 from .http import HttpClient
-from .husker import Husker
+from .husker import Husker, HuskerError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique
 from .scraper import Scraper
 
 #----------------------------------------------------------------------------------------------------------------------------------
