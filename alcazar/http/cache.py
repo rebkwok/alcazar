@@ -21,6 +21,10 @@ from time import time
 
 # 3rd parties
 import requests
+try:
+    from requests.packages import urllib3
+except ImportError:
+    import urllib3
 
 # alcazar
 from ..utils.compatibility import pickle, text_type
@@ -293,7 +297,7 @@ class FlatFileStorage(object):
 
     def load(self, key, response):
         file_path = self._file_path(key)
-        response.raw = requests.packages.urllib3.HTTPResponse(
+        response.raw = urllib3.HTTPResponse(
             # The data that we write to disk is pre-decoding, which is good because it means in most cases we can have a gzipped
             # cache without expanding CPU cycles for it. However it means that in order to provide the user with decoded data, we
             # need to recreate an HTTPResponse object, since that's the object doing the decoding. Trying to pickle that got messy,
