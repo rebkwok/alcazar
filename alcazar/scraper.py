@@ -24,7 +24,7 @@ class Scraper(object):
 
     def __init__(self, **kwargs):
         self.id = kwargs.pop('id', self.id) or self.__class__.__name__
-        self.cache_id = kwargs('cache_id', self.cache_id) or self.id
+        self.cache_id = kwargs.pop('cache_id', self.cache_id) or self.id
         self.fetcher = Fetcher(**self._compile_kwargs(kwargs, (
             'max_cache_life',
             'cache_root_path',
