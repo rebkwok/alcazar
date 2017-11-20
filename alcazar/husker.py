@@ -24,6 +24,7 @@ except ImportError:
 # alcazar
 from .exceptions import ScraperError
 from .utils.compatibility import PY2, bytes_type, text_type
+from .utils.etree import detach_node
 from .utils.jsonutils import lenient_json_loads, strip_js_comments
 from .utils.text import normalize_spaces
 
@@ -303,18 +304,22 @@ class ElementHusker(Husker):
     def __len__(self):
         return len(self.value)
 
-    # def __getitem__(self, item):
-    #     value = self.get(item)
-    #     if value is None:
-    #         raise KeyError(item)
-    #     return value
-
-    def attrib(self, item, default=None):
-        value = self._ensure_decoded(self.value.get(item, default))
+    def __getitem__(self, item):
+        value = self.value.attrib[item]
         if value is None:
             return NULL_HUSKER
         else:
             return TextHusker(value)
+
+    def attrib(self, item, default=None):
+        try:
+            return self[item]
+        except KeyError:
+            return default
+
+    @property
+    def children(self):
+        return ListHusker(map(ElementHusker, self.value))
 
     def selection(self, path):
         is_xpath = '/' in path or path == '.'
@@ -377,10 +382,13 @@ class ElementHusker(Husker):
             js = strip_js_comments(js)
         return TextHusker(js)
 
+    def detach(self, reattach_tail=True):
+        detach_node(self.value, reattach_tail=reattach_tail)
+
     def repr_spec(self, path):
         return "'%s'" % path
 
-    def __str__(self):
+    def html_source(self):
         return ET.tostring(
             self.value,
             pretty_print=True,
