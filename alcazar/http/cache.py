@@ -45,7 +45,7 @@ class CacheAdapterMixin(object):
     Mixin for the AlcazarHttpClient that adds caching capabilities.
     """
 
-    def __init__(self, max_cache_life=None, **kwargs):
+    def __init__(self, max_cache_life=30*24*60*60, **kwargs):
         self.cache, rest = self._build_cache_from_kwargs(**kwargs)
         super(CacheAdapterMixin, self).__init__(**rest)
         self.max_cache_life = max_cache_life

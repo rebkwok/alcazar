@@ -21,9 +21,9 @@ from .log import LogEntry, LoggingAdapterMixin
 
 class AdapterBase(object):
 
-    def __init__(self, **kwargs):
-        self.timeout = kwargs.pop('timeout', None)
+    def __init__(self, timeout=30, **kwargs):
         super(AdapterBase, self).__init__(**kwargs)
+        self.timeout = timeout
 
     def send(self, prepared_request, **kwargs):
         kwargs.setdefault('timeout', self.timeout)
@@ -54,12 +54,12 @@ class AlcazarSession(requests.Session):
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, headers={}, **kwargs):
         super(AlcazarSession, self).__init__()
-        self.headers.update(CaseInsensitiveDict(
-            self.default_headers,
-            **kwargs.pop('headers', {})
-        ))
+        headers = CaseInsensitiveDict(self.default_headers, **headers)
+        if 'user_agent' in kwargs:
+            headers['User-Agent'] = kwargs.pop('user_agent')
+        self.headers.update(headers)
         adapter = AlcazarHttpAdapter(**kwargs)
         self.mount('http://', adapter)
         self.mount('https://', adapter)

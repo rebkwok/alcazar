@@ -24,23 +24,11 @@ from .utils.compatibility import urljoin
 
 class Fetcher(object):
 
-    http_max_cache_life = 30*24*60*60
-    http_cache_root_path = None
-    http_timeout = 30
-    http_user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0'
-
     html_encoding = 'UTF-8'
     html_encoding_errors = 'strict'
 
-    def __init__(self, http=None):
-        self.http = http if http is not None else HttpClient(
-            max_cache_life=self.http_max_cache_life,
-            cache_root_path=self.http_cache_root_path,
-            timeout=self.http_timeout,
-            headers={
-                'User-Agent': self.http_user_agent,
-            },
-        )
+    def __init__(self, http=None, user_agent=None, **kwargs):
+        self.http = http if http is not None else HttpClient(**kwargs)
 
     def compile_request(self, request, referer=None):
         if not isinstance(request, requests.Request):

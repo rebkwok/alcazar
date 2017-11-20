@@ -123,12 +123,6 @@ class HeadersTests(object):
             response.json(),
         )
 
-    def test_default_user_agent_header(self):
-        self.assertIn(
-            'Alcazar',
-            self.fetch().json().get('User-Agent', ''),
-        )
-
     def test_default_accept_encoding_header(self):
         self.assertIn(
             'gzip',
@@ -144,6 +138,19 @@ class HeadersTests(object):
             # FIXME we don't know it's not the server normalising the header here
             response.json().get('X-Alcazar-Test', ''),
         )
+
+    def test_default_user_agent_header(self):
+        self.assertIn(
+            'Alcazar',
+            self.fetch().json().get('User-Agent', ''),
+        )
+
+    def test_can_set_user_agent(self):
+        with HttpClient(user_agent='Shabang 3.4', logger=None) as client:
+            self.assertEqual(
+                'Shabang 3.4',
+                self.fetch(client=client).json().get('User-Agent', ''),
+            )
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
