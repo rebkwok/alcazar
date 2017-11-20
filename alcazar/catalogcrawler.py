@@ -7,8 +7,8 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-# 3rd parties
-from record import Record, nullable
+# standards
+from collections import namedtuple
 
 # alcazar
 from .crawler import Crawler, Query
@@ -17,10 +17,11 @@ from .utils.compatibility import text_type
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class CatalogResultList(Record):
-    items = ListHusker
-    expected_total_items = nullable(int)
-    next_page = nullable(text_type)
+CatalogResultList = namedtuple('CatalogResultList', (
+    'items',
+    'expected_total_items',
+    'next_page',
+))
 
 class FewerItemsThanExpected(Exception):
     pass
