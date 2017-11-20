@@ -292,6 +292,38 @@ class Husker(Selector):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
+class NullHusker(Husker):
+
+    def __init__(self):
+        super(NullHusker, self).__init__(None)
+
+    def selection(self, *spec_ignored):
+        return EMPTY_LIST_HUSKER
+
+    @property
+    def text(self):
+        return NULL_HUSKER
+
+    @property
+    def multiline(self):
+        return NULL_HUSKER
+
+    def map(self, function):
+        return None
+
+    def map_const(self, value):
+        return None
+
+    def then(self, function):
+        return None
+
+    def __str__(self):
+        return '<Null>'
+
+NULL_HUSKER = NullHusker()
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
 class ElementHusker(Husker):
 
     def __init__(self, value):
@@ -305,13 +337,10 @@ class ElementHusker(Husker):
         return len(self.value)
 
     def __getitem__(self, item):
-        value = self.value.attrib[item]
-        if value is None:
-            return NULL_HUSKER
-        else:
-            return TextHusker(value)
+        value = self.value.attrib[item] # will raise KeyError
+        return TextHusker(self._ensure_decoded(value))
 
-    def attrib(self, item, default=None):
+    def attrib(self, item, default=NULL_HUSKER):
         try:
             return self[item]
         except KeyError:
@@ -572,38 +601,6 @@ class ListHusker(Husker):
         return repr(self.value)
 
 EMPTY_LIST_HUSKER = ListHusker([])
-
-#----------------------------------------------------------------------------------------------------------------------------------
-
-class NullHusker(Husker):
-
-    def __init__(self):
-        super(NullHusker, self).__init__(None)
-
-    def selection(self, *spec_ignored):
-        return EMPTY_LIST_HUSKER
-
-    @property
-    def text(self):
-        return NULL_HUSKER
-
-    @property
-    def multiline(self):
-        return NULL_HUSKER
-
-    def map(self, function):
-        return None
-
-    def map_const(self, value):
-        return None
-
-    def then(self, function):
-        return None
-
-    def __str__(self):
-        return '<Null>'
-
-NULL_HUSKER = NullHusker()
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # public utils
