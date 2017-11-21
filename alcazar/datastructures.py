@@ -71,6 +71,9 @@ class Page(object):
             relative_url = text_type(relative_url)
         return join_urls(self.url, relative_url)
 
+    def __call__(self, *args, **kwargs):
+        return self.husker(*args, **kwargs)
+
     def __getattr__(self, attr):
         try:
             return getattr(self.husker, attr)
