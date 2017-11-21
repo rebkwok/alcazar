@@ -142,7 +142,7 @@ def main():
     logging.info("Wrote %s", output_csv_file)
     with open(output_csv_file, 'rb') as file_in:
         hexdigest = sha256(file_in.read()).hexdigest()
-    if hexdigest != 'be32afe31fb9ddda6fcbfbf40113843b5d416db6a50adbb721f663236d42e332':
+    if hexdigest != '14946129ab82eeae2c641df3029c02365998302012d9e2ccb739f421728f556d':
         raise Exception(hexdigest)
 
 if __name__ == '__main__':
