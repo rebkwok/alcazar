@@ -9,11 +9,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # standards
 from datetime import timedelta
+import logging
 from os import path
+from time import sleep
+from traceback import format_exc
+from types import GeneratorType
 
 # alcazar
 from .cleaner import Cleaner
 from .datastructures import Query
+from .exceptions import ScraperError
 from .fetcher import Fetcher
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -43,13 +48,28 @@ class Scraper(object):
         # You'll most certainly want to override this
         return page
 
-    def scrape(self, request, parse=None, fetch=None, **extras):
+    def scrape(self, request, parse=None, fetch=None, num_attempts=5, **extras):
         query = self.compile_query(request, **extras)
         fetch = fetch or self.fetch
         parse = parse or self.parse
-        # TODO retry on error
-        page = fetch(query)
-        return parse(page, **query.extras)
+        for attempt_i in range(num_attempts):
+            try:
+                # NB it's up to the Fetcher implementation to translate this attempt_i kwarg into config options that disable the
+                # cache
+                page = fetch(query, attempt_i=attempt_i)
+                payload = parse(page, **query.extras)
+                if isinstance(payload, GeneratorType):
+                    # consume the generator here so that we can catch any exceptions it might raise
+                    payload = tuple(payload)
+                return payload
+            except ScraperError as error:
+                if attempt_i+1 < num_attempts:
+                    delay = 5 ** attempt_i
+                    logging.warning(format_exc())
+                    logging.warning("sleeping %d sec%s", delay, '' if delay == 1 else 's')
+                    sleep(delay)
+                else:
+                    raise
 
     def compile_query(self, request, **kwargs):
         # 2017-11-20 - I expect crawler.compile_query will override this to parse its own methods (fetch, parse, save)

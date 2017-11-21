@@ -41,6 +41,8 @@ class Fetcher(object):
         self.encoding_errors = encoding_errors
 
     def fetch_response(self, query, **kwargs):
+        if kwargs.pop('attempt_i', 0) > 0:
+            kwargs.setdefault('force_cache_stale', True)
         return self.http.request(query.request, **kwargs)
 
     def compile_request(self, request):
