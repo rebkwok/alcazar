@@ -14,15 +14,9 @@ from contextlib import contextmanager
 import requests
 
 # alcazar
+from .exceptions import SkipThisPage
 from .husker import TextHusker
 from .scraper import Scraper
-
-#----------------------------------------------------------------------------------------------------------------------------------
-# data structures
-
-
-class SkipThisPage(Exception):
-    pass
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # scheduler

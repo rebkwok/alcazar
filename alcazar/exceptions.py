@@ -17,7 +17,12 @@ from types import GeneratorType
 #----------------------------------------------------------------------------------------------------------------------------------
 # exception classes
 
-class ScraperError(Exception):
+class AlcazarException(Exception):
+
+class ScraperError(AlcazarException):
+    pass
+
+class SkipThisPage(AlcazarException):
     pass
 
 #----------------------------------------------------------------------------------------------------------------------------------
