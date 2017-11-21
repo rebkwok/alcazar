@@ -98,7 +98,10 @@ class Fetcher(object):
     def xml_page(self, query, response):
         # NB we let lxml do the character decoding
         xml_bytes = response.content
-        husker = ElementHusker(parse_xml_etree(xml_bytes))
+        husker = ElementHusker(
+            parse_xml_etree(xml_bytes),
+            is_full_document=True,
+        )
         return Page(query, response, husker)
 
 #----------------------------------------------------------------------------------------------------------------------------------
