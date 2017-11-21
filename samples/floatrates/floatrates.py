@@ -8,7 +8,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
-from decimal import Decimal
 from os import path
 
 # alcazar
@@ -20,15 +19,15 @@ def main():
     scraper = alcazar.Scraper(
         cache_root_path = path.join(path.dirname(__file__), 'cache'),
     )
-    document = scraper.fetch('http://www.floatrates.com/daily/USD.xml')
-    item = document(
-        '/channel'
-        + '/item[baseCurrency="USD" and targetCurrency="AUD"]'
-        + '/exchangeRate'
+    rate = scraper.scrape(
+        'http://www.floatrates.com/daily/USD.xml',
+        lambda page: page.one(
+            '/channel'
+            '/item[baseCurrency="USD" and targetCurrency="AUD"]'
+            '/exchangeRate'
+        ).float,
     )
-    rate = item.text.map(Decimal)
-    floatrate = str(rate.quantize(Decimal('0.0001')))
-    assert floatrate == '1.3229', repr(floatrate)
+    assert '%.4f' % rate == '1.3238', repr(rate)
 
 if __name__ == '__main__':
     main()
