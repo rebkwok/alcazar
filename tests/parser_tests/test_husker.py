@@ -683,4 +683,8 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         node = self.husker.one('table')
         self.assertFalse(node.some('//section'))
 
+    def test_css_path_starting_with_dot(self):
+        node = self.husker.one('section')
+        self.assertEqual(3, len(node.all('.discourse')))
+
 #----------------------------------------------------------------------------------------------------------------------------------

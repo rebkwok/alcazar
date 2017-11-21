@@ -367,9 +367,9 @@ class ElementHusker(Husker):
         )
 
     def _compile_xpath(self, path):
-        if re.search(r'(?:^\.|/|@|^\w+$)', path):
+        if re.search(r'(?:^\.(?=/)|/|@|^\w+$)', path):
             return re.sub(
-                r'^(\.?)(/{,2})',
+                r'^((?:\.(?=/))?)(/{,2})',
                 lambda m: '%s%s' % (
                     m.group(1) if self.is_full_document else '.',
                     m.group(2) or '//',
@@ -438,7 +438,7 @@ class ElementHusker(Husker):
             return "'%s' (compiled to '%s')" % (path, xpath)
 
     def repr_value(self):
-        return 'HTML:\n' + self.html_source()
+        return 'etree:\n' + self.html_source()
 
     def html_source(self):
         return ET.tostring(
