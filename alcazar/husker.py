@@ -240,13 +240,10 @@ class Husker(Selector):
     def datetime(self, fmt):
         return datetime.strptime(self.str, fmt)
 
-    def map(self, function):
+    def map_raw(self, function):
         return function(self.raw)
 
-    def map_const(self, value):
-        return value
-
-    def then(self, function):
+    def map(self, function):
         return function(self)
 
     def filter(self, function):
@@ -311,13 +308,10 @@ class NullHusker(Husker):
     def multiline(self):
         return NULL_HUSKER
 
+    def map_raw(self, function):
+        return None
+
     def map(self, function):
-        return None
-
-    def map_const(self, value):
-        return None
-
-    def then(self, function):
         return None
 
     def __str__(self):
@@ -600,13 +594,10 @@ class ListHusker(Husker):
     attrib = _mapped_operation('attrib')
     raw = _mapped_property('raw', cls=list)
 
-    def map(self, function):
+    def map_raw(self, function):
         return [function(element.raw) for element in self]
 
-    def map_const(self, value):
-        return value
-
-    def then(self, function):
+    def map(self, function):
         return [function(element) for element in self]
 
     def filter(self, function):

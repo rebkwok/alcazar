@@ -38,9 +38,9 @@ class TrainTimesScraper(alcazar.Scraper):
         for row in page('#oft').all('tbody tr.mtx'):
             yield self.Train(
                 dep_time=row('.dep').datetime('%H:%M').time(),
-                dep_platform=row.some('.from .ctf-plat').then(self.parse_platform),
+                dep_platform=row.some('.from .ctf-plat').map(self.parse_platform),
                 arr_time=row('.arr').datetime('%H:%M').time(),
-                arr_platform=row.some('.to .ctf-plat').then(self.parse_platform),
+                arr_platform=row.some('.to .ctf-plat').map(self.parse_platform),
             )
 
     def parse_platform(self, el):
