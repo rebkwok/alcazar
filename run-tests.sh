@@ -39,7 +39,7 @@ for v in ${supported_versions[@]}; do
             python --version
             exit 3
         fi
-        (pip install -r requirements.txt || exit "$?") \
+        (pip install -e . || exit "$?") \
             | grep -v '^\(Cleaning up\|Requirement already satisfied\)'
 
         # run the tests

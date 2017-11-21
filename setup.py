@@ -2,9 +2,14 @@
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
+# 2+3 compatibility
 from __future__ import unicode_literals
 
+# standards
 from distutils.core import setup
+
+# 3rd parties
+from pip.req import parse_requirements
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -16,6 +21,12 @@ setup(
     author_email='alcazar@saintamh.org',
     url='https://saintamh.org/code/alcazar/',
     packages=['alcazar'],
+    install_requires=[
+        'lxml>=3',
+        'cssselect>=1.0',
+        'requests>=2',
+        'urllib3>=1.17',
+    ],
 )
 
 #----------------------------------------------------------------------------------------------------------------------------------
