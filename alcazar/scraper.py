@@ -28,6 +28,8 @@ class Scraper(object):
         self.cache_id = kwargs.pop('cache_id', self.cache_id) or self.id
         self.fetcher = Fetcher(**_fetcher_kwargs(kwargs, self))
         self.cleaner = Cleaner()
+        if kwargs:
+            raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
 
     def request(self, *args, **kwargs):
         # A convenience shortcut. The list of parameters, and the returned type, are up to the fetcher.
