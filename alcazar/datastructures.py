@@ -7,6 +7,9 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+# standards
+import re
+
 # alcazar
 from .utils.compatibility import string_types, text_type
 from .utils.urls import join_urls
@@ -67,8 +70,11 @@ class Page(object):
         return self.response.url
 
     def link(self, relative_url):
+        if not relative_url:
+            return relative_url
         if not isinstance(relative_url, string_types):
             relative_url = text_type(relative_url)
+        relative_url = re.sub(r'#.*', '', relative_url)
         return join_urls(self.url, relative_url)
 
     def __call__(self, *args, **kwargs):

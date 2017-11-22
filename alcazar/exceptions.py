@@ -18,6 +18,7 @@ from types import GeneratorType
 # exception classes
 
 class AlcazarException(Exception):
+    pass
 
 class ScraperError(AlcazarException):
     pass
