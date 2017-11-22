@@ -24,7 +24,15 @@ if PY2:
     import anydbm as dbm
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
     import cPickle as pickle
-    from urlparse import urljoin, urlparse, ParseResult as UrlParseResult
+    from urllib import (
+        quote as urlquote,
+        quote_plus as urlquote_plus,
+    )
+    from urlparse import (
+        ParseResult as UrlParseResult,
+        urljoin,
+        urlparse,
+    )
 
 else:
     text_type = str
@@ -35,7 +43,13 @@ else:
     import dbm
     from http.server import BaseHTTPRequestHandler, HTTPServer
     import pickle
-    from urllib.parse import urljoin, urlparse, ParseResult as UrlParseResult
+    from urllib.parse import (
+        ParseResult as UrlParseResult,
+        quote as urlquote,
+        quote_plus as urlquote_plus,
+        urljoin,
+        urlparse,
+    )
 
 native_string = str
 

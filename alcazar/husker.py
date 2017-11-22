@@ -93,14 +93,14 @@ class Selector(object):
     def first(self, *spec):
         selected = self.selection(*spec)
         if len(selected) == 0:
-            raise HuskerMismatch('%s found no matches for %s' % (self.id, self.repr_spec(*spec)))
+            raise HuskerMismatch('%s found no matches for %s in %s' % (self.id, self.repr_spec(*spec), self.repr_value()))
         else:
             return selected[0]
 
     def last(self, *spec):
         selected = self.selection(*spec)
         if len(selected) == 0:
-            raise HuskerMismatch('%s found no matches for %s' % (self.id, self.repr_spec(*spec)))
+            raise HuskerMismatch('%s found no matches for %s in %s' % (self.id, self.repr_spec(*spec), self.repr_value()))
         else:
             return selected[-1]
 
@@ -114,7 +114,7 @@ class Selector(object):
     def all(self, *spec):
         selected = self.selection(*spec)
         if not selected:
-            raise HuskerMismatch('%s found no matches for %s' % (self.id, self.repr_spec(*spec)))
+            raise HuskerMismatch('%s found no matches for %s in %s' % (self.id, self.repr_spec(*spec), self.repr_value()))
         return selected
 
     def one_of(self, *all_specs):
@@ -406,11 +406,11 @@ class ElementHusker(Husker):
                 yield "\n\n"
             if node.tail:
                 yield node.tail if inside_pre else normalize_spaces(node.tail)
-        return TextHusker(re.sub(
+        return re.sub(
             r'\s+',
             lambda m: "\n\n" if "\n\n" in m.group() else "\n" if "\n" in m.group() else " ",
             ''.join(visit(self.value)),
-        ))
+        ).strip()
 
     def js(self, strip_comments=True):
         js = "\n".join(
@@ -593,6 +593,10 @@ class ListHusker(Husker):
     sub = _mapped_operation('sub')
     attrib = _mapped_operation('attrib')
     raw = _mapped_property('raw', cls=list)
+    str = _mapped_property('str', cls=list)
+    int = _mapped_property('int', cls=list)
+    float = _mapped_property('float', cls=list)
+    datetime = _mapped_operation('datetime', cls=list)
 
     def map_raw(self, function):
         return [function(element.raw) for element in self]
