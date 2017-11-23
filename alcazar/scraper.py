@@ -53,6 +53,7 @@ class Scraper(object):
         fetch = fetch or self.fetch
         parse = parse or self.parse
         for attempt_i in range(num_attempts):
+            delay = None
             try:
                 # NB it's up to the Fetcher implementation to translate this attempt_i kwarg into config options that disable the
                 # cache
@@ -67,9 +68,11 @@ class Scraper(object):
                     delay = 5 ** attempt_i
                     logging.warning(format_exc())
                     logging.warning("sleeping %d sec%s", delay, '' if delay == 1 else 's')
-                    sleep(delay)
                 else:
                     raise
+            # Sleep outside the `except` handler so that a KeyboardInterrupt won't be chained with the ScraperError, which just
+            # obfuscates the output
+            sleep(delay)
 
     def compile_query(self, request, **kwargs):
         # 2017-11-20 - I expect crawler.compile_query will override this to parse its own methods (fetch, parse, save)
