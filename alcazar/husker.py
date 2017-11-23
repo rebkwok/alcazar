@@ -431,8 +431,20 @@ class ElementHusker(Husker):
         else:
             return "'%s' (compiled to '%s')" % (path, xpath)
 
-    def repr_value(self):
-        return 'etree:\n' + self.html_source()
+    def repr_value(self, max_width=200, max_lines=100, min_trim=10):
+        source_text = self.html_source()
+        source_text = re.sub(r'(?<=.{%d}).+' % max_width, '\u2026', source_text)
+        lines = source_text.split('\n')
+        if len(lines) >= max_lines + min_trim:
+            lines = lines[:max_lines//2] \
+                + ['', '    [\u2026 %d lines snipped \u2026]' % (len(lines) - max_lines), ''] \
+                + lines[-max_lines//2:]
+            source_text = '\n'.join(lines)
+        return 'etree:\n\n%s\n%s\n%s\n' % (
+            '-' * max_width,
+            source_text.strip(),
+            '-' * max_width,
+        )
 
     def html_source(self):
         return ET.tostring(
