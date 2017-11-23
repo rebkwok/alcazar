@@ -98,7 +98,7 @@ class CatalogParser(object):
 
     def husk_no_results_apology(self, page):
         if self.no_results_apology_path is not None:
-            return page(self.no_results_apology_path)
+            return page.some(self.no_results_apology_path)
 
     @contextmanager
     def seen_items_counter(self):
