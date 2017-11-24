@@ -5,6 +5,12 @@
   </head>
   <body>
     <p id="empty"></p>
+    <p id="values">
+      <p id="int" value="42">24</p>
+      <p id="float" value="4.2">2.4</p>
+      <p id="datetime" value="1992-12-25">Dec 25 1992</p>
+      <p id="json" value="[42]">[24]</p>
+    </p>
     <table>
       <tr id="first-row">
         <th>One</th>
@@ -20,8 +26,9 @@
       </tr>
     </table>
     <section id="discourse">
-      <p id="one" class="discourse">It begins.</p>
-      <p id="two" class="discourse greater-than-one">It runs.</p>
-      <p id="three" class="discourse greater-than-one">It ends.</p>
+      <p id="one" num="1" class="discourse">It begins.</p>
+      <p id="two" num="2" class="discourse greater-than-one">It runs.</p>
+      <p id="three" num="3" class="discourse greater-than-one">It ends.</p>
+    <!-- NB section not closed -->
   </body>
 </html>

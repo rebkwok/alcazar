@@ -7,6 +7,9 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+# standards
+from datetime import datetime
+
 # alcazar
 from alcazar.husker import ElementHusker, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, TextHusker
 from alcazar.utils.compatibility import PY2, text_type
@@ -656,6 +659,153 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
     def test_bool_on_empty_list(self):
         self.assertFalse(self.husker.selection('missing'))
+
+
+    def test_str_on_valued_element(self):
+        self.assertEqual(self.husker('#int').str, '24')
+
+    def test_str_on_null_element(self):
+        self.assertIsNone(self.husker.some('#missing').str)
+
+    def test_str_on_valued_attribute(self):
+        self.assertEqual(self.husker('#int')['value'].str, '42')
+
+    def test_str_on_null_attribute(self):
+        self.assertIsNone(self.husker.one('#one').attrib('missing').str)
+
+    def test_str_on_valued_text(self):
+        self.assertEqual(self.husker.one('#int').text.str, '24')
+
+    def test_str_on_valued_but_empty_text(self):
+        self.assertEqual(self.husker.one('#empty').str, '')
+
+    def test_str_on_null_text(self):
+        self.assertIsNone(self.husker.some('#missing').text.str)
+
+    def test_str_on_valued_list(self):
+        self.assertEqual(self.husker.all('#int').str, ['24'])
+
+    def test_str_on_empty_list(self):
+        self.assertEqual(self.husker.selection('missing').str, [])
+
+
+    def test_json_on_valued_element(self):
+        self.assertEqual(self.husker('#json').json(), [24])
+
+    def test_json_on_null_element(self):
+        self.assertIsNone(self.husker.some('#missing').json())
+
+    def test_json_on_valued_attribute(self):
+        self.assertEqual(self.husker('#json')['value'].json(), [42])
+
+    def test_json_on_null_attribute(self):
+        self.assertIsNone(self.husker.one('#one').attrib('missing').json())
+
+    def test_json_on_valued_text(self):
+        self.assertEqual(self.husker.one('#json').text.json(), [24])
+
+    def test_json_on_valued_but_empty_text(self):
+        with self.assertRaises(ValueError):
+            self.husker.one('#empty').json()
+
+    def test_json_on_null_text(self):
+        self.assertIsNone(self.husker.some('#missing').text.json())
+
+    def test_json_on_valued_list(self):
+        self.assertEqual(self.husker.all('#json').json(), [[24]])
+
+    def test_json_on_empty_list(self):
+        self.assertEqual(self.husker.selection('missing').json(), [])
+
+
+    def test_int_on_valued_element(self):
+        self.assertEqual(self.husker('#int').int, 24)
+
+    def test_int_on_null_element(self):
+        self.assertIsNone(self.husker.some('#missing').int)
+
+    def test_int_on_valued_attribute(self):
+        self.assertEqual(self.husker('#int')['value'].int, 42)
+
+    def test_int_on_null_attribute(self):
+        self.assertIsNone(self.husker.one('#one').attrib('missing').int)
+
+    def test_int_on_valued_text(self):
+        self.assertEqual(self.husker.one('#int').text.int, 24)
+
+    def test_int_on_valued_but_empty_text(self):
+        with self.assertRaises(ValueError):
+            self.husker.one('#empty').int
+
+    def test_int_on_null_text(self):
+        self.assertIsNone(self.husker.some('#missing').text.int)
+
+    def test_int_on_valued_list(self):
+        self.assertEqual(self.husker.all('#int').int, [24])
+
+    def test_int_on_empty_list(self):
+        self.assertEqual(self.husker.selection('missing').int, [])
+
+
+    def test_float_on_valued_element(self):
+        self.assertEqual(self.husker('#float').float, 2.4)
+
+    def test_float_on_null_element(self):
+        self.assertIsNone(self.husker.some('#missing').float)
+
+    def test_float_on_valued_attribute(self):
+        self.assertEqual(self.husker('#float')['value'].float, 4.2)
+
+    def test_float_on_null_attribute(self):
+        self.assertIsNone(self.husker.one('#one').attrib('missing').float)
+
+    def test_float_on_valued_text(self):
+        self.assertEqual(self.husker.one('#float').text.float, 2.4)
+
+    def test_float_on_valued_but_empty_text(self):
+        with self.assertRaises(ValueError):
+            self.husker.one('#empty').float
+
+    def test_float_on_null_text(self):
+        self.assertIsNone(self.husker.some('#missing').text.float)
+
+    def test_float_on_valued_list(self):
+        self.assertEqual(self.husker.all('#float').float, [2.4])
+
+    def test_float_on_empty_list(self):
+        self.assertEqual(self.husker.selection('missing').float, [])
+
+
+    def test_datetime_on_valued_element(self):
+        self.assertEqual(self.husker('#datetime').datetime('%b %d %Y'), datetime(1992, 12, 25))
+
+    def test_datetime_on_null_element(self):
+        self.assertIsNone(self.husker.some('#missing').datetime('whatever'))
+
+    def test_datetime_on_valued_attribute(self):
+        self.assertEqual(self.husker('#datetime')['value'].datetime('%Y-%m-%d'), datetime(1992, 12, 25))
+
+    def test_datetime_on_null_attribute(self):
+        self.assertIsNone(self.husker.one('#one').attrib('missing').datetime('whatever'))
+
+    def test_datetime_on_valued_text(self):
+        self.assertEqual(self.husker.one('#datetime').datetime('%b %d %Y'), datetime(1992, 12, 25))
+
+    def test_datetime_on_valued_but_empty_text(self):
+        self.assertEqual(self.husker('#empty').datetime(''), datetime(1900, 1, 1))
+
+    def test_datetime_on_null_text(self):
+        self.assertIsNone(self.husker.some('#missing').text.datetime('whatever'))
+
+    def test_datetime_on_valued_list(self):
+        self.assertEqual(
+            self.husker.all('#datetime').datetime('%b %d %Y'),
+            [datetime(1992, 12, 25)],
+        )
+
+    def test_datetime_on_empty_list(self):
+        self.assertEqual(self.husker.selection('missing').datetime('whatever'), [])
+
 
     # def test_iter_on_valued_list(self):
     #     self.assertEqual(

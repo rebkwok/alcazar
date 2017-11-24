@@ -308,6 +308,24 @@ class NullHusker(Husker):
     def multiline(self):
         return NULL_HUSKER
 
+    def json(self):
+        return None
+
+    @property
+    def str(self):
+        return None
+
+    @property
+    def int(self):
+        return None
+
+    @property
+    def float(self):
+        return None
+
+    def datetime(self, fmt):
+        return None
+
     def map_raw(self, function):
         return None
 
