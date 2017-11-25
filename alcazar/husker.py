@@ -526,6 +526,10 @@ class TextHusker(Husker):
     def multiline(self):
         return self
 
+    @property
+    def normalized(self):
+        return TextHusker(normalize_spaces(self.value))
+
     def repr_spec(self, regex, flags=''):
         return "%s%s" % (
             re.sub(r'^u?[\'\"](.*)[\'\"]$', r'/\1/', regex),

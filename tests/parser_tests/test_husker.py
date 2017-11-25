@@ -838,3 +838,22 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertEqual(3, len(node.all('.discourse')))
 
 #----------------------------------------------------------------------------------------------------------------------------------
+
+class TextHuskerTest(AlcazarTest):
+
+    def test_normalized(self):
+        text_str = """
+            This is my text.
+            There are many like it but this one is mine.
+        """
+        text_husker = TextHusker(text_str)
+        self.assertEqual(
+            text_husker.value,
+            text_str,
+        )
+        self.assertEqual(
+            text_husker.normalized.value,
+            "This is my text. There are many like it but this one is mine.",
+        )
+
+#----------------------------------------------------------------------------------------------------------------------------------
