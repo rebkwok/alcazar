@@ -430,6 +430,14 @@ class ElementHusker(Husker):
             ''.join(visit(self.value)),
         ).strip()
 
+    @property
+    def head(self):
+        return TextHusker(self.value.text)
+
+    @property
+    def tail(self):
+        return TextHusker(self.value.tail)
+
     def js(self, strip_comments=True):
         js = "\n".join(
             re.sub('^\s*<!--', '', re.sub('-->\s*$', '', js_text))
