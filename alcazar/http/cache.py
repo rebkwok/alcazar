@@ -60,6 +60,9 @@ class CacheAdapterMixin(object):
         else:
             cache_root_path = kwargs.pop('cache_root_path', None)
             if cache_root_path is not None:
+                cache_id = kwargs.pop('cache_id', None)
+                if cache_id:
+                    cache_root_path = path.join(cache_root_path, cache_id)
                 cache = DiskCache.build(cache_root_path)
             else:
                 cache = NullCache()

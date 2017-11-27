@@ -103,6 +103,7 @@ class Scraper(object):
 FETCHER_KWARGS = (
     'max_cache_life',
     'cache_root_path',
+    'cache_id',
     'timeout',
     'user_agent',
     'html_encoding',
