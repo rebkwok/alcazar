@@ -106,12 +106,18 @@ class CatalogParser(object):
     def seen_items_counter(self):
         counter = Counter()
         yield counter
-        if 'expected_total_items' in counter \
-                and counter['seen_items'] < 0.9*counter['expected_total_items']:
-            raise FewerItemsThanExpected("Expected %d results, found %d" % (
-                page.extras['expected_total_items'],
-                seen_items,
-            ))
+        if 'expected_total_items' in counter:
+            if counter['seen_items'] >= 0.9*counter['expected_total_items']:
+                logging.info(
+                    "Found %d of an expected %d catalog items",
+                    counter['seen_items'],
+                    counter['expected_total_items'],
+                )
+            else:
+                raise FewerItemsThanExpected("Expected %d results, found %d" % (
+                    page.extras['expected_total_items'],
+                    seen_items,
+                ))
 
     def scrape_item(self, page, item, **extras):
         # Override this to e.g. raise SkipThisPage before fetching it
