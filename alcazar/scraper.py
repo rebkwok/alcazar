@@ -16,7 +16,6 @@ from traceback import format_exc
 from types import GeneratorType
 
 # alcazar
-from .cleaner import Cleaner
 from .datastructures import Query
 from .exceptions import ScraperError
 from .fetcher import Fetcher
@@ -29,10 +28,11 @@ class Scraper(object):
     cache_id = None
 
     def __init__(self, **kwargs):
-        self.id = kwargs.pop('id', self.id) or self.__class__.__name__
+        self.id = kwargs.pop('id', self.id)
+        if not self.id and self.__class__.__name__ != 'Scraper':
+            self.id = self.__class__.__name__
         self.cache_id = kwargs.pop('cache_id', self.cache_id) or self.id
         self.fetcher = Fetcher(**_fetcher_kwargs(kwargs, self))
-        self.cleaner = Cleaner()
         if kwargs:
             raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
 
