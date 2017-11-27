@@ -13,7 +13,7 @@ __version__ = '0.1'
 from .catalogparser import CatalogParser
 from .fetcher import Fetcher
 from .http import HttpClient
-from .husker import Husker, HuskerError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique
+from .husker import Husker, HuskerError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, husk
 from .scraper import Scraper
 
 #----------------------------------------------------------------------------------------------------------------------------------
