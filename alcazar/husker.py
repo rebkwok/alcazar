@@ -237,7 +237,10 @@ class Husker(Selector):
     def float(self):
         return float(self.str)
 
-    def datetime(self, fmt):
+    def date(self, fmt='%Y-%m-%d'):
+        return datetime.strptime(self.str, fmt).date()
+
+    def datetime(self, fmt='%Y-%m-%dT%H:%M:%S'):
         return datetime.strptime(self.str, fmt)
 
     def map_raw(self, function):
@@ -321,6 +324,9 @@ class NullHusker(Husker):
 
     @property
     def float(self):
+        return None
+
+    def date(self, fmt):
         return None
 
     def datetime(self, fmt):
@@ -638,6 +644,7 @@ class ListHusker(Husker):
     str = _mapped_property('str', cls=list)
     int = _mapped_property('int', cls=list)
     float = _mapped_property('float', cls=list)
+    date = _mapped_operation('date', cls=list)
     datetime = _mapped_operation('datetime', cls=list)
 
     def map_raw(self, function):

@@ -8,7 +8,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
-from datetime import datetime
+from datetime import date, datetime
 
 # alcazar
 from alcazar.husker import ElementHusker, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, TextHusker
@@ -776,20 +776,57 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertEqual(self.husker.selection('missing').float, [])
 
 
+    def test_date_on_valued_element(self):
+        self.assertEqual(self.husker('#date').date('%b %d %Y'), date(1992, 12, 25))
+
+    def test_date_on_null_element(self):
+        self.assertIsNone(self.husker.some('#missing').date('whatever'))
+
+    def test_date_on_valued_attribute(self):
+        self.assertEqual(self.husker('#date')['value'].date('%Y-%m-%d'), date(1992, 12, 25))
+
+    def test_date_on_valued_attribute_with_default_format(self):
+        self.assertEqual(self.husker('#date')['value'].date(), date(1992, 12, 25))
+
+    def test_date_on_null_attribute(self):
+        self.assertIsNone(self.husker.one('#one').attrib('missing').date('whatever'))
+
+    def test_date_on_valued_text(self):
+        self.assertEqual(self.husker.one('#date').date('%b %d %Y'), date(1992, 12, 25))
+
+    def test_date_on_valued_but_empty_text(self):
+        self.assertEqual(self.husker('#empty').date(''), date(1900, 1, 1))
+
+    def test_date_on_null_text(self):
+        self.assertIsNone(self.husker.some('#missing').text.date('whatever'))
+
+    def test_date_on_valued_list(self):
+        self.assertEqual(
+            self.husker.all('#date').date('%b %d %Y'),
+            [date(1992, 12, 25)],
+        )
+
+    def test_date_on_empty_list(self):
+        self.assertEqual(self.husker.selection('missing').date('whatever'), [])
+
+
     def test_datetime_on_valued_element(self):
-        self.assertEqual(self.husker('#datetime').datetime('%b %d %Y'), datetime(1992, 12, 25))
+        self.assertEqual(self.husker('#datetime').datetime('%b %d %Y %I:%M %p'), datetime(1992, 12, 25, 10, 55, 0))
 
     def test_datetime_on_null_element(self):
         self.assertIsNone(self.husker.some('#missing').datetime('whatever'))
 
     def test_datetime_on_valued_attribute(self):
-        self.assertEqual(self.husker('#datetime')['value'].datetime('%Y-%m-%d'), datetime(1992, 12, 25))
+        self.assertEqual(self.husker('#datetime')['value'].datetime('%Y-%m-%dT%H:%M:%S'), datetime(1992, 12, 25, 10, 55, 0))
+
+    def test_datetime_on_valued_attribute_with_default_format(self):
+        self.assertEqual(self.husker('#datetime')['value'].datetime(), datetime(1992, 12, 25, 10, 55, 0))
 
     def test_datetime_on_null_attribute(self):
         self.assertIsNone(self.husker.one('#one').attrib('missing').datetime('whatever'))
 
     def test_datetime_on_valued_text(self):
-        self.assertEqual(self.husker.one('#datetime').datetime('%b %d %Y'), datetime(1992, 12, 25))
+        self.assertEqual(self.husker.one('#datetime').datetime('%b %d %Y %I:%M %p'), datetime(1992, 12, 25, 10, 55, 0))
 
     def test_datetime_on_valued_but_empty_text(self):
         self.assertEqual(self.husker('#empty').datetime(''), datetime(1900, 1, 1))
@@ -799,8 +836,8 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
     def test_datetime_on_valued_list(self):
         self.assertEqual(
-            self.husker.all('#datetime').datetime('%b %d %Y'),
-            [datetime(1992, 12, 25)],
+            self.husker.all('#datetime').datetime('%b %d %Y %I:%M %p'),
+            [datetime(1992, 12, 25, 10, 55, 0)],
         )
 
     def test_datetime_on_empty_list(self):
