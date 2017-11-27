@@ -41,13 +41,14 @@ class CatalogParser(object):
     no_results_apology_path = NotImplemented
     expected_total_items_path = NotImplemented
     next_page_request_path = NotImplemented
+    item_request_path = './/a/@href'
 
     # In most cases this is the only method you'll need to override. `page` is the item's own page, `item` is whatever
     # `husk_result_items` yields, which by default is the husker for the item in the results list.
     def parse_catalog_item(self, page, item):
         raise NotImplementedError
 
-    def scrape_catalog(self, start_requests):
+    def scrape_catalog(self, start_requests, **extras):
         with self.seen_items_counter() as counter:
             for start_request in start_requests:
                 request = start_request
@@ -55,10 +56,11 @@ class CatalogParser(object):
                     result_list = self.scrape(
                         request,
                         self.parse_result_list,
+                        **extras
                     )
                     for item in result_list.items:
                         try:
-                            yield self.scrape_item(result_list.page, item)
+                            yield self.scrape_item(result_list.page, item, **extras)
                         except SkipThisPage as reason:
                             logging.info("%s -- skipped", reason)
                         counter['seen_items'] += 1
@@ -66,7 +68,7 @@ class CatalogParser(object):
                         counter['expected_total_items'] = result_list.expected_total_items
                     request = result_list.next_page_request
 
-    def parse_result_list(self, page):
+    def parse_result_list(self, page, **extras_unused):
         return CatalogResultList(
             page=page,
             items=tuple(self.husk_result_items(page)),
@@ -111,15 +113,16 @@ class CatalogParser(object):
                 seen_items,
             ))
 
-    def scrape_item(self, page, item):
+    def scrape_item(self, page, item, **extras):
         # Override this to e.g. raise SkipThisPage before fetching it
         return self.scrape(
             page.link(self.husk_item_request(item)),
             self.parse_catalog_item,
             item=item,
+            **extras
         )
 
     def husk_item_request(self, item):
-        return item.all('.//a/@href').dedup().one()
+        return item.all(item_request_path).dedup().one()
 
 #----------------------------------------------------------------------------------------------------------------------------------
