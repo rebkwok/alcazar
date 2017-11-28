@@ -636,6 +636,7 @@ class ListHusker(Husker):
         return operation
 
     text = _mapped_property('text')
+    multiline = _mapped_property('multiline')
     js = _mapped_operation('js')
     json = _mapped_operation('json')
     sub = _mapped_operation('sub')
