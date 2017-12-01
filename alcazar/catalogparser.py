@@ -60,7 +60,13 @@ class CatalogParser(object):
                     )
                     for item in result_list.items:
                         try:
-                            yield self.scrape_item(result_list.page, item, **extras)
+                            yield self.scrape(
+                                result_list.page.link(self.husk_item_request(item)),
+                                parse=self.parse_catalog_item,
+                                fetch=self.fetch_catalog_item,
+                                item=item,
+                                **extras
+                            )
                         except SkipThisPage as reason:
                             logging.info("%s -- skipped", reason)
                         counter['seen_items'] += 1
@@ -119,16 +125,10 @@ class CatalogParser(object):
                     seen_items,
                 ))
 
-    def scrape_item(self, page, item, **extras):
-        # Override this to e.g. raise SkipThisPage before fetching it
-        return self.scrape(
-            page.link(self.husk_item_request(item)),
-            self.parse_catalog_item,
-            item=item,
-            **extras
-        )
-
     def husk_item_request(self, item):
         return item.all(item_request_path).dedup().one()
+
+    def fetch_catalog_item(self, query, **kwargs):
+        return query and super().fetch(query, **kwargs)
 
 #----------------------------------------------------------------------------------------------------------------------------------
