@@ -336,7 +336,10 @@ class NullHusker(Husker):
         return None
 
     def map(self, function):
-        return None
+        return NULL_HUSKER
+
+    def filter(self, function):
+        return NULL_HUSKER
 
     def __str__(self):
         return '<Null>'
