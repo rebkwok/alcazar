@@ -11,6 +11,7 @@ __version__ = '0.1'
 
 # alcazar
 from .catalogparser import CatalogParser
+from .exceptions import AlcazarException, ScraperError, SkipThisPage
 from .fetcher import Fetcher
 from .http import HttpClient
 from .husker import Husker, HuskerError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, husk

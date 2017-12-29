@@ -48,10 +48,21 @@ class Scraper(object):
         # You'll most certainly want to override this
         return page
 
-    def scrape(self, request, parse=None, fetch=None, num_attempts=5, **extras):
+    def record_payload(self, request, page, payload, **extras):
+        # If you're happy with just the scraper returning its payload to the caller, you don't need this. Override e.g. to save to
+        # DB
+        pass
+
+    def record_error(self, request, error, **extras):
+        # Same as record_payload. The error will be raised unless this returns a truthy value.
+        return None
+
+    def scrape(self, request, parse=None, fetch=None, record_payload=None, record_error=None, num_attempts=5, **extras):
         query = self.compile_query(request, **extras)
         fetch = fetch or self.fetch
         parse = parse or self.parse
+        record_payload = record_payload or self.record_payload
+        record_error = record_error or self.record_error
         for attempt_i in range(num_attempts):
             delay = None
             try:
@@ -62,6 +73,7 @@ class Scraper(object):
                 if isinstance(payload, GeneratorType):
                     # consume the generator here so that we can catch any exceptions it might raise
                     payload = tuple(payload)
+                record_payload(request, page, payload, **extras)
                 return payload
             except ScraperError as error:
                 if attempt_i+1 < num_attempts:
@@ -69,7 +81,11 @@ class Scraper(object):
                     logging.warning(format_exc())
                     logging.warning("sleeping %d sec%s", delay, '' if delay == 1 else 's')
                 else:
-                    raise
+                    substitute = record_error(request, error, **extras)
+                    if substitute:
+                        return substitute
+                    else:
+                        raise
             # Sleep outside the `except` handler so that a KeyboardInterrupt won't be chained with the ScraperError, which just
             # obfuscates the output
             sleep(delay)

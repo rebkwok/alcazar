@@ -43,7 +43,7 @@ class CatalogParser(object):
     next_page_request_path = NotImplemented
     item_request_path = './/a/@href'
 
-    # In most cases this is the only method you'll need to override. `page` is the item's own page, `item` is whatever
+    # In many cases this is the only method you'll need to override. `page` is the item's own page, `item` is whatever
     # `husk_result_items` yields, which by default is the husker for the item in the results list.
     def parse_catalog_item(self, page, item):
         raise NotImplementedError
@@ -53,17 +53,11 @@ class CatalogParser(object):
             for start_request in start_requests:
                 request = start_request
                 while request:
-                    result_list = self.scrape(
-                        request,
-                        self.parse_result_list,
-                        **extras
-                    )
+                    result_list = self.scrape_result_list(request, **extras)
                     for item in result_list.items:
                         try:
-                            yield self.scrape(
+                            yield self.scrape_catalog_item(
                                 result_list.page.link(self.husk_item_request(item)),
-                                parse=self.parse_catalog_item,
-                                fetch=self.fetch_catalog_item,
                                 item=item,
                                 **extras
                             )
@@ -74,12 +68,34 @@ class CatalogParser(object):
                         counter['expected_total_items'] = result_list.expected_total_items
                     request = result_list.next_page_request
 
+    def scrape_result_list(self, request, **extras):
+        return self.scrape(
+            request,
+            self.parse_result_list,
+            record_error=self.record_result_list_error,
+            **extras,
+        )
+
     def parse_result_list(self, page, **extras_unused):
         return CatalogResultList(
             page=page,
             items=tuple(self.husk_result_items(page)),
             expected_total_items=self.husk_expected_total_items(page),
             next_page_request=self.husk_next_page_request(page),
+        )
+
+    def record_result_list_error(self, request, error, **extras):
+        return self.record_error(request, error, **extras)
+
+    def scrape_catalog_item(self, page, item, **extras):
+        return self.scrape(
+            page,
+            item=item,
+            parse=self.parse_catalog_item,
+            fetch=self.fetch_catalog_item,
+            record_payload=self.record_catalog_item_payload,
+            record_error=self.record_catalog_item_error,
+            **extras
         )
 
     def husk_result_items(self, page):
@@ -130,5 +146,11 @@ class CatalogParser(object):
 
     def fetch_catalog_item(self, query, **kwargs):
         return query and super().fetch(query, **kwargs)
+
+    def record_catalog_item_payload(self, request, page, payload, **extras):
+        return self.record_payload(request, page, payload, **extras)
+
+    def record_catalog_item_error(self, request, error, **extras):
+        return self.record_error(self, request, error, **extras)
 
 #----------------------------------------------------------------------------------------------------------------------------------
