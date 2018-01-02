@@ -73,7 +73,7 @@ class CatalogParser(object):
             request,
             self.parse_result_list,
             record_error=self.record_result_list_error,
-            **extras,
+            **extras
         )
 
     def parse_result_list(self, page, **extras_unused):
