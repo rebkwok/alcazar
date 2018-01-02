@@ -287,7 +287,7 @@ class FlatFileStorage(object):
                 and all(isinstance(e, text_type) for e in key)
                 ):
             raise ValueError("Invalid cache key: %r" % key)
-        return path.join(self.cache_root_path, *key)
+        return path.join(self.cache_root_path, *key) + '.gz'
 
     @staticmethod
     def _open_local_file(response, file_path, mode):
