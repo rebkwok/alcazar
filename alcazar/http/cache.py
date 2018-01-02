@@ -68,11 +68,11 @@ class CacheAdapterMixin(object):
                 cache = NullCache()
         return cache, kwargs
 
-    def send(self, prepared_request, cache_life=None, cache_key=None, **rest):
+    def send(self, prepared_request, cache_life=None, cache_key=None, force_cache_stale=False, **rest):
         stream = rest.get('stream', False)
         rest['stream'] = True
         log = rest['log']
-        cache_key, entry = self._get(prepared_request, cache_life, cache_key)
+        cache_key, entry = self._get(prepared_request, cache_life, cache_key, force_cache_stale)
         log['cache_key'] = cache_key
         if entry is None:
             log['cache_or_courtesy'] = ''
@@ -91,17 +91,20 @@ class CacheAdapterMixin(object):
         else:
             return entry.response
 
-    def _get(self, prepared_request, cache_life, cache_key):
+    def _get(self, prepared_request, cache_life, cache_key, force_cache_stale):
         now = time()
         if self.needs_purge:
             self.cache.purge(now - self.max_cache_life)
             self.needs_purge = False
         if cache_key is None:
             cache_key = self.compute_cache_key(prepared_request)
-        if cache_life is None:
-            cache_life = self.max_cache_life
-        min_timestamp = 0 if cache_life is None else (now - cache_life)
-        entry = self.cache.get(cache_key, min_timestamp)
+        if force_cache_stale:
+            entry = None
+        else:
+            if cache_life is None:
+                cache_life = self.max_cache_life
+            min_timestamp = 0 if cache_life is None else (now - cache_life)
+            entry = self.cache.get(cache_key, min_timestamp)
         return cache_key, entry
 
     def _fetch(self, prepared_request, rest):
