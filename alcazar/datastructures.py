@@ -67,7 +67,10 @@ class Page(object):
     @property
     def url(self):
         # NB this is the URL after redirections, so it could be different from query.url
-        return self.response.url
+        if self.response is None:
+            return self.query.url
+        else:
+            return self.response.url
 
     def link(self, relative_url):
         if not relative_url:
@@ -81,10 +84,7 @@ class Page(object):
         return self.husker(*args, **kwargs)
 
     def __getattr__(self, attr):
-        try:
-            return getattr(self.husker, attr)
-        except AttributeError:
-            return super(Page, self).__getattr__(attr)
+        return getattr(self.husker, attr)
 
     def __repr__(self):
         return "Page(%r, %r, %r)" % (self.query, self.response, self.husker)
