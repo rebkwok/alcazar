@@ -68,7 +68,9 @@ class CacheAdapterMixin(object):
                 cache = NullCache()
         return cache, kwargs
 
-    def send(self, prepared_request, cache_life=None, cache_key=None, force_cache_stale=False, **rest):
+    def send(self, prepared_request, use_cache=True, cache_life=None, cache_key=None, force_cache_stale=False, **rest):
+        if not use_cache:
+            return super(CacheAdapterMixin, self).send(prepared_request, **rest)
         stream = rest.get('stream', False)
         rest['stream'] = True
         log = rest['log']
