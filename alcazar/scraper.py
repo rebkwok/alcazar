@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 from datetime import timedelta
 import logging
-from os import path
+from os import path, rename
 from time import sleep
 from traceback import format_exc
 from types import GeneratorType
@@ -44,7 +44,7 @@ class Scraper(object):
         # If you want to set fetcher kwargs for a request submitted via `scrape`, you'll need to override this.
         return self.fetcher.fetch(query, **kwargs)
 
-    def parse(self, page):
+    def parse(self, page, **kwargs):
         # You'll most certainly want to override this
         return page
 
@@ -89,6 +89,24 @@ class Scraper(object):
             # Sleep outside the `except` handler so that a KeyboardInterrupt won't be chained with the ScraperError, which just
             # obfuscates the output
             sleep(delay)
+
+    def download(self, request, local_file_path, overwrite=False, **kwargs):
+        def save(request, page, payload, **extras):
+            part_file_path = local_file_path + '.part'
+            with open(part_file_path, 'wb') as file_out:
+                for chunk in page.response.iter_content():
+                    file_out.write(chunk)
+            rename(part_file_path, local_file_path)
+        if not path.exists(local_file_path) or overwrite:
+            kwargs['stream'] = True
+            self.scrape(
+                request,
+                record_payload=save,
+                **kwargs,
+            )
+            logging.info('%s saved', local_file_path)
+        else:
+            logging.info('%s already exists', local_file_path)
 
     def compile_query(self, request, **kwargs):
         # 2017-11-20 - I expect crawler.compile_query will override this to parse its own methods (fetch, parse, save)
