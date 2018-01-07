@@ -59,7 +59,7 @@ class Fetcher(object):
             elif content_type == 'text/xml':
                 return self.xml_page(query, response)
             else:
-                raise ValueError("Don't know how to parse %s" % content_type)
+                return self.unparsed_page(query, response)
 
     def fetch_html(self, query, **kwargs):
         encoding = kwargs.pop('encoding', None)
@@ -105,5 +105,8 @@ class Fetcher(object):
             is_full_document=True,
         )
         return Page(query, response, husker)
+
+    def unparsed_page(self, query, response):
+        return Page(query, response, husker=None)
 
 #----------------------------------------------------------------------------------------------------------------------------------
