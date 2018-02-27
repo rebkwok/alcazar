@@ -18,7 +18,7 @@ import requests
 from .datastructures import Page
 from .etree_parser import parse_html_etree, parse_xml_etree
 from .http import HttpClient
-from .husker import ElementHusker
+from .husker import ElementHusker, JmesPathHusker
 from .utils.compatibility import urljoin
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -58,6 +58,8 @@ class Fetcher(object):
                 return self.html_page(query, response)
             elif content_type == 'text/xml':
                 return self.xml_page(query, response)
+            elif content_type == 'application/json':
+                return self.json_page(query, response)
             else:
                 return self.unparsed_page(query, response)
 
@@ -108,5 +110,9 @@ class Fetcher(object):
 
     def unparsed_page(self, query, response):
         return Page(query, response, husker=None)
+
+    def json_page(self, query, response):
+        husker = JmesPathHusker(response.json())
+        return Page(query, response, husker)
 
 #----------------------------------------------------------------------------------------------------------------------------------

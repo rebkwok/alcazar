@@ -10,11 +10,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 from datetime import datetime
 from functools import reduce
+import json
 import operator
 import re
 from types import GeneratorType
 
 # 3rd parties
+import jmespath
 import lxml.etree as ET
 try:
     from lxml.cssselect import CSSSelector
@@ -223,7 +225,7 @@ class Husker(Selector):
         raise NotImplementedError(repr(self))
 
     def json(self):
-        return lenient_json_loads(self.str)
+        return JmesPathHusker(lenient_json_loads(self.str))
 
     @property
     def str(self):
@@ -504,6 +506,33 @@ class ElementHusker(Husker):
     _NON_TEXT_TAGS = frozenset((
         'script', 'style',
     ))
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+class JmesPathHusker(Husker):
+
+    def selection(self, path):
+        selected = jmespath.search(path, self.value)
+        if '[' not in path:
+            selected = [selected]
+        return ListHusker(
+            TextHusker(element) if isinstance(element, str) else JmesPathHusker(element)
+            for element in selected
+        )
+
+    @property
+    def text(self):
+        text = self.value
+        if not isinstance(text, str):
+            text = json.dumps(text, sort_keys=True)
+        return TextHusker(text)
+
+    @property
+    def multiline(self):
+        text = self.value
+        if not isinstance(text, str):
+            text = json.dumps(text, indent=4, sort_keys=True)
+        return TextHusker(text)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

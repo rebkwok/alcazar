@@ -24,6 +24,7 @@ setup(
     install_requires=[
         'lxml>=3',
         'cssselect>=1.0',
+        'jmespath>=0.9.3',
         'requests>=2',
         'urllib3>=1.17',
     ],

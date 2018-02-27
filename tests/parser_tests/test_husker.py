@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from datetime import date, datetime
 
 # alcazar
-from alcazar.husker import ElementHusker, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, TextHusker
+from alcazar.husker import ElementHusker, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, JmesPathHusker, TextHusker
 from alcazar.utils.compatibility import PY2, text_type
 
 # tests
@@ -906,6 +906,58 @@ class TextHuskerTest(AlcazarTest):
         self.assertEqual(
             text_husker.normalized.value,
             "This is my text. There are many like it but this one is mine.",
+        )
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+class JmesPathHuskerTest(AlcazarTest):
+
+    data = {
+        "status": "OK",
+        "results": [
+            {
+                "title": "The first result",
+                "rank": 1,
+            }, {
+                "title": "The second result",
+                "rank": 2,
+            },
+        ]
+    }
+
+    def test_one_string(self):
+        husker = JmesPathHusker(self.data)
+        self.assertEqual(
+            husker.one("status"),
+            "OK",
+        )
+
+    def test_one_list_element(self):
+        husker = JmesPathHusker(self.data)
+        self.assertEqual(
+            husker.one("results[?rank == `1`]").one("title"),
+            "The first result",
+        )
+
+    def test_one_list(self):
+        husker = JmesPathHusker(self.data)
+        self.assertEqual(
+            husker.one("results").one("title").text,
+            ["The first result", "The second result"],
+        )
+
+    def test_all_list_elements(self):
+        husker = JmesPathHusker(self.data)
+        self.assertEqual(
+            [result('title') for result in husker.all("results[*]")],
+            ["The first result", "The second result"],
+        )
+
+    def test_all_list_elements_with_indirection(self):
+        husker = JmesPathHusker(self.data)
+        self.assertEqual(
+            [result('title') for result in husker.one("results").all("[*]")],
+            ["The first result", "The second result"],
         )
 
 #----------------------------------------------------------------------------------------------------------------------------------
