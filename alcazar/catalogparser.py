@@ -142,7 +142,7 @@ class CatalogParser(object):
                 ))
 
     def husk_item_request(self, item):
-        return item.all(item_request_path).dedup().one()
+        return item.all(self.item_request_path).dedup().one()
 
     def fetch_catalog_item(self, query, **kwargs):
         return query and super().fetch(query, **kwargs)
