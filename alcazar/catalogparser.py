@@ -72,9 +72,13 @@ class CatalogParser(object):
         return self.scrape(
             request,
             self.parse_result_list,
+            fetch=self.fetch_result_list,
             record_error=self.record_result_list_error,
             **extras
         )
+
+    def fetch_result_list(self, query, **kwargs):
+        return self.fetch(query, **kwargs)
 
     def parse_result_list(self, page, **extras_unused):
         return CatalogResultList(
