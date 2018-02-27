@@ -15,6 +15,7 @@ from functools import partial
 import gzip
 from hashlib import md5
 import json
+import logging
 from os import path, makedirs, rename, rmdir, unlink
 import shelve
 from time import time
@@ -45,7 +46,7 @@ class CacheAdapterMixin(object):
     Mixin for the AlcazarHttpClient that adds caching capabilities.
     """
 
-    def __init__(self, max_cache_life=30*24*60*60, **kwargs):
+    def __init__(self, max_cache_life=None, **kwargs):
         self.cache, rest = self._build_cache_from_kwargs(**kwargs)
         super(CacheAdapterMixin, self).__init__(**rest)
         self.max_cache_life = max_cache_life
@@ -243,6 +244,13 @@ class ShelfIndex(object):
 
     def lookup(self, key, min_timestamp=None):
         entry = self.db.get(self._key_to_string(key))
+        logging.debug(
+            "Cache[%r] entry is %s",
+            key,
+            'None' if entry is None
+            else 'stale (%d, min=%d)' % (entry.timestamp, min_timestamp) if entry.timestamp < (min_timestamp or 0)
+            else 'fresh (%d, min=%s)' % (entry.timestamp, min_timestamp)
+        )
         if entry is not None and entry.timestamp >= (min_timestamp or 0):
             return entry
 
