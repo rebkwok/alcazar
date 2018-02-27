@@ -44,7 +44,7 @@ class CatalogParser(object):
     item_request_path = './/a/@href'
 
     # In many cases this is the only method you'll need to override. `page` is the item's own page, `item` is whatever
-    # `husk_result_items` yields, which by default is the husker for the item in the results list.
+    # `parse_result_items` yields, which by default is the husker for the item in the results list.
     def parse_catalog_item(self, page, item):
         raise NotImplementedError
 
@@ -83,7 +83,7 @@ class CatalogParser(object):
     def parse_result_list(self, page, **extras_unused):
         return CatalogResultList(
             page=page,
-            items=tuple(self.husk_result_items(page)),
+            items=tuple(self.parse_result_items(page)),
             expected_total_items=self.husk_expected_total_items(page),
             next_page_request=self.husk_next_page_request(page),
         )
@@ -102,9 +102,9 @@ class CatalogParser(object):
             **extras
         )
 
-    def husk_result_items(self, page):
+    def parse_result_items(self, page):
         try:
-            list_el = page(self.result_list_path)
+            list_el = self.husk_result_list(page)
         except HuskerMismatch:
             apology = self.husk_no_results_apology(page)
             if apology:
@@ -113,7 +113,13 @@ class CatalogParser(object):
             else:
                 raise
         else:
-            return list_el.all(self.result_item_path)
+            return self.husk_result_items(page, list_el)
+
+    def husk_result_list(self, page):
+        return page(self.result_list_path)
+
+    def husk_result_items(self, page, list_el):
+        return list_el.all(self.result_item_path)
 
     def husk_expected_total_items(self, page):
         if self.expected_total_items_path is not None:
