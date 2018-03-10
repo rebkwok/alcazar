@@ -449,6 +449,16 @@ class ElementHusker(Husker):
     def tail(self):
         return TextHusker(self.value.tail)
 
+    @property
+    def next(self):
+        next = self.value.getnext()
+        return ElementHusker(next) if next is not None else NullHusker
+
+    @property
+    def previous(self):
+        previous = self.value.getprevious()
+        return ElementHusker(previous) if previous is not None else NullHusker
+
     def js(self, strip_comments=True):
         js = "\n".join(
             re.sub('^\s*<!--', '', re.sub('-->\s*$', '', js_text))
