@@ -8,6 +8,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # 3rd parties
+import logging
 import requests
 
 # alcazar
@@ -54,7 +55,7 @@ class StackScheduler(Scheduler):
         self.stack.append(query)
 
     def add_all(self, queries):
-        super(StackScheduler, self).add_all(reversed(queries))
+        super(StackScheduler, self).add_all(reversed(list(queries)))
 
     def pop(self):
         return self.stack.pop()
@@ -78,23 +79,30 @@ class Crawler(Scraper):
         self.scheduler = scheduler or StackScheduler()
 
     def crawl(self):
-        while not scheduler.empty:
-            query = scheduler.pop()
+        self.crawler_starting()
+        while not self.scheduler.empty:
+            query = self.scheduler.pop()
             try:
-                self.scrape(query)
+                payload = self.scrape(query)
+                if payload is not None:
+                    yield payload
             except SkipThisPage as reason:
                 self.log_skipped_page(query, reason)
+        self.crawler_stopped()
 
-    def enqueue(self, request, **kwargs):
-        request = self.compile_request(request, self.current_referer)
-        methods, rest = self.compile_method_pointers(**kwargs)
-        self.current_link_batch.append(Query(
-            request=request,
-            methods=methods,
-            extras=self.compile_extras(forward_extras, rest),
-        ))
+    def crawler_starting(self):
+        pass
+
+    def crawler_stopped(self):
+        pass
+
+    def enqueue(self, *requests_or_queries, **kwargs):
+        self.scheduler.add_all(
+            self.compile_query(request_or_query, **kwargs)
+            for request_or_query in requests_or_queries
+        )
 
     def log_skipped_page(self, query, reason):
-        logging.info("Skipped %s (%s)", query, reason)
+        logging.info("Skipped %s (%s)", query.request, reason)
 
 #----------------------------------------------------------------------------------------------------------------------------------

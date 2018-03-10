@@ -81,7 +81,7 @@ class HttpClient(object):
 
     def request(self, request, **kwargs):
         auto_raise_for_status = kwargs.pop('auto_raise_for_status', self.auto_raise_for_status)
-        prepared = self.session.prepare_request(request)
+        prepared = self.session.prepare_request(request.to_requests_request())
         response = self.session.send(prepared, **kwargs)
         if auto_raise_for_status:
             response.raise_for_status()

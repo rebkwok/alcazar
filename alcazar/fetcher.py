@@ -11,11 +11,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from contextlib import closing
 import re
 
-# 3rd parties
-import requests
-
 # alcazar
-from .datastructures import Page
+from .datastructures import Page, Request
 from .etree_parser import parse_html_etree, parse_xml_etree
 from .http import HttpClient
 from .husker import ElementHusker, JmesPathHusker
@@ -45,11 +42,11 @@ class Fetcher(object):
             kwargs.setdefault('force_cache_stale', True)
         return self.http.request(query.request, **kwargs)
 
-    def compile_request(self, request):
-        if isinstance(request, requests.Request):
-            return request
+    def compile_request(self, request_or_url):
+        if isinstance(request_or_url, Request):
+            return request_or_url
         else:
-            return requests.Request('GET', request)
+            return Request(request_or_url)
 
     def fetch(self, query, **kwargs):
         with closing(self.fetch_response(query, **kwargs)) as response:

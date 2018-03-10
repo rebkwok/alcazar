@@ -10,8 +10,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __version__ = '0.1'
 
 # alcazar
-from .catalogparser import CatalogParser
-from .datastructures import Page, Query
+from .catalogparser import CatalogParser, CatalogResultList
+from .crawler import Crawler
+from .datastructures import GET, Page, POST, Query, Request
 from .exceptions import AlcazarException, ScraperError, SkipThisPage
 from .fetcher import Fetcher
 from .http import HttpClient
