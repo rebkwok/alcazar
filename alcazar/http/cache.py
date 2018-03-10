@@ -244,13 +244,13 @@ class ShelfIndex(object):
 
     def lookup(self, key, min_timestamp=None):
         entry = self.db.get(self._key_to_string(key))
-        logging.debug(
-            "Cache[%r] entry is %s",
-            key,
-            'None' if entry is None
-            else 'stale (%d, min=%d)' % (entry.timestamp, min_timestamp) if entry.timestamp < (min_timestamp or 0)
-            else 'fresh (%d, min=%s)' % (entry.timestamp, min_timestamp)
-        )
+        # logging.debug(
+        #     "Cache[%r] entry is %s",
+        #     key,
+        #     'None' if entry is None
+        #     else 'stale (%d, min=%d)' % (entry.timestamp, min_timestamp) if entry.timestamp < (min_timestamp or 0)
+        #     else 'fresh (%d, min=%s)' % (entry.timestamp, min_timestamp)
+        # )
         if entry is not None and entry.timestamp >= (min_timestamp or 0):
             return entry
 
