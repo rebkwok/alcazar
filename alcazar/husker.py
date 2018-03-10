@@ -547,12 +547,18 @@ class TextHusker(Husker):
         selected = regex.finditer(self.value)
         if regex.groups < 2:
             return ListHusker(
-                TextHusker(m.group(regex.groups))
-                for m in selected
+                NULL_HUSKER if g is None else TextHusker(g)
+                for g in (
+                    m.group(regex.groups)
+                    for m in selected
+                )
             )
         else:
             return ListHusker(
-                ListHusker(TextHusker(g) for g in m.groups())
+                ListHusker(
+                    NULL_HUSKER if g is None else TextHusker(g)
+                    for g in m.groups()
+                )
                 for m in selected
             )
 
