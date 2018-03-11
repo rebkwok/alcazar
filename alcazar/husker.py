@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # standards
 from datetime import datetime
+from decimal import Decimal
 from functools import reduce
 import json
 import operator
@@ -238,6 +239,10 @@ class Husker(Selector):
     @property
     def float(self):
         return float(self.str)
+
+    @property
+    def decimal(self):
+        return Decimal(self.str)
 
     def date(self, fmt='%Y-%m-%d'):
         return datetime.strptime(self.str, fmt).date()
