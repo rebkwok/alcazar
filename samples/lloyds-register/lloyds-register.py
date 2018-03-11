@@ -36,13 +36,13 @@ class LloydsRegisterScraper(alcazar.Scraper):
     def run(self):
         scheme_meta = self.scrape(
             'http://www.lr.org/en/utilities-building-assurance-schemes/uk-schemes/',
-            self.parse_scheme_meta,
+            parse=self.parse_scheme_meta,
         )
         for scheme_name, scheme_url in scheme_meta:
             for search_url in self.scrape(scheme_url, self.parse_search_urls, scheme_name=scheme_name):
                 yield from self.scrape(
                     search_url,
-                    self.parse_scheme_rows,
+                    parse=self.parse_scheme_rows,
                     scheme_name=scheme_name,
                 )
 

@@ -21,7 +21,7 @@ def main():
     )
     rate = scraper.scrape(
         'http://www.floatrates.com/daily/USD.xml',
-        lambda page: page.one(
+        parse=lambda page: page.one(
             '/channel'
             '/item[baseCurrency="USD" and targetCurrency="AUD"]'
             '/exchangeRate'
