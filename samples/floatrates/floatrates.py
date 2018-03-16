@@ -28,6 +28,7 @@ def main():
         ).float,
     )
     assert '%.4f' % rate == '1.3238', repr(rate)
+    print('1 USD = %.04f AUD' % rate)
 
 if __name__ == '__main__':
     main()
