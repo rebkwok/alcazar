@@ -36,11 +36,17 @@ class Request:
         self.headers = headers
 
     def to_requests_request(self):
+        params = self.params
+        if params:
+            params = OrderedDict(sorted(params.items())), # to avoid thwarting the cache
+        data = self.data
+        if data and isinstance(data, dict):
+            data = OrderedDict(sorted(data.items())) # ditto
         return requests.Request(
             method=self.method,
             url=self.url,
-            params=self.params and OrderedDict(self.params), # to avoid thwarting the cache
-            data=self.data,
+            params=params,
+            data=data,
             headers=self.headers,
         )
 
