@@ -526,14 +526,20 @@ class ElementHusker(Husker):
 
 class JmesPathHusker(Husker):
 
+    @classmethod
+    def _child(cls, value):
+        if value is None:
+            return NULL_HUSKER
+        elif isinstance(value, str):
+            return TextHusker(value)
+        else:
+            return JmesPathHusker(value)
+
     def selection(self, path):
         selected = jmespath.search(path, self.value)
         if '[' not in path:
             selected = [selected]
-        return ListHusker(
-            TextHusker(element) if isinstance(element, str) else JmesPathHusker(element)
-            for element in selected
-        )
+        return ListHusker(map(self._child, selected))
 
     @property
     def text(self):
@@ -548,6 +554,12 @@ class JmesPathHusker(Husker):
         if not isinstance(text, str):
             text = json.dumps(text, indent=4, sort_keys=True)
         return TextHusker(text)
+
+    @property
+    def list(self):
+        if not isinstance(self.value, list):
+            raise HuskerError("value is a %s, not a list" % self.value.__class__.__name__)
+        return ListHusker(map(self._child, self.value))
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
