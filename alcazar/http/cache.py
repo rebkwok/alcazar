@@ -229,7 +229,19 @@ class ShelfIndex(object):
     """
 
     def __init__(self, file_path):
-        self.db = shelve.open(file_path, 'c', protocol=pickle.HIGHEST_PROTOCOL)
+        self.file_path = file_path
+        # NB only open DB file on demand, as it opens it exclusively
+        self._db = None
+
+    @property
+    def db(self):
+        if self._db is None:
+            self._db = shelve.open(
+                self.file_path,
+                'c',
+                protocol=pickle.HIGHEST_PROTOCOL,
+            )
+        return self._db
 
     @staticmethod
     def _key_to_string(key):
