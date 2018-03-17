@@ -38,7 +38,7 @@ class Request:
     def to_requests_request(self):
         params = self.params
         if params:
-            params = OrderedDict(sorted(params.items())), # to avoid thwarting the cache
+            params = OrderedDict(sorted(params.items())) # to avoid thwarting the cache
         data = self.data
         if data and isinstance(data, dict):
             data = OrderedDict(sorted(data.items())) # ditto
