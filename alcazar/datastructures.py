@@ -12,7 +12,7 @@ from collections import OrderedDict
 import re
 
 # alcazar
-from .utils.compatibility import string_types, text_type
+from .utils.compatibility import string_types, text_type, urlencode
 from .utils.urls import join_urls
 
 # 3rd parties
@@ -58,6 +58,12 @@ class Request:
             data=self.data,
             headers=self.headers,
         )
+
+    def __str__(self):
+        url = self.url
+        if self.params:
+            url += '?' + urlencode(OrderedDict(self.params.items()))
+        return url
 
 def GET(url, **kwargs):
     return Request(url, method='GET', **kwargs)

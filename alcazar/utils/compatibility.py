@@ -27,6 +27,7 @@ if PY2:
     from urllib import (
         quote as urlquote,
         quote_plus as urlquote_plus,
+        urlencode,
     )
     from urlparse import (
         ParseResult as UrlParseResult,
@@ -47,6 +48,7 @@ else:
         ParseResult as UrlParseResult,
         quote as urlquote,
         quote_plus as urlquote_plus,
+        urlencode,
         urljoin,
         urlparse,
     )
