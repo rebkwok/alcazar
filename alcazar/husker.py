@@ -448,13 +448,15 @@ class ElementHusker(Husker):
 
     @property
     def next(self):
-        next = self.value.getnext()
-        return ElementHusker(next) if next is not None else NullHusker
+        return husk(self.value.getnext())
 
     @property
     def previous(self):
-        previous = self.value.getprevious()
-        return ElementHusker(previous) if previous is not None else NullHusker
+        return husk(self.value.getprevious())
+
+    @property
+    def parent(self):
+        return husk(self.value.getparent())
 
     def js(self, strip_comments=True):
         js = "\n".join(
@@ -565,19 +567,13 @@ class TextHusker(Husker):
         regex = self._compile(regex, flags)
         selected = regex.finditer(self.value)
         if regex.groups < 2:
-            return ListHusker(
-                NULL_HUSKER if g is None else TextHusker(g)
-                for g in (
-                    m.group(regex.groups)
-                    for m in selected
-                )
-            )
+            return ListHusker(map(husk, (
+                m.group(regex.groups)
+                for m in selected
+            )))
         else:
             return ListHusker(
-                ListHusker(
-                    NULL_HUSKER if g is None else TextHusker(g)
-                    for g in m.groups()
-                )
+                ListHusker(map(husk, m.groups()))
                 for m in selected
             )
 
