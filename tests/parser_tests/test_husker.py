@@ -138,10 +138,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
     def test_selection_on_null_getted_attrib(self):
         root = self.husker.one('section#discourse').attrib('missing')
-        self.assertEqual(
-            ''.join(root.selection(r'[^aeiou]')),
-            '',
-        )
+        self.assertFalse(root.selection(r'[^aeiou]'))
 
     def test_selection_on_valued_text(self):
         root = self.husker.one('p#one').text
@@ -152,10 +149,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
     def test_selection_on_null_text(self):
         root = self.husker.some('p#missing').text
-        self.assertEqual(
-            ''.join(root.selection(r'.')),
-            '',
-        )
+        self.assertFalse(root.selection(r'.'))
 
     def test_selection_on_list(self):
         root = self.husker.all('p')
@@ -183,8 +177,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
     def test_one_on_null_elem(self):
         root = self.husker.any('missing')
-        with self.assertRaises(HuskerMismatch):
-            root.one('./*')
+        self.assertFalse(root.one('./*'))
 
     def test_one_on_valued_getted_attrib(self):
         root = self.husker.one('section#discourse').attrib('id')
@@ -195,8 +188,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
     def test_one_on_null_getted_attrib(self):
         root = self.husker.one('section#discourse').attrib('missing')
-        with self.assertRaises(HuskerMismatch):
-            root.one(r'.')
+        self.assertFalse(root.one(r'.'))
 
     def test_one_on_valued_text(self):
         root = self.husker.one('p#one').text
@@ -207,8 +199,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
     def test_one_on_null_text(self):
         root = self.husker.some('p#missing').text
-        with self.assertRaises(HuskerMismatch):
-            root.one(r'.')
+        self.assertFalse(root.one(r'.'))
 
     def test_one_on_list(self):
         root = self.husker.all('p')
@@ -693,13 +684,13 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertEqual(self.husker('#json').json(), [24])
 
     def test_json_on_null_element(self):
-        self.assertIsNone(self.husker.some('#missing').json())
+        self.assertFalse(self.husker.some('#missing').json())
 
     def test_json_on_valued_attribute(self):
         self.assertEqual(self.husker('#json')['value'].json(), [42])
 
     def test_json_on_null_attribute(self):
-        self.assertIsNone(self.husker.one('#one').attrib('missing').json())
+        self.assertFalse(self.husker.one('#one').attrib('missing').json())
 
     def test_json_on_valued_text(self):
         self.assertEqual(self.husker.one('#json').text.json(), [24])
@@ -709,7 +700,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             self.husker.one('#empty').json()
 
     def test_json_on_null_text(self):
-        self.assertIsNone(self.husker.some('#missing').text.json())
+        self.assertFalse(self.husker.some('#missing').text.json())
 
     def test_json_on_valued_list(self):
         self.assertEqual(self.husker.all('#json').json(), [[24]])
@@ -942,7 +933,7 @@ class JmesPathHuskerTest(AlcazarTest):
     def test_one_list(self):
         husker = JmesPathHusker(self.data)
         self.assertEqual(
-            husker.one("results").one("title").text,
+            [element("title") for element in husker.one("results").list],
             ["The first result", "The second result"],
         )
 

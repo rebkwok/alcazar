@@ -307,46 +307,38 @@ class NullHusker(Husker):
     def __init__(self):
         super(NullHusker, self).__init__(None)
 
-    def selection(self, *spec_ignored):
-        return EMPTY_LIST_HUSKER
+    _returns_null = lambda *args, **kwargs: NULL_HUSKER
+    _returns_none = lambda *args, **kwargs: None
 
-    @property
-    def text(self):
-        return NULL_HUSKER
+    selection = _returns_null
+    one = _returns_null
+    some = _returns_null
+    first = _returns_null
+    last = _returns_null
+    any = _returns_null
+    all = _returns_null
+    one_of = _returns_null
+    some_of = _returns_null
+    first_of = _returns_null
+    any_of = _returns_null
+    all_of = _returns_null
+    selection_of = _returns_null
 
-    @property
-    def multiline(self):
-        return NULL_HUSKER
+    text = property(_returns_null)
+    multiline = property(_returns_null)
+    join = _returns_null
+    list = _returns_null
 
-    def json(self):
-        return None
+    json = _returns_null
+    str = property(_returns_none)
+    int = property(_returns_none)
+    float = property(_returns_none)
+    date = _returns_none
+    datetime = _returns_none
 
-    @property
-    def str(self):
-        return None
-
-    @property
-    def int(self):
-        return None
-
-    @property
-    def float(self):
-        return None
-
-    def date(self, fmt):
-        return None
-
-    def datetime(self, fmt):
-        return None
-
-    def map_raw(self, function):
-        return None
-
-    def map(self, function):
-        return NULL_HUSKER
-
-    def filter(self, function):
-        return NULL_HUSKER
+    map = _returns_null
+    map_raw = _returns_none
+    filer = _returns_null
 
     def __str__(self):
         return '<Null>'
@@ -729,6 +721,9 @@ class ListHusker(Husker):
     @property
     def raw(self):
         return [element.raw for element in self.value]
+
+    def join(self, sep):
+        return TextHusker(sep.join(e.str for e in self))
 
     def __str__(self):
         return repr(self.value)
