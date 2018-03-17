@@ -13,6 +13,7 @@ from requests.structures import CaseInsensitiveDict
 
 # alcazar
 from .. import __version__
+from ..datastructures import Request
 from ..exceptions import ScraperError
 from .cache import CacheAdapterMixin
 from .courtesy import CourtesySleepAdapterMixin
@@ -106,7 +107,7 @@ class HttpClient(object):
         return self.request(request, **rest)
 
     def _compile_request(self, **kwargs):
-        request = requests.Request(
+        request = Request(
             url=kwargs.pop('url'),
             data=kwargs.pop('data', None),
             headers=CaseInsensitiveDict(kwargs.pop('headers', {})),
