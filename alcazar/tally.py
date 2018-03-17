@@ -24,7 +24,6 @@ class Tally(object):
         self._seen = None
 
     def reset(self):
-        self.check()
         self._expected = None
         self._seen = None
 
