@@ -83,7 +83,7 @@ _RE_HTML_ENTITY_SPECIAL_CASES = re.compile(
 
 def _repair_html_entities_to_mimic_browser_behavior(html_string):
     return _RE_HTML_ENTITY_SPECIAL_CASES.sub(
-        lambda match: _HTML_ENTITIES_SPECIAL_CASES[match.group(0)],
+        lambda match: _HTML_ENTITIES_SPECIAL_CASES[match.group(0).lower()],
         html_string,
     )
 
