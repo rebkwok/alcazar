@@ -26,6 +26,7 @@ class Scraper(object):
 
     id = None
     cache_id = None
+    num_attempts_per_scrape = 5
 
     def __init__(self, **kwargs):
         self.id = kwargs.pop('id', self.id)
@@ -57,7 +58,8 @@ class Scraper(object):
         # Same as record_payload. The error will be raised unless this returns a truthy value.
         return None
 
-    def scrape(self, request_or_query, num_attempts=5, **kwargs):
+    def scrape(self, request_or_query, **kwargs):
+        num_attempts = kwargs.pop('num_attempts', self.num_attempts_per_scrape)
         query = self.compile_query(request_or_query, **kwargs)
         methods = query.methods
         for attempt_i in range(num_attempts):
