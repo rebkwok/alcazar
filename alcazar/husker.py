@@ -35,6 +35,7 @@ from .utils.text import normalize_spaces
 # globals
 
 _builtin_int = int
+_unspecified = object()
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # exceptions
@@ -49,6 +50,9 @@ class HuskerNotUnique(HuskerError):
     pass
 
 class HuskerMultipleSpecMatch(HuskerNotUnique):
+    pass
+
+class HuskerLookupError(HuskerError):
     pass
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -262,6 +266,15 @@ class Husker(Selector):
         else:
             return NULL_HUSKER
 
+    def lookup(self, table, default=_unspecified):
+        try:
+            return table[self.str]
+        except KeyError:
+            if default is _unspecified:
+                raise HuskerLookupError(repr(self.raw))
+            else:
+                return default
+
     @property
     def raw(self):
         # In the default case, return .value, but some subclasses override this
@@ -338,7 +351,8 @@ class NullHusker(Husker):
 
     map = _returns_null
     map_raw = _returns_none
-    filer = _returns_null
+    filter = _returns_null
+    lookup = _returns_none
 
     def __str__(self):
         return '<Null>'
