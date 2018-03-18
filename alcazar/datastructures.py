@@ -12,7 +12,7 @@ from collections import OrderedDict
 import re
 
 # alcazar
-from .utils.compatibility import string_types, text_type, urlencode
+from .utils.compatibility import parse_qsl, string_types, text_type, urlencode, urlparse
 from .utils.urls import join_urls
 
 # 3rd parties
@@ -29,41 +29,63 @@ class Request:
             assert method.isupper(), repr(method) # just to make sure caller doesn't swap method and url
         else:
             method = 'POST' if data else 'GET'
-        self.url = url
-        self.method = method
-        self.params = params
-        self.data = data
-        self.headers = headers
+        self._url = url
+        self._method = method
+        self._params = params
+        self._data = data
+        self._headers = headers
 
     def to_requests_request(self):
-        params = self.params
+        params = self._params
         if params:
             params = OrderedDict(sorted(params.items())) # to avoid thwarting the cache
-        data = self.data
+        data = self._data
         if data and isinstance(data, dict):
             data = OrderedDict(sorted(data.items())) # ditto
         return requests.Request(
-            method=self.method,
-            url=self.url,
+            method=self._method,
+            url=self._url,
             params=params,
             data=data,
-            headers=self.headers,
+            headers=self._headers,
         )
 
     def modify_params(self, new_params):
         return Request(
-            url=self.url,
-            method=self.method,
-            params=dict(self.params or {}, **new_params),
-            data=self.data,
-            headers=self.headers,
+            url=self._url,
+            method=self._method,
+            params=dict(self._params or {}, **new_params),
+            data=self._data,
+            headers=self._headers,
         )
 
-    def __str__(self):
-        url = self.url
-        if self.params:
-            url += '?' + urlencode(OrderedDict(self.params.items()))
+    @property
+    def method(self):
+        return self._method
+
+    @property
+    def path(self):
+        return urlparse(self._url).path
+
+    @property
+    def params(self):
+        if self._params is not None:
+            return self._params
+        else:
+            return dict(parse_qsl(urlparse(self._url).query))
+
+    @property
+    def url(self):
+        url = self._url
+        if self._params:
+            url += '?' + urlencode(OrderedDict(self._params.items()))
         return url
+
+    def __str__(self):
+        if self._method == 'GET':
+            return self.url
+        else:
+            return '<POST %s>' % self.url
 
 def GET(url, **kwargs):
     return Request(url, method='GET', **kwargs)

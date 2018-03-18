@@ -31,6 +31,7 @@ if PY2:
     )
     from urlparse import (
         ParseResult as UrlParseResult,
+        parse_qsl,
         urljoin,
         urlparse,
     )
@@ -46,6 +47,7 @@ else:
     import pickle
     from urllib.parse import (
         ParseResult as UrlParseResult,
+        parse_qsl,
         quote as urlquote,
         quote_plus as urlquote_plus,
         urlencode,

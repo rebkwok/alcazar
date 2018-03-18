@@ -19,6 +19,7 @@ from .http import HttpClient
 from .husker import Husker, HuskerError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, husk
 from .scraper import Scraper
 from .tally import Tally
+from .utils import compatibility
 from .utils.urls import join_urls
 
 #----------------------------------------------------------------------------------------------------------------------------------
