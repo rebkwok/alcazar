@@ -29,10 +29,12 @@ class Tally(object):
         self._count_by_request_type = {}
 
     def set_expected(self, expected):
+        if not isinstance(expected, (int, None.__class__)):
+            raise ValueError(repr(expected))
         if self._expected not in (None, expected):
             raise ValueError("%r != %r" % (expected, self._expected))
         if self._expected is None:
-            self.log.debug('Expected result count set to %d', expected)
+            self.log.debug('Expected result count set to %s', expected)
         self._expected = expected
 
     def record_request_type(self, request_type, count=1):
@@ -66,7 +68,9 @@ class Tally(object):
                 self._iter_unpadded_table_lines('Payload fate', self._count_by_fate),
                 [
                     '-- Tally --||',
-                    'expected | %s |' % self._expected if self._expected is not None else '?',
+                    'expected | %s |' % (
+                        self._expected if self._expected is not None else '?',
+                    ),
                     'total | %d | %s' % (
                         total,
                         '%.02f%%' % (100.0 * total / self._expected) if self._expected else '',
@@ -75,6 +79,9 @@ class Tally(object):
                 ],
             )
         ]
+        if not all(len(row) == 3 for row in table):
+            for row in table:
+                print(repr(row))
         widths = [
             max(len(row[i]) for row in table)
             for i in (0, 1, 2)
