@@ -375,7 +375,9 @@ class ElementHusker(Husker):
         return len(self.value)
 
     def __getitem__(self, item):
-        value = self.value.attrib[item] # will raise KeyError
+        value = self.value.attrib.get(item, _unspecified)
+        if value is _unspecified:
+            raise HuskerError("Attribute %r not found" % item)
         return TextHusker(self._ensure_decoded(value))
 
     def attrib(self, item, default=NULL_HUSKER):
@@ -485,11 +487,7 @@ class ElementHusker(Husker):
         detach_node(self.value, reattach_tail=reattach_tail)
 
     def repr_spec(self, path):
-        xpath = self._compile_xpath(path)
-        if path == xpath:
-            return "'%s'" % path
-        else:
-            return "'%s' (compiled to '%s')" % (path, xpath)
+        return "'%s'" % path
 
     def repr_value(self, max_width=200, max_lines=100, min_trim=10):
         source_text = self.html_source()
