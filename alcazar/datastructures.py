@@ -87,8 +87,8 @@ class Request:
         else:
             return '<POST %s>' % self.url
 
-def GET(url, **kwargs):
-    return Request(url, method='GET', **kwargs)
+def GET(url, params=None, **kwargs):
+    return Request(url, method='GET', params=params, **kwargs)
 
 def POST(url, data=None, **kwargs):
     return Request(url, method='POST', data=data, **kwargs)
