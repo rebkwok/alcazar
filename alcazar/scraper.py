@@ -17,7 +17,7 @@ from types import GeneratorType
 
 # alcazar
 from .datastructures import Query, QueryMethods
-from .exceptions import ScraperError
+from .exceptions import ScraperError, SkipThisPage
 from .fetcher import Fetcher
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -49,13 +49,17 @@ class Scraper(object):
         # You'll most certainly want to override this
         return page
 
-    def record_payload(self, query, page, payload):
+    def record_payload(self, page, payload):
         # If you're happy with just the scraper returning its payload to the caller, you don't need this. Override e.g. to save to
         # DB
         pass
 
     def record_error(self, query, error):
         # Same as record_payload. The error will be raised unless this returns a truthy value.
+        return None
+
+    def record_skipped_page(self, query, reason):
+        logging.info("Skipped %s (%s)", query.request, reason)
         return None
 
     def scrape(self, request_or_query, **kwargs):
@@ -72,6 +76,8 @@ class Scraper(object):
                 if isinstance(payload, GeneratorType):
                     # consume the generator here so that we can catch any exceptions it might raise
                     payload = tuple(payload)
+            except SkipThisPage as reason:
+                return self.record_skipped_page(query, reason)
             except ScraperError as error:
                 if attempt_i+1 < num_attempts:
                     delay = 5 ** attempt_i
@@ -84,7 +90,7 @@ class Scraper(object):
                     else:
                         raise
             else:
-                methods.record_payload(query, page, payload)
+                methods.record_payload(page, payload)
                 return payload
             # Sleep outside the `except` handler so that a KeyboardInterrupt won't be chained with the ScraperError, which just
             # obfuscates the output
@@ -102,7 +108,7 @@ class Scraper(object):
         else:
             logging.info('%s already exists', local_file_path)
 
-    def _save_to_disk(self, query, page, payload):
+    def _save_to_disk(self, page, payload):
         part_file_path = local_file_path + '.part'
         with open(part_file_path, 'wb') as file_out:
             for chunk in page.response.iter_content():

@@ -19,7 +19,8 @@ class FewerItemsThanExpected(AlcazarException):
 
 class Tally(object):
 
-    def __init__(self, log=logging):
+    def __init__(self, label=None, log=logging):
+        self.label = label
         self.log = log
         self.reset()
 
@@ -64,6 +65,7 @@ class Tally(object):
         table = [
             line.split('|')
             for line in chain(
+                ['-- %s --||' % self.label] if self.label else [],
                 self._iter_unpadded_table_lines('Request type', self._count_by_request_type),
                 self._iter_unpadded_table_lines('Payload fate', self._count_by_fate),
                 [
