@@ -82,12 +82,7 @@ class Crawler(Scraper):
         self.crawler_starting()
         while not self.scheduler.empty:
             query = self.scheduler.pop()
-            try:
-                payload = self.scrape(query)
-                if payload is not None:
-                    yield payload
-            except SkipThisPage as reason:
-                self.log_skipped_page(query, reason)
+            self.scrape(query)
         self.crawler_stopped()
 
     def crawler_starting(self):
@@ -101,8 +96,5 @@ class Crawler(Scraper):
             self.compile_query(request_or_query, **kwargs)
             for request_or_query in requests_or_queries
         )
-
-    def log_skipped_page(self, query, reason):
-        logging.info("Skipped %s (%s)", query.request, reason)
 
 #----------------------------------------------------------------------------------------------------------------------------------
