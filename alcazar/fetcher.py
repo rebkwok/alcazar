@@ -37,10 +37,10 @@ class Fetcher(object):
         self.encoding = encoding
         self.encoding_errors = encoding_errors
 
-    def fetch_response(self, query, **kwargs):
+    def fetch_response(self, request, **kwargs):
         if kwargs.pop('attempt_i', 0) > 0:
             kwargs.setdefault('force_cache_stale', True)
-        return self.http.request(query.request, **kwargs)
+        return self.http.request(request, **kwargs)
 
     def compile_request(self, request_or_url):
         if isinstance(request_or_url, Request):
@@ -49,7 +49,7 @@ class Fetcher(object):
             return Request(request_or_url)
 
     def fetch(self, query, **kwargs):
-        with closing(self.fetch_response(query, **kwargs)) as response:
+        with closing(self.fetch_response(query.request, **kwargs)) as response:
             content_type = re.sub(r'\s*;.*', '', response.headers.get('Content-Type') or '')
             if content_type == 'text/html':
                 return self.html_page(query, response)
@@ -63,7 +63,7 @@ class Fetcher(object):
     def fetch_html(self, query, **kwargs):
         encoding = kwargs.pop('encoding', None)
         encoding_errors = kwargs.pop('encoding_errors', None)
-        with closing(self.fetch_response(query, **kwargs)) as response:
+        with closing(self.fetch_response(query.request, **kwargs)) as response:
             return self.html_page(
                 query,
                 response,
@@ -72,7 +72,7 @@ class Fetcher(object):
             )
 
     def fetch_xml(self, query, **kwargs):
-        with closing(self.fetch_response(query, **kwargs)) as response:
+        with closing(self.fetch_response(query.request, **kwargs)) as response:
             return response, self.xml_page(query, response)
 
     def html_page(self, query, response, encoding=None, encoding_errors=None):
