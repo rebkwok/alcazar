@@ -31,11 +31,13 @@ class Fetcher(object):
                  http=None,
                  encoding=None,
                  encoding_errors='strict',
+                 strip_namespaces=True,
                  **kwargs
                 ):
         self.http = http if http is not None else HttpClient(**kwargs)
         self.encoding = encoding
         self.encoding_errors = encoding_errors
+        self.strip_namespaces = strip_namespaces
 
     def fetch_response(self, request, **kwargs):
         if kwargs.pop('attempt_i', 0) > 0:
@@ -96,11 +98,12 @@ class Fetcher(object):
         )
         return Page(query, response, husker)
 
-    def xml_page(self, query, response):
+    def xml_page(self, query, response, **kwargs):
         # NB we let lxml do the character decoding
         xml_bytes = response.content
+        kwargs.setdefault('strip_namespaces', self.strip_namespaces)
         husker = ElementHusker(
-            parse_xml_etree(xml_bytes),
+            parse_xml_etree(xml_bytes, **kwargs),
             is_full_document=True,
         )
         return Page(query, response, husker)

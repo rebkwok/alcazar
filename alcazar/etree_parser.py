@@ -102,7 +102,25 @@ def _repair_self_closing_html_tag(html_string):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-def parse_xml_etree(xml_bytes):
+def strip_xml_namespaces(xml_bytes):
+    return re.sub(
+        br'(<[\?/]?\s*)(?:[\w\-]+:)?([\w\-\.]+)(?=[>\s/])([^>]*)',
+        lambda m1: b'%s%s%s' % (
+            m1.group(1),
+            m1.group(2),
+            re.sub(
+                # noice
+                br'(\s+)(?:[\w\-]+:(?=\w))?([\w\-]*)([^\s\'\"]*(?:\"(?:[^\\\"]|\\.)*\"|\'(?:[^\\\']|\\.)*\')?)',
+                lambda m2: b'' if m2.group(2) == b'xmlns' else b'%s%s%s' % (m2.group(1), m2.group(2), m2.group(3)),
+                m1.group(3),
+            ),
+        ),
+        xml_bytes,
+    )
+
+def parse_xml_etree(xml_bytes, strip_namespaces=False):
+    if strip_namespaces:
+        xml_bytes = strip_xml_namespaces(xml_bytes)
     return ET.XML(xml_bytes)
 
 #----------------------------------------------------------------------------------------------------------------------------------
