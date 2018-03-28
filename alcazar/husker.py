@@ -26,7 +26,7 @@ except ImportError:
 
 # alcazar
 from .exceptions import ScraperError
-from .utils.compatibility import PY2, bytes_type, text_type
+from .utils.compatibility import PY2, bytes_type, text_type, unescape_html
 from .utils.etree import detach_node
 from .utils.jsonutils import lenient_json_loads, strip_js_comments
 from .utils.text import normalize_spaces
@@ -252,7 +252,11 @@ class Husker(Selector):
         return datetime.strptime(self.str, fmt).date()
 
     def datetime(self, fmt='%Y-%m-%dT%H:%M:%S'):
-        return datetime.strptime(self.str, fmt)
+        text = self.text.sub(
+            r'(?:\.\d+|[\+\-]\d\d?(?::\d\d?)?|Z)*$',
+            '',
+        )
+        return datetime.strptime(text.str, fmt)
 
     def map_raw(self, function):
         return function(self.raw)
@@ -341,6 +345,10 @@ class NullHusker(Husker):
     multiline = property(_returns_null)
     join = _returns_null
     list = _returns_null
+    sub = _returns_null
+
+    __getitem__ = _returns_null
+    attrib = _returns_null
 
     json = _returns_null
     str = property(_returns_none)
@@ -378,7 +386,7 @@ class ElementHusker(Husker):
         value = self.value.attrib.get(item, _unspecified)
         if value is _unspecified:
             raise HuskerError("Attribute %r not found" % item)
-        return TextHusker(self._ensure_decoded(value))
+        return TextHusker(unescape_html(self._ensure_decoded(value)))
 
     def attrib(self, item, default=NULL_HUSKER):
         try:
