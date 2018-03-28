@@ -236,11 +236,14 @@ class ShelfIndex(object):
     @property
     def db(self):
         if self._db is None:
-            self._db = shelve.open(
-                self.file_path,
-                'c',
-                protocol=pickle.HIGHEST_PROTOCOL,
-            )
+            try:
+                self._db = shelve.open(
+                    self.file_path,
+                    'c',
+                    protocol=pickle.HIGHEST_PROTOCOL,
+                )
+            except Exception:
+                raise Exception("Failed to open %s" % self.file_path)
         return self._db
 
     @staticmethod
