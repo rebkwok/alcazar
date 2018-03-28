@@ -75,7 +75,11 @@ class Fetcher(object):
 
     def fetch_xml(self, query, **kwargs):
         with closing(self.fetch_response(query.request, **kwargs)) as response:
-            return response, self.xml_page(query, response)
+            return self.xml_page(query, response)
+
+    def fetch_json(self, query, **kwargs):
+        with closing(self.fetch_response(query.request, **kwargs)) as response:
+            return self.json_page(query, response)
 
     def html_page(self, query, response, encoding=None, encoding_errors=None):
         html_string = response.content.decode(
