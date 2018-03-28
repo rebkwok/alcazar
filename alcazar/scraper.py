@@ -52,11 +52,11 @@ class Scraper(object):
     def record_payload(self, page, payload):
         # If you're happy with just the scraper returning its payload to the caller, you don't need this. Override e.g. to save to
         # DB
-        pass
+        return payload
 
     def record_error(self, query, error):
         # Same as record_payload. The error will be raised unless this returns a truthy value.
-        return None
+        logging.error(format_exc())
 
     def record_skipped_page(self, query, reason):
         logging.info("Skipped %s (%s)", query.request, reason)
@@ -90,8 +90,7 @@ class Scraper(object):
                     else:
                         raise
             else:
-                methods.record_payload(page, payload)
-                return payload
+                return methods.record_payload(page, payload)
             # Sleep outside the `except` handler so that a KeyboardInterrupt won't be chained with the ScraperError, which just
             # obfuscates the output
             sleep(delay)
