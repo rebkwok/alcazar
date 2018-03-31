@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # standards
 from collections import OrderedDict
+import json
 import re
 
 # alcazar
@@ -24,7 +25,7 @@ class Request:
     # 2018-03-10 - for a while I resisted creating my own Request class, thinking requests already has one (2, even), why lengthen
     # the daisy chain. But ther's a few things I wanted that requests.Request doesn't have -- here they are:
 
-    def __init__(self, url, method=None, params=None, data=None, headers=None):
+    def __init__(self, url, method=None, params=None, data=None, headers=None, json=None):
         if method:
             assert method.isupper(), repr(method) # just to make sure caller doesn't swap method and url
         else:
@@ -34,20 +35,28 @@ class Request:
         self._params = params
         self._data = data
         self._headers = headers
+        self._json = json
 
     def to_requests_request(self):
+        headers = self._headers
         params = self._params
         if params:
             params = OrderedDict(sorted(params.items())) # to avoid thwarting the cache
         data = self._data
         if data and isinstance(data, dict):
             data = OrderedDict(sorted(data.items())) # ditto
+        if self._json:
+            assert data is None
+            # The point of serialising to bytes before passing over to `requests` is to preserve the ordering, so that the cache
+            # is still effective
+            data = json.dumps(self._json, sort_keys=True).encode('UTF-8')
+            headers = {**(headers or {}), 'Content-Type': 'application/json; charset=UTF-8'}
         return requests.Request(
             method=self._method,
             url=self._url,
             params=params,
             data=data,
-            headers=self._headers,
+            headers=headers,
         )
 
     def modify_params(self, new_params):
@@ -57,6 +66,37 @@ class Request:
             params=dict(self._params or {}, **new_params),
             data=self._data,
             headers=self._headers,
+            json=self._json,
+        )
+
+    def add_header(self, key, value):
+        return Request(
+            url=self._url,
+            method=self._method,
+            params=self._params,
+            data=self._data,
+            headers=dict(self._headers or {}, **{key: value}),
+            json=self._json,
+        )
+
+    def modify_method(self, method):
+        return Request(
+            url=self._url,
+            method=method,
+            params=self._params,
+            data=self._data,
+            headers=self._headers,
+            json=self._json,
+        )
+
+    def modify_url(self, url):
+        return Request(
+            url=url,
+            method=self._method,
+            params=self._params,
+            data=self._data,
+            headers=self._headers,
+            json=self._json,
         )
 
     @property
@@ -113,7 +153,7 @@ class Query(object):
 
     @property
     def url(self):
-        return self.request.url
+        return self.request and self.request.url
 
     def __repr__(self):
         return "Query(%r, %r, %r)" % (
@@ -147,7 +187,7 @@ class Page(object):
         # The Query object that was `fetch`ed
         self.query = query
 
-        # 2017-11-20 - the situation here mirrors that descrived above for Query.request -- at the moment the only Fetcher we have
+        # 2017-11-20 - the situation here mirrors that described above for Query.request -- at the moment the only Fetcher we have
         # uses the `requests` library, and so this a `requests.Response` object. But eventually I intend to have other fetchers,
         # and it would be up to the fetcher to determine the class of this object. I've not decided yet what the shared interface
         # will be.

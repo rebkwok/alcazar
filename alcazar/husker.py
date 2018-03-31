@@ -346,6 +346,8 @@ class NullHusker(Husker):
     join = _returns_null
     list = _returns_null
     sub = _returns_null
+    lower = _returns_null
+    upper = _returns_null
 
     __getitem__ = _returns_null
     attrib = _returns_null
@@ -616,6 +618,12 @@ class TextHusker(Husker):
     @property
     def normalized(self):
         return TextHusker(normalize_spaces(self.value))
+
+    def lower(self):
+        return TextHusker(self.value.lower())
+
+    def upper(self):
+        return TextHusker(self.value.upper())
 
     def repr_spec(self, regex, flags=''):
         return "%s%s" % (
