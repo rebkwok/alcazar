@@ -8,9 +8,6 @@ from __future__ import unicode_literals
 # standards
 from distutils.core import setup
 
-# 3rd parties
-from pip.req import parse_requirements
-
 #----------------------------------------------------------------------------------------------------------------------------------
 
 setup(
