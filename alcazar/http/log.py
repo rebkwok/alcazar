@@ -8,6 +8,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
+from sys import stderr
 from time import time
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -79,7 +80,7 @@ class DefaultLogger(Logger):
             value = entry.pop(key, None)
             if value is not None:
                 line.append(format(value))
-        print("".join(line), end=end)
+        print("".join(line), end=end, file=stderr)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
