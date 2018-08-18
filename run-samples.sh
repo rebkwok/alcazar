@@ -2,7 +2,7 @@
 
 cd $(dirname $0)
 
-for sample_dir in samples/trains; do
+for sample_dir in samples/floatrates samples/trains; do
     echo "Running $sample_dir ..."
     sample_name=$(basename "$sample_dir")
 
