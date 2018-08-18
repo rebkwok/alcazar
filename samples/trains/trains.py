@@ -41,7 +41,7 @@ class TrainTimesScraper(alcazar.Scraper):
         )
 
     def parse_trains(self, page):
-        parse_platform = lambda el: el.text('^Platform (\w+)$')
+        parse_platform = lambda el: el.text(u'^Platform (\w+)$')
         for row in page('#oft').all('tbody tr.mtx'):
             yield self.Train(
                 dep_time=row('.dep').datetime('%H:%M').time(),

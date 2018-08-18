@@ -26,7 +26,7 @@ except ImportError:
 
 # alcazar
 from .exceptions import ScraperError
-from .utils.compatibility import PY2, bytes_type, text_type, unescape_html
+from .utils.compatibility import PY2, bytes_type, string_types, text_type, unescape_html
 from .utils.etree import detach_node
 from .utils.jsonutils import lenient_json_loads, strip_js_comments
 from .utils.text import normalize_spaces
@@ -645,7 +645,7 @@ class TextHusker(Husker):
 
     @staticmethod
     def _compile(regex, flags):
-        if isinstance(regex, text_type):
+        if isinstance(regex, string_types):
             return re.compile(
                 regex,
                 reduce(

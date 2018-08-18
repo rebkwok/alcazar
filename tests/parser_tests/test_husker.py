@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # standards
 from datetime import date, datetime
+import re
 
 # alcazar
 from alcazar.husker import ElementHusker, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, JmesPathHusker, TextHusker
@@ -884,19 +885,32 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
 class TextHuskerTest(AlcazarTest):
 
+    text_str = """
+        This is my text.
+        There are many like it but this one is mine.
+    """
+
     def test_normalized(self):
-        text_str = """
-            This is my text.
-            There are many like it but this one is mine.
-        """
-        text_husker = TextHusker(text_str)
+        text_husker = TextHusker(self.text_str)
         self.assertEqual(
             text_husker.value,
-            text_str,
+            self.text_str,
         )
         self.assertEqual(
             text_husker.normalized.value,
             "This is my text. There are many like it but this one is mine.",
+        )
+
+    def test_regex_as_str(self):
+        self.assertEqual(
+            TextHusker(self.text_str).one('This is my (\w+)'),
+            'text',
+        )
+
+    def test_regex_as_compiled(self):
+        self.assertEqual(
+            TextHusker(self.text_str).one(re.compile('This is my (\w+)')),
+            'text',
         )
 
 #----------------------------------------------------------------------------------------------------------------------------------
