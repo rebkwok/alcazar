@@ -2,7 +2,7 @@
 
 cd $(dirname $0)
 
-for sample_dir in samples/floatrates samples/gumtree samples/trains; do
+for sample_dir in samples/floatrates samples/gumtree samples/opengraph samples/trains; do
     echo "Running $sample_dir ..."
     sample_name=$(basename "$sample_dir")
 
