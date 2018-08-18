@@ -16,7 +16,7 @@ import gzip
 from hashlib import md5
 import json
 import logging
-from os import path, makedirs, rename, rmdir, unlink
+from os import environ, path, makedirs, rename, rmdir, unlink
 import shelve
 from time import time
 
@@ -59,9 +59,9 @@ class CacheAdapterMixin(object):
             if cache is None:
                 cache = NullCache()
         else:
-            cache_root_path = kwargs.pop('cache_root_path', None)
+            cache_root_path = kwargs.pop('cache_root_path', None) or environ.get('HTTP_CACHE_ROOT_PATH')
+            cache_id = kwargs.pop('cache_id', None)
             if cache_root_path is not None:
-                cache_id = kwargs.pop('cache_id', None)
                 if cache_id:
                     cache_root_path = path.join(cache_root_path, cache_id)
                 cache = DiskCache.build(cache_root_path)

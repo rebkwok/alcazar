@@ -1,11 +1,12 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+
+#----------------------------------------------------------------------------------------------------------------------------------
+# includes
 
 # standards
 from collections import namedtuple
-from datetime import datetime, timedelta
-from hashlib import sha256
+from datetime import datetime
 import json
-from os import path
 
 # alcazar
 import alcazar
@@ -13,8 +14,6 @@ import alcazar
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class TrainTimesScraper(alcazar.Scraper):
-
-    cache_root_path = path.join(path.dirname(__file__), 'cache')
 
     Query = namedtuple('Query', (
         'from_station',
@@ -52,11 +51,11 @@ class TrainTimesScraper(alcazar.Scraper):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-def main():
+def run_sample():
     query = TrainTimesScraper.Query(
         from_station='EDB',
         to_station='GLQ',
-        dep_datetime=datetime(2017, 11, 21, 14, 0),
+        dep_datetime=datetime(2018, 8, 21, 14, 0),
     )
     all_trains = tuple(TrainTimesScraper().search(query))
     print(json.dumps(
@@ -71,8 +70,5 @@ def main():
         sort_keys=True,
         default=lambda v: v and v.strftime('%H:%M')
     ))
-
-if __name__ == '__main__':
-    main()
 
 #----------------------------------------------------------------------------------------------------------------------------------
