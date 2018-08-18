@@ -105,15 +105,15 @@ def _repair_self_closing_html_tag(html_string):
 def strip_xml_namespaces(xml_bytes):
     return re.sub(
         br'(<[\?/]?\s*)(?:[\w\-]+:)?([\w\-\.]+)(?=[>\s/])([^>]*)',
-        lambda m1: b'%s%s%s' % (
-            m1.group(1),
-            m1.group(2),
-            re.sub(
+        lambda m1: (
+            m1.group(1)
+            + m1.group(2)
+            + re.sub(
                 # noice
                 br'(\s+)(?:[\w\-]+:(?=\w))?([\w\-]*)([^\s\'\"]*(?:\"(?:[^\\\"]|\\.)*\"|\'(?:[^\\\']|\\.)*\')?)',
-                lambda m2: b'' if m2.group(2) == b'xmlns' else b'%s%s%s' % (m2.group(1), m2.group(2), m2.group(3)),
+                lambda m2: b'' if m2.group(2) == b'xmlns' else (m2.group(1) + m2.group(2) + m2.group(3)),
                 m1.group(3),
-            ),
+            )
         ),
         xml_bytes,
     )
