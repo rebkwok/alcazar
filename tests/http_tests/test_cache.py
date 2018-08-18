@@ -21,6 +21,7 @@ from tempfile import mkdtemp
 import requests
 
 # alcazar
+from alcazar.exceptions import HttpError
 from alcazar.http import HttpClient
 from alcazar.http.cache import DiskCache
 from alcazar.utils.compatibility import native_string
@@ -131,7 +132,7 @@ class UncachedTests(object):
         self.assertEqual(self.fetch('/counter').text, '2')
 
     def test_failonce_only_fails_once(self):
-        with self.assertRaises(requests.exceptions.HTTPError):
+        with self.assertRaises(HttpError):
             self.fetch('/fail_once')
         self.assertEqual(self.fetch('/fail_once').text, 'OK')
 
@@ -167,7 +168,7 @@ class CachedTests(object):
 
     def test_failonce_fails_every_time(self):
         for _ in ('live', 'from-cache'):
-            with self.assertRaises(requests.HTTPError):
+            with self.assertRaises(HttpError):
                 self.fetch('/fail_once')
 
     def test_cache_life_zero_disables_cache(self):
@@ -178,10 +179,10 @@ class CachedTests(object):
 
     def test_exception_response_is_cached(self):
         for _ in ('live', 'from-cache'):
-            with self.assertRaises(requests.HTTPError) as raised:
+            with self.assertRaises(HttpError) as raised:
                 self.fetch('/five_hundred')
             self.assertEqual(
-                raised.exception.response.text,
+                raised.exception.reason.response.text,
                 'I have failed 0 times',
             )
 

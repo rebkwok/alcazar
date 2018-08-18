@@ -18,9 +18,15 @@ from types import GeneratorType
 # exception classes
 
 class AlcazarException(Exception):
-    pass
+
+    def __init__(self, message=None, reason=None):
+        super(AlcazarException, self).__init__(message)
+        self.reason = reason # a chain link to a further exception, where applicable
 
 class ScraperError(AlcazarException):
+    pass
+
+class HttpError(ScraperError):
     pass
 
 class SkipThisPage(AlcazarException):

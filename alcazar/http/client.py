@@ -14,7 +14,7 @@ from requests.structures import CaseInsensitiveDict
 # alcazar
 from .. import __version__
 from ..datastructures import Request
-from ..exceptions import ScraperError
+from ..exceptions import HttpError, ScraperError
 from .cache import CacheAdapterMixin
 from .courtesy import CourtesySleepAdapterMixin
 from .log import LogEntry, LoggingAdapterMixin
@@ -89,9 +89,10 @@ class HttpClient(object):
             if auto_raise_for_status:
                 response.raise_for_status()
             return response
-        except requests.RequestException:
-            # FIXME a way to access the original error details!
-            raise ScraperError()
+        except requests.HTTPError as error:
+            raise HttpError(str(error), reason=error)
+        except requests.RequestException as exception:
+            raise ScraperError(str(exception), reason=exception)
 
     def get(self, url, **kwargs):
         kwargs['url'] = url
