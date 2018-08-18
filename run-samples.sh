@@ -28,7 +28,7 @@ for sample_dir in samples/floatrates samples/trains; do
         exit 1
     fi
 
-    expected_output=$(cat "$sample_dir/output.json")
+    expected_output=$(cat "$sample_dir"/output.*)
     diff=$(diff --ignore-all-space <(echo "$expected_output") <(echo "$actual_output"))
 
     if [ "$diff" ]; then
