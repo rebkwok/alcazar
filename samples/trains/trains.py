@@ -28,23 +28,21 @@ class TrainTimesScraper(alcazar.Scraper):
             'http://ojp.nationalrail.co.uk/service/timesandfares/%s/%s/%s/%s/dep' % (
                 from_station,
                 to_station,
-                dep_datetime.strftime ('%d%m%y'),
-                dep_datetime.strftime ('%H%M'),
+                dep_datetime.strftime('%d%m%y'),
+                dep_datetime.strftime('%H%M'),
             ),
-            self.parse_trains,
+            parse=self.parse_trains,
         )
 
     def parse_trains(self, page):
+        parse_platform = lambda el: el.text('^Platform (\w+)$')
         for row in page('#oft').all('tbody tr.mtx'):
             yield self.Train(
                 dep_time=row('.dep').datetime('%H:%M').time(),
-                dep_platform=row.some('.from .ctf-plat').map(self.parse_platform),
+                dep_platform=row.some('.from .ctf-plat').map(parse_platform).str,
                 arr_time=row('.arr').datetime('%H:%M').time(),
-                arr_platform=row.some('.to .ctf-plat').map(self.parse_platform),
+                arr_platform=row.some('.to .ctf-plat').map(parse_platform).str,
             )
-
-    def parse_platform(self, el):
-        return el.text('^Platform (\w+)$').str
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -55,7 +53,7 @@ def main():
         all_trains,
         indent=4,
         sort_keys=True,
-        default=lambda v: v.strftime('%H:%M'),
+        default=lambda v: v and v.strftime('%H:%M')
     )
     print(json_str)
     hexdigest = sha256(json_str.encode('UTF-8')).hexdigest()
