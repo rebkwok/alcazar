@@ -16,6 +16,12 @@ class TrainTimesScraper(alcazar.Scraper):
 
     cache_root_path = path.join(path.dirname(__file__), 'cache')
 
+    Query = namedtuple('Query', (
+        'from_station',
+        'to_station',
+        'dep_datetime',
+    ))
+
     Train = namedtuple('Train', (
         'dep_time',
         'dep_platform',
@@ -23,13 +29,13 @@ class TrainTimesScraper(alcazar.Scraper):
         'arr_platform',
     ))
 
-    def search(self, from_station, to_station, dep_datetime):
+    def search(self, query):
         return self.scrape(
             'http://ojp.nationalrail.co.uk/service/timesandfares/%s/%s/%s/%s/dep' % (
-                from_station,
-                to_station,
-                dep_datetime.strftime('%d%m%y'),
-                dep_datetime.strftime('%H%M'),
+                query.from_station,
+                query.to_station,
+                query.dep_datetime.strftime('%d%m%y'),
+                query.dep_datetime.strftime('%H%M'),
             ),
             parse=self.parse_trains,
         )
@@ -47,17 +53,24 @@ class TrainTimesScraper(alcazar.Scraper):
 #----------------------------------------------------------------------------------------------------------------------------------
 
 def main():
-    dep_datetime = datetime(2017, 11, 21, 14, 0)
-    all_trains = tuple(TrainTimesScraper().search('EDB', 'GLQ', dep_datetime))
-    json_str = json.dumps(
-        all_trains,
+    query = TrainTimesScraper.Query(
+        from_station='EDB',
+        to_station='GLQ',
+        dep_datetime=datetime(2017, 11, 21, 14, 0),
+    )
+    all_trains = tuple(TrainTimesScraper().search(query))
+    print(json.dumps(
+        {
+            "query": query._asdict(),
+            "trains": [
+                train._asdict()
+                for train in all_trains
+            ],
+        },
         indent=4,
         sort_keys=True,
         default=lambda v: v and v.strftime('%H:%M')
-    )
-    print(json_str)
-    hexdigest = sha256(json_str.encode('UTF-8')).hexdigest()
-    assert hexdigest == '817e8f10016dee3661515070fed9c9e25449475bd0af2d61eaa8c699aa9b9910', hexdigest
+    ))
 
 if __name__ == '__main__':
     main()

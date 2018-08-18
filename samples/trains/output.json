@@ -1,0 +1,39 @@
+{
+    "query": {
+        "dep_datetime": "14:00",
+        "from_station": "EDB",
+        "to_station": "GLQ"
+    },
+    "trains": [
+        {
+            "arr_platform": null,
+            "arr_time": "14:48",
+            "dep_platform": "13",
+            "dep_time": "14:00"
+        },
+        {
+            "arr_platform": null,
+            "arr_time": "15:22",
+            "dep_platform": "10",
+            "dep_time": "14:07"
+        },
+        {
+            "arr_platform": null,
+            "arr_time": "15:06",
+            "dep_platform": "17",
+            "dep_time": "14:15"
+        },
+        {
+            "arr_platform": null,
+            "arr_time": "15:31",
+            "dep_platform": "14",
+            "dep_time": "14:24"
+        },
+        {
+            "arr_platform": null,
+            "arr_time": "15:21",
+            "dep_platform": "15",
+            "dep_time": "14:30"
+        }
+    ]
+}

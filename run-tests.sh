@@ -43,7 +43,8 @@ for v in ${supported_versions[@]}; do
             | grep -v '^\(Cleaning up\|Requirement already satisfied\)'
 
         # run the tests
-        $cmd -m unittest discover -f tests "$@"
+        $cmd -m unittest discover -f tests "$@" \
+             && ./run-samples.sh
         if [ "$?" == "0" ]; then
             summary_entry="pass"
         else
