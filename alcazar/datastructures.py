@@ -50,7 +50,8 @@ class Request:
             # The point of serialising to bytes before passing over to `requests` is to preserve the ordering, so that the cache
             # is still effective
             data = json.dumps(self._json, sort_keys=True).encode('UTF-8')
-            headers = {**(headers or {}), 'Content-Type': 'application/json; charset=UTF-8'}
+            headers = dict(headers or {})
+            headers['Content-Type'] = 'application/json; charset=UTF-8'
         return requests.Request(
             method=self._method,
             url=self._url,
