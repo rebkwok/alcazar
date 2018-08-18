@@ -43,6 +43,9 @@ _unspecified = object()
 class HuskerError(ScraperError):
     pass
 
+class HuskerAttributeNotFound(HuskerError):
+    pass
+
 class HuskerMismatch(HuskerError):
     pass
 
@@ -387,13 +390,13 @@ class ElementHusker(Husker):
     def __getitem__(self, item):
         value = self.value.attrib.get(item, _unspecified)
         if value is _unspecified:
-            raise HuskerError("Attribute %r not found" % item)
+            raise HuskerAttributeNotFound(repr(item))
         return TextHusker(unescape_html(self._ensure_decoded(value)))
 
     def attrib(self, item, default=NULL_HUSKER):
         try:
             return self[item]
-        except KeyError:
+        except HuskerAttributeNotFound:
             return default
 
     @property
