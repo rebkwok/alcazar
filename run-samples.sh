@@ -2,7 +2,7 @@
 
 cd $(dirname $0)
 
-for sample_dir in samples/floatrates samples/trains; do
+for sample_dir in samples/floatrates samples/gumtree samples/trains; do
     echo "Running $sample_dir ..."
     sample_name=$(basename "$sample_dir")
 
@@ -20,8 +20,9 @@ for sample_dir in samples/floatrates samples/trains; do
             python -c "import $sample_name; $sample_name.run_sample()" \
     )
     status="$?"
-    rm -f "$sample_dir"/*.pyc
-    rm -rf "$sample_dir"/__pycache__/
+    find "$sample_dir" \
+         \( -name '*.pyc' -o -name __pycache__ \) \
+         -delete
 
     if [ "$status" != "0" ]; then
         echo $actual_output 1>&2

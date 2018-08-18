@@ -14,6 +14,7 @@ import logging
 
 # alcazar
 from .crawler import Crawler
+from .datastructures import Query
 from .exceptions import AlcazarException, SkipThisPage
 from .husker import HuskerMismatch, ListHusker
 from .utils.compatibility import text_type
@@ -55,9 +56,9 @@ class CatalogParser(object):
     ### core loop
 
     def scrape_catalog(self, start_queries):
+        queue = list(map(self.compile_result_list_query, start_queries))
+        queue.reverse()
         with self.seen_items_counter() as counter:
-            queue = list(start_queries)
-            queue.reverse()
             while queue:
                 query = queue.pop()
                 result_list = self.scrape(query)
@@ -79,13 +80,17 @@ class CatalogParser(object):
     ### result list handling
 
     def compile_result_list_query(self, request, **extras):
-        return self.compile_query(
-            request,
-            fetch=self.fetch_result_list,
-            parse=self.parse_result_list,
-            record_error=self.record_result_list_error,
-            **extras
-        )
+        if isinstance(request, Query):
+            assert not extras, (request, extras)
+            return request
+        else:
+            return self.compile_query(
+                request,
+                fetch=self.fetch_result_list,
+                parse=self.parse_result_list,
+                record_error=self.record_result_list_error,
+                **extras
+            )
 
     def fetch_result_list(self, query, **kwargs):
         return self.fetch(query, **kwargs)
@@ -170,11 +175,11 @@ class CatalogParser(object):
     def fetch_catalog_item(self, query, **kwargs):
         return self.fetch(query, **kwargs)
 
-    def record_catalog_item_payload(self, query, page, payload):
-        return self.record_payload(query, page, payload)
+    def record_catalog_item_payload(self, query, payload):
+        return self.record_payload(query, payload)
 
     def record_catalog_item_error(self, query, error):
-        return self.record_error(self, query, error)
+        return self.record_error(query, error)
 
     def husk_item_request(self, _result_list_unused, item):
         return item.all(self.item_request_path).dedup().one()
