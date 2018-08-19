@@ -6,7 +6,7 @@ for sample_dir in samples/*; do
     echo "Running $sample_dir ..."
     sample_name=$(basename "$sample_dir")
 
-    actual_output=$(cd "$sample_dir"; python "$sample_name.py")
+    actual_output=$(cd "$sample_dir"; ls -l; python "$sample_name.py")
     if [ "$?" != "0" ]; then
         echo $actual_output 1>&2
         exit 1
