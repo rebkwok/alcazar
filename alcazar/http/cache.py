@@ -16,7 +16,7 @@ import gzip
 from hashlib import md5
 import json
 import logging
-from os import environ, path, makedirs, rename, rmdir, unlink
+from os import path, makedirs, rename, rmdir, unlink
 import shelve
 from time import time
 
@@ -28,7 +28,7 @@ except ImportError:
     import urllib3
 
 # alcazar
-from ..utils.compatibility import pickle, text_type
+from ..utils.compatibility import PY2, pickle, text_type
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # data structures
@@ -59,7 +59,7 @@ class CacheAdapterMixin(object):
             if cache is None:
                 cache = NullCache()
         else:
-            cache_root_path = kwargs.pop('cache_root_path', None) or environ.get('HTTP_CACHE_ROOT_PATH')
+            cache_root_path = kwargs.pop('cache_root_path', None)
             cache_id = kwargs.pop('cache_id', None)
             if cache_root_path is not None:
                 if cache_id:
@@ -182,8 +182,19 @@ class DiskCache(Cache):
     def build(cls, cache_root_path):
         if not path.isdir(cache_root_path):
             makedirs(cache_root_path)
+        shelf_file_name = 'index.shelf'
+        if PY2:
+            # The index file contains pickled requests.Response objects, and you can't unpickle in Python 3 a Response object that
+            # was pickled in Python 2. The culprit is the OrderedDict shim provided by urllib3. The pickled response includes an
+            # OrderedDict object, but the Python 2 shim is not runnable in Python 3 -- unpickling tries to create a
+            # urllib3.OrderedDict object in a Python 3 environment, which crashes with "No module named 'dummy_thread'".
+            #
+            # So Python 2 instances use a different shelf file name. If the same code base is run with both Python versions (as is
+            # the case for the samples in the Alcazar distribution folder), they'll each get their own index file, though they can
+            # share the request data files.
+            shelf_file_name = 'index.p2.shelf'
         return cls(
-            index=ShelfIndex(path.join(cache_root_path, 'index.shelf')),
+            index=ShelfIndex(path.join(cache_root_path, shelf_file_name)),
             storage=FlatFileStorage(cache_root_path),
         )
 
