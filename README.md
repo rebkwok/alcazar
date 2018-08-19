@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/saintamh/alcazar.svg?branch=master)](https://travis-ci.org/saintamh/alcazar)
+
 Alcazar is a Python library that simplifies the task of writing web scrapers.
 
 Some of its core features are:
@@ -15,3 +17,5 @@ This project brings together the following libraries:
 * [JMESPath](http://jmespath.org/)
 
 See the `samples` directory for a taste of how Alcazar works.
+
+[Alcazar is available on PyPi](https://pypi.org/project/alcazar/)

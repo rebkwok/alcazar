@@ -8,11 +8,16 @@ from __future__ import unicode_literals
 # standards
 import setuptools
 from os import path
+import re
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
 with open(path.join(path.dirname(__file__), 'README.md'), 'rb') as file_in:
-    long_description = file_in.read().decode('UTF-8')
+    long_description = re.sub(
+        r'\n\n+.*available on PyPi.*\n?',
+        '',
+        file_in.read().decode('UTF-8'),
+    )
 
 setuptools.setup(
     name='alcazar',
