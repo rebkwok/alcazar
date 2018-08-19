@@ -254,6 +254,8 @@ class ShelfIndex(object):
                     protocol=pickle.HIGHEST_PROTOCOL,
                 )
             except Exception:
+                if PY2:
+                    logging.exception("Failed to open %s" % self.file_path)
                 raise Exception("Failed to open %s" % self.file_path)
         return self._db
 
