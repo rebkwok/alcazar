@@ -382,7 +382,8 @@ class ElementHusker(Husker):
         self.is_full_document = is_full_document
 
     def __iter__(self):
-        return iter(self.value)
+        for child in self.value:
+            yield ElementHusker(child)
 
     def __len__(self):
         return len(self.value)

@@ -881,6 +881,14 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         node = self.husker.one('section#discourse')
         self.assertEqual(3, len(node.all('.discourse')))
 
+    def test_element_iter_returns_huskers_too(self):
+        node = self.husker.one('section#discourse')
+        text = [child.text.str for child in node]
+        self.assertEqual(
+            text,
+            ['It begins.', 'It runs.', 'It ends.'],
+        )
+
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class TextHuskerTest(AlcazarTest):
