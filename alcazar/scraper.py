@@ -43,7 +43,10 @@ class Scraper(object):
 
     def fetch(self, query, **kwargs):
         # If you want to set fetcher kwargs for a request submitted via `scrape`, you'll need to override this.
-        return self.fetcher.fetch(query, **kwargs)
+        return self.fetcher.fetch(
+            self.compile_query(query),
+            **kwargs
+        )
 
     def parse(self, page):
         # You'll most certainly want to override this
