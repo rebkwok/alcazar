@@ -146,13 +146,14 @@ class Scraper(object):
 # to use it. I ended up concluding this was overkill, and hence this little blemish.
 
 FETCHER_KWARGS = (
-    'max_cache_life',
-    'cache_root_path',
     'cache_id',
+    'cache_root_path',
+    'courtesy_seconds',
+    'encoding',
+    'encoding_errors',
+    'max_cache_life',
     'timeout',
     'user_agent',
-    'html_encoding',
-    'html_encoding_errors',
 )
 
 def _fetcher_kwargs(kwargs, host=None):
