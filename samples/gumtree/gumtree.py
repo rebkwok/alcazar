@@ -43,7 +43,7 @@ class Gumtree(alcazar.CatalogParser, alcazar.Scraper):
                 .decimal,
             'location': page('span[@itemprop="address"]').str,
             'age': item('.//*[@data-q="listing-adAge"]')
-                .text('Ad posted (\d+ (?:second|minute|hour|day)s?) ago$')
+                .text('Ad posted (\d+ (?:second|min|hour|day)s?) ago$')
                 .str,
             'image_urls': page.js()
                 .one(r'imageUrls\s*:\s*\[(.*?)\]')
