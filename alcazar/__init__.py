@@ -7,7 +7,7 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-__version__ = '0.1'
+__version__ = '0.1.1'
 
 # alcazar
 from .catalogparser import CatalogParser, CatalogResultList

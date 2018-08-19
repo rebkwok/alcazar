@@ -1,6 +1,7 @@
 *.egg-info/
 *.pyc
 __pycache__/
+build/
 cache/
+dist/
 venv*
-out.csv
