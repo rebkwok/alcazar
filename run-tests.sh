@@ -3,4 +3,4 @@
 set -e
 
 python -m unittest discover -f tests "$@" \
-    && ./run-samples.sh
+    && bash ./run-samples.sh
