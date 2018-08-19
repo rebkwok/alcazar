@@ -4,6 +4,9 @@
 #----------------------------------------------------------------------------------------------------------------------------------
 # includes
 
+# 2+3 compat
+from __future__ import print_function, unicode_literals
+
 # standards
 import json
 
@@ -38,12 +41,12 @@ class Gumtree(alcazar.CatalogParser, alcazar.Scraper):
             'title': item('.listing-title').str,
             'description': page('p.ad-description').multiline.str,
             'price_gbp': page('strong.ad-price')
-                .text('^£(\d+(?:,\d\d\d)*\.\d\d)$')
+                .text(r'^£(\d+(?:,\d\d\d)*\.\d\d)$')
                 .sub(',', '')
                 .decimal,
             'location': page('span[@itemprop="address"]').str,
             'age': item('.//*[@data-q="listing-adAge"]')
-                .text('Ad posted (\d+ (?:second|min|hour|day)s?) ago$')
+                .text(r'Ad posted (\d+ (?:second|min|hour|day)s?) ago$')
                 .str,
             'image_urls': page.js()
                 .one(r'imageUrls\s*:\s*\[(.*?)\]')
