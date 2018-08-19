@@ -395,10 +395,10 @@ class ElementHusker(Husker):
         return TextHusker(unescape_html(self._ensure_decoded(value)))
 
     def attrib(self, item, default=NULL_HUSKER):
-        try:
-            return self[item]
-        except HuskerAttributeNotFound:
+        value = self.value.attrib.get(item, _unspecified)
+        if value is _unspecified:
             return default
+        return TextHusker(unescape_html(self._ensure_decoded(value)))
 
     @property
     def children(self):
@@ -470,11 +470,11 @@ class ElementHusker(Husker):
 
     @property
     def head(self):
-        return TextHusker(self.value.text)
+        return husk(self.value.text)
 
     @property
     def tail(self):
-        return TextHusker(self.value.tail)
+        return husk(self.value.tail)
 
     @property
     def next(self):
@@ -487,6 +487,10 @@ class ElementHusker(Husker):
     @property
     def parent(self):
         return husk(self.value.getparent())
+
+    @property
+    def tag(self):
+        return TextHusker(self.value.tag)
 
     def js(self, strip_comments=True):
         js = "\n".join(
