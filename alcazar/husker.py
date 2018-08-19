@@ -470,11 +470,11 @@ class ElementHusker(Husker):
 
     @property
     def head(self):
-        return husk(self.value.text)
+        return husk(self._ensure_decoded(self.value.text))
 
     @property
     def tail(self):
-        return husk(self.value.tail)
+        return husk(self._ensure_decoded(self.value.tail))
 
     @property
     def next(self):
@@ -490,7 +490,7 @@ class ElementHusker(Husker):
 
     @property
     def tag(self):
-        return TextHusker(self.value.tag)
+        return TextHusker(self._ensure_decoded(self.value.tag))
 
     def js(self, strip_comments=True):
         js = "\n".join(
