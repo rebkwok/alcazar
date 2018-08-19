@@ -79,10 +79,16 @@ class Crawler(Scraper):
         self.scheduler = scheduler or StackScheduler()
 
     def crawl(self):
+        for _ in self.crawl_iter():
+            pass # Just consume the iterator. This is for Crawlers where payloads are recorded as a side effect of crawling
+
+    def crawl_iter(self):
         self.crawler_starting()
         while not self.scheduler.empty:
             query = self.scheduler.pop()
-            self.scrape(query)
+            payload = self.scrape(query)
+            if payload is not None:
+                yield payload
         self.crawler_stopped()
 
     def crawler_starting(self):
