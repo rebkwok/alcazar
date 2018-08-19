@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # includes
@@ -11,8 +11,8 @@ import alcazar
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-def run_sample():
-    scraper = alcazar.Scraper()
+def main():
+    scraper = alcazar.Scraper(cache_root_path='cache')
     meta = scraper.scrape(
         'http://www.omgubuntu.co.uk/',
         parse=lambda page: dict(
@@ -28,6 +28,9 @@ def run_sample():
         indent=4,
         sort_keys=True,
     ))
+
+if __name__ == '__main__':
+    main()
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

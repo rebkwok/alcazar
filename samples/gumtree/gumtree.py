@@ -4,9 +4,6 @@
 #----------------------------------------------------------------------------------------------------------------------------------
 # includes
 
-# 2+3 compat
-from __future__ import print_function, unicode_literals
-
 # standards
 import json
 
@@ -17,6 +14,8 @@ from alcazar.utils.compatibility import urlquote_plus
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class Gumtree(alcazar.CatalogParser, alcazar.Scraper):
+
+    cache_root_path = 'cache'
 
     item_request_path = './/a[not(contains(@style, "display: none"))]/@href'
     result_list_path = 'main#fullListings'
@@ -39,22 +38,22 @@ class Gumtree(alcazar.CatalogParser, alcazar.Scraper):
             'title': item('.listing-title').str,
             'description': page('p.ad-description').multiline.str,
             'price_gbp': page('strong.ad-price')
-                .text('^£(\d+(?:,\d\d\d)*)\.\d\d$')
+                .text('^£(\d+(?:,\d\d\d)*\.\d\d)$')
                 .sub(',', '')
-                .int,
+                .decimal,
             'location': page('span[@itemprop="address"]').str,
             'age': item('.//*[@data-q="listing-adAge"]')
                 .text('Ad posted (\d+ (?:second|minute|hour|day)s?) ago$')
                 .str,
-            'image_urls': page.some('div#vip-tabs-images').selection_of(
-                './/img/@src',
-                './/img/@data-lazy',
-            ).str,
+            'image_urls': page.js()
+                .one(r'imageUrls\s*:\s*\[(.*?)\]')
+                .selection(r'https?://[^\"]+')
+                .str,
         }
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-def run_sample():
+def main():
     scraper = Gumtree()
     offers = tuple(scraper.search('edinburgh', 'coffee machine'))
     print(json.dumps(
@@ -63,5 +62,8 @@ def run_sample():
         sort_keys=True,
         default=str,
     ))
+
+if __name__ == '__main__':
+    main()
 
 #----------------------------------------------------------------------------------------------------------------------------------

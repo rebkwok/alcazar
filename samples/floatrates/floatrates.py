@@ -7,8 +7,8 @@ import alcazar
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-def run_sample():
-    scraper = alcazar.Scraper()
+def main():
+    scraper = alcazar.Scraper(cache_root_path='cache')
     rate = scraper.scrape(
         'http://www.floatrates.com/daily/USD.xml',
         parse=lambda page: page.one(
@@ -18,5 +18,8 @@ def run_sample():
         ).float,
     )
     print('1 USD = %.04f AUD' % rate)
+
+if __name__ == '__main__':
+    main()
 
 #----------------------------------------------------------------------------------------------------------------------------------

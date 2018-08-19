@@ -28,6 +28,8 @@ class TrainTimesScraper(alcazar.Scraper):
         'arr_platform',
     ))
 
+    cache_root_path = 'cache'
+
     def search(self, query):
         return self.scrape(
             'http://ojp.nationalrail.co.uk/service/timesandfares/%s/%s/%s/%s/dep' % (
@@ -51,7 +53,7 @@ class TrainTimesScraper(alcazar.Scraper):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-def run_sample():
+def main():
     query = TrainTimesScraper.Query(
         from_station='EDB',
         to_station='GLQ',
@@ -70,5 +72,8 @@ def run_sample():
         sort_keys=True,
         default=lambda v: v and v.strftime('%H:%M')
     ))
+
+if __name__ == '__main__':
+    main()
 
 #----------------------------------------------------------------------------------------------------------------------------------
