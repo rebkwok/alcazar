@@ -79,7 +79,10 @@ else:
         urlparse,
     )
 
-    from html import unescape as unescape_html
+    try:
+        from html import unescape as unescape_html
+    except ImportError:
+        from .html_shim import unescape as unescape_html
 
 native_string = str
 
