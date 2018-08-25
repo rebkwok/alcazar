@@ -156,6 +156,9 @@ class Query(object):
     def url(self):
         return self.request and self.request.url
 
+    def __getitem__(self, item):
+        return self.extras[item]
+
     def __repr__(self):
         return "Query(%r, %r, %r)" % (
             self.request,
@@ -219,6 +222,9 @@ class Page(object):
 
     def __getattr__(self, attr):
         return getattr(self.husker, attr)
+
+    def __getitem__(self, item):
+        return self.query[item]
 
     def __repr__(self):
         return "Page(%r, %r, %r)" % (self.query, self.response, self.husker)
