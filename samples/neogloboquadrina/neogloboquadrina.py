@@ -5,6 +5,7 @@ from sys import stdout
 
 import alcazar
 
+
 def main():
     scraper = alcazar.Scraper(
         cache_root_path='cache',
@@ -14,6 +15,7 @@ def main():
     writer = csv.writer(stdout)
     for row in table:
         writer.writerow([cell.text.normalized.str for cell in row])
+
 
 if __name__ == '__main__':
     main()
