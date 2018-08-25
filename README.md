@@ -39,13 +39,13 @@ Gorgie (/ˈɡɔːrɡiː/ GOR-gee) is a densely populated area of Edinburgh, Scot
 In this snippet:
 
 * we've fetched the HTML for the page
-** if any network error or HTTP error happens, we'll retry to fetch it a few times, sleeping increasing delays between every attempt
+  * if any network error or HTTP error happens, we'll retry to fetch it a few times, sleeping increasing delays between every attempt
 * we've parsed the HTML into a tree
-** using lxml's excellent handling and recovery from "broken" HTML, as seen in the wild
+  * using lxml's excellent handling and recovery from "broken" HTML, as seen in the wild
 * we've located the element we're interested in
-** here using an XPath expression, but we could've used a CSS selector too
-** we've checked that there was one and only one element that matched our query
-** else an exception would've been thrown, ensuring we capture only exactly what we wanted
+  * here using an XPath expression, but we could've used a CSS selector too
+  * we've checked that there was one and only one element that matched our query
+  * else an exception would've been thrown, ensuring we capture only exactly what we wanted
 * we've extracted its text, removed all tags from it, and normalized its whitespace
 
 See the `samples` directory for a taste of how Alcazar works.
