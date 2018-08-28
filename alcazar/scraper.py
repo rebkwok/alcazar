@@ -118,7 +118,6 @@ class Scraper(object):
         rename(part_file_path, local_file_path)
 
     def compile_query(self, request_or_query, **kwargs):
-        # 2017-11-20 - I expect crawler.compile_query will override this to parse its own methods (fetch, parse, save)
         if isinstance(request_or_query, Query):
             assert not kwargs, "Can't specify kwargs when a Query is used: %r" % kwargs
             return request_or_query
