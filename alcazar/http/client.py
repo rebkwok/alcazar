@@ -14,7 +14,7 @@ from requests.structures import CaseInsensitiveDict
 # alcazar
 from .. import __version__
 from ..datastructures import Request
-from ..exceptions import HttpError, ScraperError
+from ..exceptions import HttpError, HttpRedirect, ScraperError
 from .cache import CacheAdapterMixin
 from .courtesy import CourtesySleepAdapterMixin
 from .log import LogEntry, LoggingAdapterMixin
@@ -77,20 +77,25 @@ class AlcazarSession(requests.Session):
 
 class HttpClient(object):
 
-    def __init__(self, auto_raise_for_status=True, **kwargs):
+    def __init__(self, auto_raise_for_status=True, auto_raise_for_redirect=False, **kwargs):
         self.auto_raise_for_status = auto_raise_for_status
+        self.auto_raise_for_redirect = auto_raise_for_redirect
         self.session = AlcazarSession(**kwargs)
 
     def request(self, request, **kwargs):
         auto_raise_for_status = kwargs.pop('auto_raise_for_status', self.auto_raise_for_status)
+        auto_raise_for_redirect = kwargs.pop('auto_raise_for_redirect', self.auto_raise_for_redirect)
         try:
             prepared = self.session.prepare_request(request.to_requests_request())
             response = self.session.send(prepared, **kwargs)
             if auto_raise_for_status:
                 response.raise_for_status()
+            if auto_raise_for_redirect and 300 <= response.status_code < 400:
+                raise HttpRedirect('HTTP %s' % response.status_code, reason=response)
             return response
         except requests.HTTPError as error:
-            raise HttpError(str(error), reason=error)
+            error_class = getattr(HttpError, 'HTTP_%d' % error.response.status_code, HttpError)
+            raise error_class(str(error), reason=error)
         except requests.RequestException as exception:
             raise ScraperError(str(exception), reason=exception)
 

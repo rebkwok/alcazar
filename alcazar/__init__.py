@@ -13,7 +13,7 @@ __version__ = '0.1.1'
 from .catalogparser import CatalogParser, CatalogResultList
 from .crawler import Crawler
 from .datastructures import GET, Page, POST, Query, Request
-from .exceptions import AlcazarException, ScraperError, SkipThisPage
+from .exceptions import AlcazarException, HttpError, HttpRedirect, ScraperError, SkipThisPage
 from .fetcher import Fetcher
 from .http import HttpClient
 from .husker import Husker, HuskerError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, husk

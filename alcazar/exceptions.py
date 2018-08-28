@@ -14,6 +14,9 @@ from time import sleep
 from traceback import format_exc
 from types import GeneratorType
 
+# alcazar
+from .utils.compatibility import native_string
+
 #----------------------------------------------------------------------------------------------------------------------------------
 # exception classes
 
@@ -23,11 +26,31 @@ class AlcazarException(Exception):
         super(AlcazarException, self).__init__(message)
         self.reason = reason # a chain link to a further exception, where applicable
 
+
 class ScraperError(AlcazarException):
     pass
 
+
 class HttpError(ScraperError):
     pass
+
+
+class HttpRedirect(HttpError):
+    pass
+
+
+for _status_code in range(100, 600):
+    _superclass = HttpRedirect if 300 <= _status_code < 400 else HttpError
+    setattr(
+        HttpError,
+        native_string('HTTP_%d') % _status_code,
+        type(
+            native_string('HTTP_%s') % _status_code,
+            (_superclass,),
+            {native_string('status_code'): _status_code},
+        ),
+    )
+
 
 class SkipThisPage(AlcazarException):
     pass

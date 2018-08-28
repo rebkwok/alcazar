@@ -21,7 +21,7 @@ from unittest import TestCase
 
 # alcazar
 from alcazar import HttpClient
-from alcazar.utils.compatibility import PY2, BaseHTTPRequestHandler, HTTPServer, bytes_type, native_string, urljoin
+from alcazar.utils.compatibility import PY2, BaseHTTPRequestHandler, HTTPServer, bytes_type, native_string, parse_qsl, urljoin
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # HTTP server
@@ -35,8 +35,11 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         This is called by HTTPServer. We parse the request, and delegate to the method with the same name as the root of the path,
         so a GET request to /hello will be handled by `self.hello()`.
         """
-        match = re.search(r'/(\w+)', self.path)
-        method_name = match.group(1) if match else 'default'
+        match = re.search(r'/(\w*)(?:\?(.*))?$', self.path)
+        if not match:
+            raise ValueError(repr(self.path))
+        method_name = match.group(1) or 'default'
+        method_kwargs = dict(parse_qsl(match.group(2) or ''))
         # 2017-05-14 - can't say I'm in love with this hack
         self.handler.headers = self.headers
         method = getattr(
@@ -44,7 +47,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             method_name,
             lambda: self._send_response(method_name.encode('ascii'), status=404, reason=b'Not Here'),
         )
-        response_parts = method()
+        response_parts = method(**method_kwargs)
         if isinstance(response_parts, bytes_type):
             response_parts = {'body': response_parts}
         self._send_response(**response_parts)
