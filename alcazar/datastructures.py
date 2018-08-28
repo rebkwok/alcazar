@@ -126,7 +126,7 @@ class Request:
         if self._method == 'GET':
             return self.url
         else:
-            return '<POST %s>' % self.url
+            return '<%s %s>' % (self.method, self.url)
 
 def GET(url, params=None, **kwargs):
     return Request(url, method='GET', params=params, **kwargs)
