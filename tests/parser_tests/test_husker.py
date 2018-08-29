@@ -889,6 +889,19 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             ['It begins.', 'It runs.', 'It ends.'],
         )
 
+
+    def test_str_equality(self):
+        husker = self.husker.one('#one').text # but not .str
+        self.assertEqual(husker, 'It begins.')
+        self.assertNotEqual(None, husker)
+        self.assertNotEqual(husker, None)
+
+    def test_str_equality_when_null(self):
+        self.assertEqual(
+            self.husker.some('#thiswontmatch').text, # but not .str
+            None,
+        )
+
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class TextHuskerTest(AlcazarTest):

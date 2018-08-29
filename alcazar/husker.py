@@ -202,9 +202,12 @@ def _forward_to_value(method_name, return_type):
             convert = return_type
         wrapped = getattr(self._value, method_name, None)
         if callable(wrapped):
-            return convert(wrapped(*args, **kwargs))
+            raw = wrapped(*args, **kwargs)
+            if raw is NotImplemented:
+                return raw
+            return convert(raw)
         else:
-            raise NotImplementedError((self._value.__class__.__name__, method_name))
+            raise NotImplementedError((self.__class__.__name__, self._value.__class__.__name__, method_name))
     return method
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -315,6 +318,7 @@ class Husker(Selector):
 
     __hash__ = _forward_to_value('__hash__', _builtin_int)
     __eq__ = _forward_to_value('__eq__', bool)
+    __ne__ = _forward_to_value('__ne__', bool)
     __lt__ = _forward_to_value('__lt__', bool)
     __le__ = _forward_to_value('__le__', bool)
     __gt__ = _forward_to_value('__gt__', bool)
@@ -366,6 +370,13 @@ class NullHusker(Husker):
     map_raw = _returns_none
     filter = _returns_null
     lookup = _returns_none
+
+    __eq__ = lambda self, other: other is None
+    __ne__ = lambda self, other: other is not None
+    __lt__ = lambda self, other: False
+    __le__ = lambda self, other: False
+    __gt__ = lambda self, other: False
+    __ge__ = lambda self, other: False
 
     def __str__(self):
         return '<Null>'
