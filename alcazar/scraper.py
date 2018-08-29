@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # standards
 from datetime import timedelta
+from functools import partial
 import logging
 from os import path, rename
 from time import sleep
@@ -123,12 +124,15 @@ class Scraper(object):
             assert not kwargs, "Can't specify kwargs when a Query is used: %r" % kwargs
             return request_or_query
         else:
+            methods = {
+                name: kwargs.pop(name, getattr(self, name))
+                for name in QueryMethods.method_names
+            }
+            if 'fetcher_kwargs' in kwargs:
+                methods['fetch'] = partial(methods['fetch'], **kwargs.pop('fetcher_kwargs'))
             return Query(
                 self.fetcher.compile_request(request_or_query),
-                methods=QueryMethods(**{
-                    name: kwargs.pop(name, getattr(self, name))
-                    for name in QueryMethods.method_names
-                }),
+                methods=QueryMethods(**methods),
                 extras=kwargs,
             )
 
