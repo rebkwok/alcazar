@@ -30,6 +30,35 @@ class HeadersTestServer(object):
             'headers': {'Content-Type': 'application/json'},
         }
 
+    def redirect1(self):
+        return {
+            'body': b'redirect1',
+            'status': 301,
+            'headers': {
+                'Set-Cookie': 'redirect1=yes',
+                'Location': '/redirect2',
+            },
+        }
+
+    def redirect2(self):
+        return {
+            'body': b'redirect2',
+            'status': 301,
+            'headers': {
+                'Set-Cookie': 'redirect2=yes',
+                'Location': '/landing',
+            },
+        }
+
+    def landing(self):
+        return {
+            'body': b'landing',
+            'status': 301,
+            'headers': {
+                'Set-Cookie': 'landing=yes',
+            },
+        }
+
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class HeadersTests(object):
@@ -151,6 +180,44 @@ class HeadersTests(object):
                 'Shabang 3.4',
                 self.fetch(client=client).json().get('User-Agent', ''),
             )
+
+    def test_redirects_set_cookies_when_fetched_manually(self):
+        self.assertEqual({}, dict(self.client.session.cookies))
+        self.assertEqual(
+            self.fetch('/redirect1', allow_redirects=False).text,
+            'redirect1',
+        )
+        self.assertEqual(
+            self.fetch('/redirect2', allow_redirects=False).text,
+            'redirect2',
+        )
+        self.assertEqual(
+            self.fetch('/landing', allow_redirects=False).text,
+            'landing',
+        )
+        self.assertEqual(
+            {
+                'redirect1': 'yes',
+                'redirect2': 'yes',
+                'landing': 'yes',
+            },
+            dict(self.client.session.cookies),
+        )
+
+    def test_redirects_set_cookies_when_fetched_automatically(self):
+        self.assertEqual({}, dict(self.client.session.cookies))
+        self.assertEqual(
+            self.fetch('/redirect1').text,
+            'landing',
+        )
+        self.assertEqual(
+            {
+                'redirect1': 'yes',
+                'redirect2': 'yes',
+                'landing': 'yes',
+            },
+            dict(self.client.session.cookies),
+        )
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
