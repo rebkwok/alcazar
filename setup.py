@@ -24,6 +24,11 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url='https://github.com/saintamh/alcazar/',
     packages=setuptools.find_packages(),
+    entry_points={
+        'console_scripts': [
+            'alcazar = alcazar.cli:main',
+        ],
+    },
     install_requires=[
         'lxml>=3',
         'cssselect>=1.0',
