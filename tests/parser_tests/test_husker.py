@@ -103,7 +103,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
 
     def test_charset(self):
         self.assertEqual(
-            self.husker.one('/html/head/meta/@charset').value,
+            self.husker.one('/html/head/meta/@charset').raw,
             'UTF-8',
         )
 
@@ -901,11 +901,11 @@ class TextHuskerTest(AlcazarTest):
     def test_normalized(self):
         text_husker = TextHusker(self.text_str)
         self.assertEqual(
-            text_husker.value,
+            text_husker.raw,
             self.text_str,
         )
         self.assertEqual(
-            text_husker.normalized.value,
+            text_husker.normalized.raw,
             "This is my text. There are many like it but this one is mine.",
         )
 

@@ -132,7 +132,7 @@ class Selector(object):
         if not match:
             raise HuskerMismatch("%s: none of the specified specs matched %r: %s" % (
                 self.id,
-                self.value,
+                self._value,
                 ', '.join('"%s"' % spec for spec in all_specs),
             ))
         return match
@@ -200,11 +200,11 @@ def _forward_to_value(method_name, return_type):
             convert = lambda values: ListHusker(map(TextHusker, values))
         else:
             convert = return_type
-        wrapped = getattr(self.value, method_name, None)
+        wrapped = getattr(self._value, method_name, None)
         if callable(wrapped):
             return convert(wrapped(*args, **kwargs))
         else:
-            raise NotImplementedError((self.value.__class__.__name__, method_name))
+            raise NotImplementedError((self._value.__class__.__name__, method_name))
     return method
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ class Husker(Selector):
     """
 
     def __init__(self, value):
-        self.value = value
+        self._value = value
 
     @property
     def text(self):
@@ -237,7 +237,7 @@ class Husker(Selector):
 
     @property
     def str(self):
-        return self.text.value
+        return self.text._value
 
     @property
     def int(self):
@@ -284,14 +284,14 @@ class Husker(Selector):
 
     @property
     def raw(self):
-        # In the default case, return .value, but some subclasses override this
-        return self.value
+        # In the default case, return ._value, but some subclasses override this
+        return self._value
 
     def __bool__(self):
         """
         A husker evaluates as truthy iff it holds a value at all, irrespective of what that value's truthiness is.
         """
-        return self.value is not None        
+        return self._value is not None        
 
     if PY2:
         # NB don't just say `__nonzero__ = __bool__` because `__bool__` is overriden in some subclasses
@@ -305,13 +305,13 @@ class Husker(Selector):
             return repr(spec)
 
     def repr_value(self):
-        return repr(self.text.value)
+        return repr(self.text._value)
 
     def __str__(self):
-        return self.text.value
+        return self.text._value
 
     def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.value)
+        return '%s(%r)' % (self.__class__.__name__, self._value)
 
     __hash__ = _forward_to_value('__hash__', _builtin_int)
     __eq__ = _forward_to_value('__eq__', bool)
@@ -382,27 +382,27 @@ class ElementHusker(Husker):
         self.is_full_document = is_full_document
 
     def __iter__(self):
-        for child in self.value:
+        for child in self._value:
             yield ElementHusker(child)
 
     def __len__(self):
-        return len(self.value)
+        return len(self._value)
 
     def __getitem__(self, item):
-        value = self.value.attrib.get(item, _unspecified)
+        value = self._value.attrib.get(item, _unspecified)
         if value is _unspecified:
             raise HuskerAttributeNotFound(repr(item))
         return TextHusker(unescape_html(self._ensure_decoded(value)))
 
     def attrib(self, item, default=NULL_HUSKER):
-        value = self.value.attrib.get(item, _unspecified)
+        value = self._value.attrib.get(item, _unspecified)
         if value is _unspecified:
             return default
         return TextHusker(unescape_html(self._ensure_decoded(value)))
 
     @property
     def children(self):
-        return ListHusker(map(ElementHusker, self.value))
+        return ListHusker(map(ElementHusker, self._value))
 
     def selection(self, path):
         xpath = self._compile_xpath(path)
@@ -410,7 +410,7 @@ class ElementHusker(Husker):
             xpath,
             # you can use regexes in your paths, e.g. '//a[re:test(text(),"reg(?:ular)?","i")]'
             namespaces = {'re':'http://exslt.org/regular-expressions'},
-        )(self.value)
+        )(self._value)
         return ListHusker(
             husk(self._ensure_decoded(v))
             for v in selected
@@ -438,7 +438,7 @@ class ElementHusker(Husker):
 
     @property
     def text(self):
-        return TextHusker(normalize_spaces(''.join(self.value.itertext())))
+        return TextHusker(normalize_spaces(''.join(self._value.itertext())))
 
     @property
     def multiline(self):
@@ -465,44 +465,44 @@ class ElementHusker(Husker):
         return re.sub(
             r'\s+',
             lambda m: "\n\n" if "\n\n" in m.group() else "\n" if "\n" in m.group() else " ",
-            ''.join(visit(self.value)),
+            ''.join(visit(self._value)),
         ).strip()
 
     @property
     def head(self):
-        return husk(self._ensure_decoded(self.value.text))
+        return husk(self._ensure_decoded(self._value.text))
 
     @property
     def tail(self):
-        return husk(self._ensure_decoded(self.value.tail))
+        return husk(self._ensure_decoded(self._value.tail))
 
     @property
     def next(self):
-        return husk(self.value.getnext())
+        return husk(self._value.getnext())
 
     @property
     def previous(self):
-        return husk(self.value.getprevious())
+        return husk(self._value.getprevious())
 
     @property
     def parent(self):
-        return husk(self.value.getparent())
+        return husk(self._value.getparent())
 
     @property
     def tag(self):
-        return TextHusker(self._ensure_decoded(self.value.tag))
+        return TextHusker(self._ensure_decoded(self._value.tag))
 
     def js(self, strip_comments=True):
         js = "\n".join(
             re.sub('^\s*<!--', '', re.sub('-->\s*$', '', js_text))
-            for js_text in self.value.xpath('.//script/text()')
+            for js_text in self._value.xpath('.//script/text()')
         )
         if strip_comments:
             js = strip_js_comments(js)
         return TextHusker(js)
 
     def detach(self, reattach_tail=True):
-        detach_node(self.value, reattach_tail=reattach_tail)
+        detach_node(self._value, reattach_tail=reattach_tail)
 
     def repr_spec(self, path):
         return "'%s'" % path
@@ -524,7 +524,7 @@ class ElementHusker(Husker):
 
     def html_source(self):
         return ET.tostring(
-            self.value,
+            self._value,
             pretty_print=True,
             method='HTML',
             encoding=text_type,
@@ -560,30 +560,30 @@ class JmesPathHusker(Husker):
             return JmesPathHusker(value)
 
     def selection(self, path):
-        selected = jmespath.search(path, self.value)
+        selected = jmespath.search(path, self._value)
         if '[' not in path:
             selected = [selected]
         return ListHusker(map(self._child, selected))
 
     @property
     def text(self):
-        text = self.value
+        text = self._value
         if not isinstance(text, str):
             text = json.dumps(text, sort_keys=True)
         return TextHusker(text)
 
     @property
     def multiline(self):
-        text = self.value
+        text = self._value
         if not isinstance(text, str):
             text = json.dumps(text, indent=4, sort_keys=True)
         return TextHusker(text)
 
     @property
     def list(self):
-        if not isinstance(self.value, list):
-            raise HuskerError("value is a %s, not a list" % self.value.__class__.__name__)
-        return ListHusker(map(self._child, self.value))
+        if not isinstance(self._value, list):
+            raise HuskerError("value is a %s, not a list" % self._value.__class__.__name__)
+        return ListHusker(map(self._child, self._value))
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -595,7 +595,7 @@ class TextHusker(Husker):
 
     def selection(self, regex, flags=''):
         regex = self._compile(regex, flags)
-        selected = regex.finditer(self.value)
+        selected = regex.finditer(self._value)
         if regex.groups < 2:
             return ListHusker(map(husk, (
                 m.group(regex.groups)
@@ -611,7 +611,7 @@ class TextHusker(Husker):
         return TextHusker(
             self._compile(regex, flags).sub(
                 replacement,
-                self.value,
+                self._value,
             )
         )
 
@@ -625,13 +625,13 @@ class TextHusker(Husker):
 
     @property
     def normalized(self):
-        return TextHusker(normalize_spaces(self.value))
+        return TextHusker(normalize_spaces(self._value))
 
     def lower(self):
-        return TextHusker(self.value.lower())
+        return TextHusker(self._value.lower())
 
     def upper(self):
-        return TextHusker(self.value.upper())
+        return TextHusker(self._value.upper())
 
     def repr_spec(self, regex, flags=''):
         return "%s%s" % (
@@ -640,13 +640,13 @@ class TextHusker(Husker):
         )
 
     def __add__(self, other):
-        return TextHusker(self.value + other.value)
+        return TextHusker(self._value + other._value)
 
     def __bool__(self):
-        return bool(self.value)
+        return bool(self._value)
 
     def __str__(self):
-        return self.value
+        return self._value
 
     @staticmethod
     def _compile(regex, flags):
@@ -675,19 +675,19 @@ class ListHusker(Husker):
         super(ListHusker, self).__init__(value)
 
     def __iter__(self):
-        return iter(self.value)
+        return iter(self._value)
 
     def __len__(self):
-        return len(self.value)
+        return len(self._value)
 
     def __getitem__(self, item):
-        return self.value[item]
+        return self._value[item]
 
     def __bool__(self):
-        return bool(self.value)
+        return bool(self._value)
 
     def __add__(self, other):
-        return ListHusker(self.value + other.value)
+        return ListHusker(self._value + other._value)
 
     def selection(self, test=None):
         if test is not None and not callable(test):
@@ -695,14 +695,14 @@ class ListHusker(Husker):
             test = lambda child: child.selection(spec)
         return ListHusker(
             child
-            for child in self.value
+            for child in self._value
             if test is None or test(child)
         )
 
     def dedup(self, key=None):
         seen = set()
         deduped = []
-        for child in self.value:
+        for child in self._value:
             keyed = child if key is None else key(child)
             if keyed not in seen:
                 seen.add(keyed)
@@ -712,7 +712,7 @@ class ListHusker(Husker):
     def _mapped_property(name, cls=None):
         return property(lambda self: (cls or self.__class__)(
             getattr(child, name)
-            for child in self.value
+            for child in self._value
         ))
 
     def _mapped_operation(name, cls=None):
@@ -720,7 +720,7 @@ class ListHusker(Husker):
             list_cls = cls or self.__class__
             return list_cls(
                 getattr(child, name)(*args, **kwargs)
-                for child in self.value
+                for child in self._value
             )
         return operation
 
@@ -752,13 +752,13 @@ class ListHusker(Husker):
 
     @property
     def raw(self):
-        return [element.raw for element in self.value]
+        return [element.raw for element in self._value]
 
     def join(self, sep):
         return TextHusker(sep.join(e.str for e in self))
 
     def __str__(self):
-        return repr(self.value)
+        return repr(self._value)
 
 EMPTY_LIST_HUSKER = ListHusker([])
 
