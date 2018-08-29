@@ -29,6 +29,7 @@ class Scraper(object):
     num_attempts_per_scrape = 5
 
     def __init__(self, **kwargs):
+        super(Scraper, self).__init__()
         self.id = kwargs.pop('id', self.id)
         if not self.id and self.__class__.__name__ != 'Scraper':
             self.id = self.__class__.__name__
