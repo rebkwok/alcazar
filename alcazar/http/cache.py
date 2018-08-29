@@ -73,13 +73,22 @@ class CacheAdapterMixin(object):
                 cache = NullCache()
         return cache, kwargs
 
-    def send(self, prepared_request, use_cache=True, cache_life=None, cache_key=None, force_cache_stale=False, **rest):
+    def send(
+            self,
+            prepared_request,
+            use_cache=True,
+            cache_life=None,
+            cache_key=None,
+            cache_key_salt=None,
+            force_cache_stale=False,
+            **rest
+            ):
         if not use_cache:
             return super(CacheAdapterMixin, self).send(prepared_request, **rest)
         stream = rest.get('stream', False)
         rest['stream'] = True
         log = rest['log']
-        cache_key, entry = self._get(prepared_request, cache_life, cache_key, force_cache_stale)
+        cache_key, entry = self._get(prepared_request, cache_life, cache_key, cache_key_salt, force_cache_stale)
         log['cache_key'] = cache_key
         if entry is None:
             log['cache_or_courtesy'] = ''
@@ -98,13 +107,13 @@ class CacheAdapterMixin(object):
         else:
             return entry.response
 
-    def _get(self, prepared_request, cache_life, cache_key, force_cache_stale):
+    def _get(self, prepared_request, cache_life, cache_key, cache_key_salt, force_cache_stale):
         now = time()
         if self.needs_purge:
             self.cache.purge(now - self.max_cache_life)
             self.needs_purge = False
         if cache_key is None:
-            cache_key = self.compute_cache_key(prepared_request)
+            cache_key = self.compute_cache_key(prepared_request, cache_key_salt)
         if force_cache_stale:
             entry = None
         else:
@@ -128,18 +137,21 @@ class CacheAdapterMixin(object):
             timestamp=time(),
         )
 
-    def compute_cache_key(self, prepared_request):
+    def compute_cache_key(self, prepared_request, cache_key_salt):
         # Notes on the use of md5 rather than something stronger:
         # * MD5 hashes are comparatively short, which is convenient when logging and debugging
         # * experience shows it's plenty good enough
         # * if a particular scraper is going to scrape billions of pages, then this method can be overriden
+        parts = [
+            prepared_request.method,
+            prepared_request.url,
+            prepared_request.body,
+        ]
+        if cache_key_salt is not None:
+            parts.append(cache_key_salt)
         hexdigest = md5(b''.join(
             repr(part).encode('UTF-8')
-            for part in (
-                prepared_request.method,
-                prepared_request.url,
-                prepared_request.body,
-            )
+            for part in parts
         )).hexdigest()
         hexdigest = text_type(hexdigest)
         return (hexdigest[:3], hexdigest[3:])

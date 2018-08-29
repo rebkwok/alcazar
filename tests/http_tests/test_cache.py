@@ -307,6 +307,14 @@ class CachedTests(object):
                 (step, char * size),
             )
 
+    def test_cache_key_salt(self):
+        for _ in ('live', 'from-cache', 'from-cache-again'):
+            for index, salt in enumerate([None, 'saltn', 'peppa']):
+                self.assertEqual(
+                    self.fetch('/counter', cache_key_salt=salt).text,
+                    str(index),
+                )
+
     @staticmethod
     def _url_path(url):
         return re.sub(r'^https?://[^/]+', '', url)
