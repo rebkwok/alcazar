@@ -27,7 +27,7 @@ class Scheduler(object):
     def add(self, query):
         raise NotImplementedError
 
-    def add_all(self, queries):
+    def add_many(self, queries):
         for query in queries:
             self.add(query)
 
@@ -54,8 +54,8 @@ class StackScheduler(Scheduler):
     def add(self, query):
         self.stack.append(query)
 
-    def add_all(self, queries):
-        super(StackScheduler, self).add_all(reversed(list(queries)))
+    def add_many(self, queries):
+        super(StackScheduler, self).add_many(reversed(list(queries)))
 
     def pop(self):
         return self.stack.pop()
@@ -97,10 +97,15 @@ class Crawler(Scraper):
     def crawler_stopped(self):
         pass
 
-    def enqueue(self, *requests_or_queries, **kwargs):
-        self.scheduler.add_all(
+    def enqueue(self, request_or_query, **kwargs):
+        self.scheduler.add(self.compile_query(request_or_query, **kwargs))
+
+    def enqueue_many(self, requests_or_queries, **kwargs):
+        queries = [
+            # Consume and convert them all first, so that any HuskerError or such gets raised before we start adding to the queue
             self.compile_query(request_or_query, **kwargs)
             for request_or_query in requests_or_queries
-        )
+        ]
+        self.scheduler.add_many(queries)
 
 #----------------------------------------------------------------------------------------------------------------------------------
