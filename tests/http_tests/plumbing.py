@@ -45,7 +45,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         method = getattr(
             self.handler,
             method_name,
-            lambda: self._send_response(method_name.encode('ascii'), status=404, reason=b'Not Here'),
+            lambda: {'body': method_name.encode('ascii'), 'status': 404, 'reason': b'Not Here'},
         )
         response_parts = method(**method_kwargs)
         if isinstance(response_parts, bytes_type):
