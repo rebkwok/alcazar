@@ -33,12 +33,15 @@ from ..utils.compatibility import PY2, pickle, text_type
 #----------------------------------------------------------------------------------------------------------------------------------
 # data structures
 
-CacheEntry = namedtuple('CacheEntry', (
-    'response',
-    'raw_headers',
-    'exception',
-    'timestamp',
-))
+class CacheEntry(namedtuple('CacheEntry', (
+        'response',
+        'exception',
+        'timestamp',
+        'raw_headers',
+        ))):
+
+    def __new__(cls, response, exception, timestamp, raw_headers=None):
+        return super(CacheEntry, cls).__new__(cls, response, exception, timestamp, raw_headers)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
