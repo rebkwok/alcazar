@@ -69,8 +69,7 @@ class AlcazarSession(requests.Session):
     def send(self, prepared_request, **kwargs):
         # NB this calls itself via indirect recursion (in requests.Session) to handle redirects
         kwargs['is_redirect'] = not kwargs.get('allow_redirects', True)
-        kwargs['log'] = LogEntry()
-        kwargs['log']['is_redirect'] = kwargs['is_redirect']
+        kwargs['log'] = LogEntry(is_redirect=kwargs['is_redirect'])
         return super(AlcazarSession, self).send(prepared_request, **kwargs)
 
 #----------------------------------------------------------------------------------------------------------------------------------

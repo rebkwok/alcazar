@@ -42,8 +42,8 @@ class LogEntry(object):
 
     all_section_keys = frozenset(key for key, _ in all_sections)
 
-    def __init__(self):
-        self.parts = {}
+    def __init__(self, **parts):
+        self.parts = parts
 
     def __setitem__(self, key, value):
         if key not in self.all_section_keys:
