@@ -415,6 +415,10 @@ class ElementHusker(Husker):
     def children(self):
         return ListHusker(map(ElementHusker, self._value))
 
+    def descendants(self):
+        for descendant in self._value.iter():
+            yield ElementHusker(descendant)
+
     def selection(self, path):
         xpath = self._compile_xpath(path)
         selected = ET.XPath(

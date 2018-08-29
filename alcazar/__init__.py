@@ -15,6 +15,7 @@ from .crawler import Crawler
 from .datastructures import GET, Page, POST, Query, Request
 from .exceptions import AlcazarException, HttpError, HttpRedirect, ScraperError, SkipThisPage
 from .fetcher import Fetcher
+from .forms import Form
 from .http import HttpClient
 from .husker import Husker, HuskerError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, husk
 from .scraper import Scraper

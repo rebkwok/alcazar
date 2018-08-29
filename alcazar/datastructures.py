@@ -38,6 +38,9 @@ class Request:
         self._json = json
 
     def to_requests_request(self):
+        return requests.Request(**self._compile())
+
+    def _compile(self):
         headers = self._headers
         params = self._params
         if params:
@@ -52,13 +55,13 @@ class Request:
             data = json.dumps(self._json, sort_keys=True).encode('UTF-8')
             headers = dict(headers or {})
             headers['Content-Type'] = 'application/json; charset=UTF-8'
-        return requests.Request(
-            method=self._method,
-            url=self._url,
-            params=params,
-            data=data,
-            headers=headers,
-        )
+        return {
+            'method': self._method,
+            'url': self._url,
+            'params': params,
+            'data': data,
+            'headers': headers,
+        }
 
     def modify_params(self, new_params):
         return Request(
@@ -121,6 +124,10 @@ class Request:
         if self._params:
             url += '?' + urlencode(OrderedDict(self._params.items()))
         return url
+
+    @property
+    def data(self):
+        return self._compile()['data']
 
     def __str__(self):
         if self._method == 'GET':
