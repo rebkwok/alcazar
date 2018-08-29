@@ -35,6 +35,7 @@ from ..utils.compatibility import PY2, pickle, text_type
 
 CacheEntry = namedtuple('CacheEntry', (
     'response',
+    'raw_headers',
     'exception',
     'timestamp',
 ))
@@ -117,7 +118,12 @@ class CacheAdapterMixin(object):
         except Exception as _exception:
             exception = _exception
             response = getattr(exception, 'response', None)
-        return CacheEntry(response, exception, time())
+        return CacheEntry(
+            response=response,
+            raw_headers=response.raw.headers if response and response.raw else None,
+            exception=exception,
+            timestamp=time(),
+        )
 
     def compute_cache_key(self, prepared_request):
         # Notes on the use of md5 rather than something stronger:
@@ -203,7 +209,7 @@ class DiskCache(Cache):
         # under the same key, so deleting entries that are present but outdated might actually slow things down. So we don't do it.
         entry = self.index.lookup(key, min_timestamp)
         if entry is not None and entry.response is not None:
-            self.storage.load(key, entry.response)
+            self.storage.load(key, entry)
         return entry
 
     def put(self, key, entry):
@@ -339,14 +345,15 @@ class FlatFileStorage(object):
             mode += 'b'
         return opener(file_path, mode)
 
-    def load(self, key, response):
+    def load(self, key, entry):
         file_path = self._file_path(key)
+        response = entry.response
         response.raw = urllib3.HTTPResponse(
             # The data that we write to disk is pre-decoding, which is good because it means in most cases we can have a gzipped
             # cache without expanding CPU cycles for it. However it means that in order to provide the user with decoded data, we
             # need to recreate an HTTPResponse object, since that's the object doing the decoding. Trying to pickle that got messy,
             # so we reconstruct it like this, which isn't pretty, but works.
-            headers=dict(response.headers),
+            headers=urllib3._collections.HTTPHeaderDict(entry.raw_headers),
             status=response.status_code,
             reason=response.reason,
             request_method=response.request.method,
@@ -354,7 +361,7 @@ class FlatFileStorage(object):
             decode_content=False,
             body=AutoClosingFile(self._open_local_file(response, file_path, 'r')),
         )
-        response.raw._original_response = MockedHttplibResponse(response)
+        response.raw._original_response = MockedHttplibResponse(response.raw)
         response._content_consumed = False
         response._content = False
 

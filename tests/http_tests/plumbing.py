@@ -57,8 +57,11 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
     def _send_response(self, body, status=200, reason='OK', headers={}):
         self.send_response(status, reason)
         headers.setdefault('Content-Type', 'text/plain; charset=UTF-8')
-        for key, value in headers.items():
-            self.send_header(key, value)
+        for key, values in headers.items():
+            if not isinstance(values, list):
+                values = [values]
+            for value in values:
+                self.send_header(key, value)
         self.end_headers()
         self.wfile.write(body)
 

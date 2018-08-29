@@ -63,6 +63,17 @@ class CacheTestServer(object):
         text = char * 1024
         return text.encode('us-ascii')
 
+    def double_cookie(self):
+        return {
+            'body': b'',
+            'headers': {
+                'Set-Cookie': [
+                    'a=1; secure; HttpOnly',
+                    'b=2; secure; HttpOnly',
+                ],
+            },
+        }
+
     def redirect(self):
         return {
             'body': b'', 
@@ -351,6 +362,14 @@ class CachedTestsWithCustomMethods(object):
         self.assertEqual(
             self._get_x_headers({'X-Header': '1'}),
             {'X-Header': '0'},
+        )
+
+    def test_double_headers_are_available(self):
+        headers_live = self.client.get(self.server_url('/double_cookie')).raw.headers._container
+        headers_from_cache = self.client.get(self.server_url('/double_cookie')).raw.headers._container
+        self.assertEqual(
+            headers_live,
+            headers_from_cache,
         )
 
 #----------------------------------------------------------------------------------------------------------------------------------
