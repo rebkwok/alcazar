@@ -63,16 +63,20 @@ class Form(object):
         url = self._parse_url()
         key_value_pairs = list(self.compile_fields(override))
         body = urlencode(key_value_pairs) if key_value_pairs else None
+        headers = {}
         if method in ('GET', 'HEAD'):
             url = url + ('&' if '?' in url else '?') + body
             body = None
             # ... and the URL stays unencoded?
-        elif body is not None and self.encoding:
-            body = body.encode(self.encoding)
+        else:
+            headers['Content-Type'] = 'application/x-www-form-urlencoded'
+            if body is not None and self.encoding:
+                body = body.encode(self.encoding)
         return Request(
             url,
             method=method,
             data=body,
+            headers=headers,
         )
 
     def _parse_node_value(self, node, input_type, input_name, is_click):
