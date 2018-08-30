@@ -180,30 +180,6 @@ class TestFormParser(unittest.TestCase):
         ''')
         self.assertEqual(request.data, 'input=value')
 
-    def test_clicked_input(self):
-        request = self._parse_form(
-            '''
-            <form method="POST">
-              <input name="input" type="text" value="value">
-              <input name="button" type="submit" value='clicky'>
-            </form>
-            ''',
-            clicked_input='button',
-        )
-        self.assertEqual(request.data, 'input=value&button=clicky')
-
-    def test_clicked_input_no_value(self):
-        request = self._parse_form(
-            '''
-            <form method="POST">
-              <input name="input" type="text" value="value">
-              <input name="button" type="submit">
-            </form>
-            ''',
-            clicked_input='button',
-        )
-        self.assertEqual(request.data, 'input=value&button=')
-
     def test_select(self):
         request = self._parse_form('''
            <form method="POST">
@@ -225,5 +201,93 @@ class TestFormParser(unittest.TestCase):
            </form>
         ''')
         self.assertEqual(request.data, 'selector=1')
+
+    def test_override_add_fields(self):
+        request = self._parse_form(
+            '''
+            <form method="POST">
+              <input name="input" value="value">
+            </form>
+            ''',
+            override={
+                'bob': 'uncle',
+            },
+        )
+        self.assertEqual(request.data, 'input=value&bob=uncle')
+
+    def test_override_change_fields(self):
+        request = self._parse_form(
+            '''
+            <form method="POST">
+              <input name="input" value="value">
+            </form>
+            ''',
+            override={
+                'input': 'othervalue',
+                'bob': 'uncle',
+            },
+        )
+        self.assertEqual(request.data, 'input=othervalue&bob=uncle')
+
+    def test_override_add_fields_from_pairs(self):
+        request = self._parse_form(
+            '''
+            <form method="POST">
+              <input name="input" value="value">
+            </form>
+            ''',
+            override=[
+                ('bob', 'uncle'),
+                ('jane', 'aunt'),
+            ],
+        )
+        self.assertEqual(request.data, 'input=value&bob=uncle&jane=aunt')
+
+    def test_override_remove_fields(self):
+        request = self._parse_form(
+            '''
+            <form method="POST">
+              <input name="input" value="value">
+              <input name="junk" value="junk">
+            </form>
+            ''',
+            override={
+                'junk': None,
+                'bob': 'uncle',
+            },
+        )
+        self.assertEqual(request.data, 'input=value&bob=uncle')
+
+    def test_override_clicked_input(self):
+        request = self._parse_form(
+            '''
+            <form method="POST">
+              <input name="input" type="text" value="value">
+              <input name="button" type="submit" value='clicky'>
+            </form>
+            ''',
+            override={'button': Form.CLICK},
+        )
+        self.assertEqual(request.data, 'input=value&button=clicky')
+
+    def test_clicked_input_no_value(self):
+        request = self._parse_form(
+            '''
+            <form method="POST">
+              <input name="input" type="text" value="value">
+              <input name="button" type="submit">
+            </form>
+            ''',
+            override={'button': Form.CLICK},
+        )
+        self.assertEqual(request.data, 'input=value&button=')
+
+    def test_unknown_input_types(self):
+        request = self._parse_form('''
+           <form method="POST">
+              <input name="input" type="youdontknowme" value="value">
+           </form>
+        ''')
+        self.assertEqual(request.data, 'input=value')
 
 #----------------------------------------------------------------------------------------------------------------------------------

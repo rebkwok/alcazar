@@ -20,6 +20,7 @@ from types import GeneratorType
 from .datastructures import Query, QueryMethods
 from .exceptions import ScraperError, SkipThisPage
 from .fetcher import Fetcher
+from .forms import Form
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -135,6 +136,12 @@ class Scraper(object):
                 methods=QueryMethods(**methods),
                 extras=kwargs,
             )
+
+    def parse_form(self, page, husker):
+        return Form(
+            page.url,
+            husker,
+        )
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # config utils
