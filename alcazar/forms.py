@@ -61,6 +61,7 @@ class Form(object):
         method = self._parse_method()
         url = self._parse_url()
         key_value_pairs = list(self.compile_fields(override))
+        # Shouldn't we just pass key/value pairs to Request rather than reimplement compiling?
         body = urlencode(key_value_pairs) if key_value_pairs else None
         headers = {}
         if method in ('GET', 'HEAD'):
