@@ -35,12 +35,22 @@ class TestQueryMethods(unittest.TestCase):
             {'url': '123', 'kwargs': {'attempt_i': 0}},
         )
 
-    def test_fetch_kwargs(self):
+    def test_fetcher_kwargs(self):
         scraper = NonFetcherScraper()
-        result = scraper.scrape('234', fetcher_kwargs={'x': 'y'})
+        result = scraper.scrape(
+            '234',
+            use_cache=False,
+            my_extra='extra',
+        )
         self.assertEqual(
             result,
-            {'url': '234', 'kwargs': {'attempt_i': 0, 'x': 'y'}},
+            {
+                'url': '234',
+                'kwargs': {
+                    'attempt_i': 0,
+                    'use_cache': False,
+                },
+            },
         )
 
 #----------------------------------------------------------------------------------------------------------------------------------

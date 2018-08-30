@@ -36,7 +36,7 @@ class Scraper(object):
         if not self.id and self.__class__.__name__ != 'Scraper':
             self.id = self.__class__.__name__
         self.cache_id = kwargs.pop('cache_id', self.cache_id) or self.id
-        self.fetcher = Fetcher(**_fetcher_kwargs(kwargs, self))
+        self.fetcher = Fetcher(**_extract_fetcher_kwargs(kwargs, self))
         if kwargs:
             raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
 
@@ -129,8 +129,9 @@ class Scraper(object):
                 name: kwargs.pop(name, getattr(self, name))
                 for name in QueryMethods.method_names
             }
-            if 'fetcher_kwargs' in kwargs:
-                methods['fetch'] = partial(methods['fetch'], **kwargs.pop('fetcher_kwargs'))
+            fetcher_kwargs = _extract_fetcher_kwargs(kwargs)
+            if fetcher_kwargs:
+                methods['fetch'] = partial(methods['fetch'], **fetcher_kwargs)
             return Query(
                 self.fetcher.compile_request(request_or_query),
                 methods=QueryMethods(**methods),
@@ -155,16 +156,19 @@ class Scraper(object):
 
 FETCHER_KWARGS = (
     'cache_id',
+    'cache_key',
+    'cache_key_salt',
     'cache_root_path',
     'courtesy_seconds',
     'encoding',
     'encoding_errors',
     'max_cache_life',
     'timeout',
+    'use_cache',
     'user_agent',
 )
 
-def _fetcher_kwargs(kwargs, host=None):
+def _extract_fetcher_kwargs(kwargs, host=None):
     compiled_kwargs = {}
     missing = object()
     for key in FETCHER_KWARGS:
