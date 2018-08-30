@@ -132,10 +132,13 @@ class Scraper(object):
             fetcher_kwargs = _extract_fetcher_kwargs(kwargs)
             if fetcher_kwargs:
                 methods['fetch'] = partial(methods['fetch'], **fetcher_kwargs)
+            extras = kwargs.pop('extras', {})
+            if kwargs:
+                raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
             return Query(
                 self.fetcher.compile_request(request_or_query),
                 methods=QueryMethods(**methods),
-                extras=kwargs,
+                extras=extras,
             )
 
     def parse_form(self, page, husker):

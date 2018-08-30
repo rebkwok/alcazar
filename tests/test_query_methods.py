@@ -40,7 +40,7 @@ class TestQueryMethods(unittest.TestCase):
         result = scraper.scrape(
             '234',
             use_cache=False,
-            my_extra='extra',
+            extras={'my_extra': 'extra'},
         )
         self.assertEqual(
             result,
