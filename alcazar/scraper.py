@@ -138,10 +138,7 @@ class Scraper(object):
             )
 
     def parse_form(self, page, husker):
-        return Form(
-            page.url,
-            husker,
-        )
+        return Form(page, husker)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # config utils

@@ -11,7 +11,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from .datastructures import Request
 from .husker import husk
 from .utils.compatibility import urlencode
-from .utils.urls import join_urls
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -19,8 +18,8 @@ class Form(object):
 
     CLICK = object()
 
-    def __init__(self, base_url, husker, encoding=None):
-        self.base_url = base_url
+    def __init__(self, page, husker, encoding=None):
+        self.page = page
         self.husker = husker
         self.encoding = None
 
@@ -114,13 +113,6 @@ class Form(object):
         return (self.husker.attrib('method').str or 'GET').upper()
 
     def _parse_url(self):
-        action_url = self.husker.attrib('action').str
-        if action_url:
-            if self.base_url:
-                return join_urls(self.base_url, action_url)
-            else:
-                return action_url
-        else:
-            return self.base_url
+        return self.page.link(self.husker.attrib('action').str)
 
 #----------------------------------------------------------------------------------------------------------------------------------

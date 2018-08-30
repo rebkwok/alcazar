@@ -217,12 +217,15 @@ class Page(object):
             return self.response.url
 
     def link(self, relative_url):
-        if not relative_url:
+        self_url = self.url
+        if not self_url:
             return relative_url
+        if not relative_url:
+            return self_url
         if not isinstance(relative_url, string_types):
             relative_url = text_type(relative_url)
         relative_url = re.sub(r'#.*', '', relative_url)
-        return join_urls(self.url, relative_url)
+        return join_urls(self_url, relative_url)
 
     def __call__(self, *args, **kwargs):
         return self.husker(*args, **kwargs)
