@@ -138,7 +138,7 @@ class CatalogParser(object):
         # This default implementation assumes there's only 1. If you have a tree-shaped list you need to override this.
         request = page.selection(self.next_page_request_path).dedup().some()
         if request:
-            yield page.link(request)
+            yield page.link_request(request)
 
     def record_result_list_error(self, query, error):
         return self.record_error(query, error)

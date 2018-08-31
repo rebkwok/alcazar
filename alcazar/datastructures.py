@@ -10,11 +10,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 from collections import OrderedDict
 import json
-import re
 
 # alcazar
 from .utils.compatibility import parse_qsl, string_types, text_type, urlencode, urlparse
-from .utils.urls import join_urls
 
 # 3rd parties
 import requests
@@ -159,7 +157,7 @@ class Query(object):
         # for implementations to use however they need.
         self.extras = extras
 
-        # How far from the start query we are. Use `page.link` for this to be set automatically
+        # How far from the start query we are. This is maintained by `scraper.link_query`
         self.depth = depth
 
     @property
@@ -220,27 +218,6 @@ class Page(object):
     @property
     def extras(self):
         return self.query.extras
-
-    def link_url(self, relative_url):
-        self_url = self.url
-        if not self_url:
-            return relative_url
-        if not relative_url:
-            return self_url
-        if not isinstance(relative_url, string_types):
-            relative_url = text_type(relative_url)
-        relative_url = re.sub(r'#.*', '', relative_url)
-        return join_urls(self_url, relative_url)
-
-    def link(self, relative_url, methods={}, extras={}):
-        merged_extras = dict(self.query.extras)
-        merged_extras.update(extras)
-        return Query(
-            request=self.link_url(relative_url),
-            methods=methods,
-            extras=merged_extras,
-            depth=self.query.depth + 1,
-        )
 
     def __call__(self, *args, **kwargs):
         return self.husker(*args, **kwargs)

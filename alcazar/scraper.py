@@ -12,15 +12,18 @@ from datetime import timedelta
 from functools import partial
 import logging
 from os import path, rename
+import re
 from time import sleep
 from traceback import format_exc
 from types import GeneratorType
 
 # alcazar
-from .datastructures import Query, QueryMethods
+from .datastructures import Query, QueryMethods, Request
 from .exceptions import ScraperError, SkipThisPage
 from .fetcher import Fetcher
 from .forms import Form
+from .utils.compatibility import string_types, text_type
+from .utils.urls import join_urls
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -100,6 +103,33 @@ class Scraper(object):
             # Sleep outside the `except` handler so that a KeyboardInterrupt won't be chained with the ScraperError, which just
             # obfuscates the output
             sleep(delay)
+
+    def link_url(self, page, url):
+        base_url = page.url
+        if not base_url:
+            return url
+        if not url:
+            return base_url
+        if not isinstance(url, string_types):
+            url = text_type(url)
+        url = re.sub(r'#.*', '', url)
+        return join_urls(base_url, url)
+
+    def link_request(self, page, request):
+        if isinstance(request, Request):
+            return request.modify_url(self.link_url(page, request.url))
+        else:
+            return Request(self.link_url(page, request))
+
+    def link_query(self, page, request, **kwargs):
+        merged_extras = dict(page.query.extras)
+        merged_extras.update(kwargs.pop('extras', {}))
+        kwargs['extras'] = merged_extras
+        kwargs['depth'] = page.query.depth + 1
+        return self.compile_query(
+            self.link_request(page, request),
+            **kwargs
+        )
 
     def download(self, request_or_query, local_file_path, overwrite=False, **kwargs):
         query = self.compile_query(request_or_query, **kwargs)

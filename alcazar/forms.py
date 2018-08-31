@@ -58,8 +58,8 @@ class Form(object):
         """
         Like `compile_fields`, but the fields are further compiled into a `Request` object. See `compile_fields` for details.
         """
-        method = self._parse_method()
-        url = self._parse_url()
+        method = (self.husker.attrib('method').str or 'GET').upper()
+        url = self.husker.attrib('action').str
         key_value_pairs = list(self.compile_fields(override))
         # Shouldn't we just pass key/value pairs to Request rather than reimplement compiling?
         body = urlencode(key_value_pairs) if key_value_pairs else None
@@ -109,11 +109,5 @@ class Form(object):
                 yield node, (node.attrib('type').str or 'text').lower()
             elif node.tag == 'select':
                 yield node, 'select'
-
-    def _parse_method(self):
-        return (self.husker.attrib('method').str or 'GET').upper()
-
-    def _parse_url(self):
-        return self.page.link_url(self.husker.attrib('action').str)
 
 #----------------------------------------------------------------------------------------------------------------------------------
