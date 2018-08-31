@@ -125,7 +125,7 @@ class HttpClient(object):
 
     def __exit__(self, *exception_info):
         self.close()
-            
+
     def close(self):
         self.session.close()
 

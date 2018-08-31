@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# We access a lot of properties whose name starts with an underscore in here, e.g. ._fp -- pylint: disable=protected-access
+
 #----------------------------------------------------------------------------------------------------------------------------------
 # includes
 
@@ -21,7 +23,6 @@ import shelve
 from time import time
 
 # 3rd parties
-import requests
 try:
     from requests.packages import urllib3
 except ImportError:
@@ -101,7 +102,7 @@ class CacheAdapterMixin(object):
         if entry.response is not None and not stream:
             # Reading the `content` property loads it to memory. We do this here because internally we always require stream=True,
             # but that might not be what the user wanted.
-            entry.response.content
+            entry.response.content # pylint: disable=pointless-statement
         if entry.exception is not None:
             raise entry.exception
         else:
@@ -276,7 +277,7 @@ class ShelfIndex(object):
                 )
             except Exception:
                 if PY2:
-                    logging.exception("Failed to open %s" % self.file_path)
+                    logging.exception("Failed to open %s", self.file_path)
                 raise Exception("Failed to open %s" % self.file_path)
         return self._db
 
@@ -535,7 +536,7 @@ class AutoClosingFile(object):
 
 class NullCache(Cache):
     """
-    Cache that does not cache. It makes the code lighter to use this when the client is configured without a cache, than to have 
+    Cache that does not cache. It makes the code lighter to use this when the client is configured without a cache, than to have
     if/else checks throughout.
     """
 

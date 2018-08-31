@@ -8,7 +8,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
-from datetime import timedelta
 from functools import partial
 import logging
 from os import path, rename
@@ -58,12 +57,12 @@ class Scraper(object):
         # You'll most certainly want to override this
         return page
 
-    def record_payload(self, page, payload):
+    def record_payload(self, page, payload): # pylint: disable=unused-argument
         # If you're happy with just the scraper returning its payload to the caller, you don't need this. Override e.g. to save to
         # DB
         return payload
 
-    def record_error(self, query, error):
+    def record_error(self, query, error): # pylint: disable=unused-argument
         # Same as record_payload. The error will be raised unless this returns a truthy value.
         logging.error(format_exc())
 
@@ -138,17 +137,18 @@ class Scraper(object):
             self.scrape(
                 query,
                 record_payload=self._save_to_disk,
+                extras={'local_file_path': local_file_path},
             )
             logging.info('%s saved', local_file_path)
         else:
             logging.info('%s already exists', local_file_path)
 
-    def _save_to_disk(self, page, payload):
-        part_file_path = local_file_path + '.part'
+    def _save_to_disk(self, page, _payload_unused):
+        part_file_path = page.extras['local_file_path'] + '.part'
         with open(part_file_path, 'wb') as file_out:
             for chunk in page.response.iter_content():
                 file_out.write(chunk)
-        rename(part_file_path, local_file_path)
+        rename(part_file_path, page.extras['local_file_path'])
 
     def compile_query(self, request_or_query, **kwargs):
         if isinstance(request_or_query, Query):

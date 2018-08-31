@@ -13,11 +13,10 @@ from contextlib import contextmanager
 import logging
 
 # alcazar
-from .crawler import Crawler
 from .datastructures import Query
 from .exceptions import AlcazarException, SkipThisPage
-from .husker import HuskerMismatch, ListHusker
-from .utils.compatibility import text_type
+from .husker import HuskerMismatch
+from .scraper import Scraper
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -36,7 +35,7 @@ class FewerItemsThanExpected(AlcazarException):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class CatalogParser(object):
+class CatalogParser(Scraper):
 
     # Either set these or override the methods that use them below. Some can be set to None to mean "this information is not on the
     # page" -- see how they're used below.
@@ -123,7 +122,7 @@ class CatalogParser(object):
         if self.no_results_apology_path is not None:
             return page.some(self.no_results_apology_path)
 
-    def husk_result_items(self, page, list_el):
+    def husk_result_items(self, page, list_el): # pylint: disable=unused-argument
         return list_el.all(self.result_item_path)
 
     def husk_expected_total_items(self, page):

@@ -12,18 +12,18 @@ from collections import OrderedDict
 import json
 
 # alcazar
-from .utils.compatibility import parse_qsl, string_types, text_type, urlencode, urlparse
+from .utils.compatibility import parse_qsl, urlencode, urlparse
 
 # 3rd parties
 import requests
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class Request:
+class Request(object):
     # 2018-03-10 - for a while I resisted creating my own Request class, thinking requests already has one (2, even), why lengthen
     # the daisy chain. But ther's a few things I wanted that requests.Request doesn't have -- here they are:
 
-    def __init__(self, url, method=None, params=None, data=None, headers=None, json=None):
+    def __init__(self, url, method=None, params=None, data=None, headers=None, json=None): # pylint: disable=redefined-outer-name
         if method:
             assert method.isupper(), repr(method) # just to make sure caller doesn't swap method and url
         else:
@@ -133,10 +133,10 @@ class Request:
         else:
             return '<%s %s>' % (self.method, self.url)
 
-def GET(url, params=None, **kwargs):
+def GET(url, params=None, **kwargs): # pylint: disable=invalid-name
     return Request(url, method='GET', params=params, **kwargs)
 
-def POST(url, data=None, **kwargs):
+def POST(url, data=None, **kwargs): # pylint: disable=invalid-name
     return Request(url, method='POST', data=data, **kwargs)
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -174,7 +174,7 @@ class Query(object):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class QueryMethods:
+class QueryMethods(object):
 
     method_names = (
         'fetch',

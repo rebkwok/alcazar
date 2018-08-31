@@ -7,13 +7,7 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-# 3rd parties
-import logging
-import requests
-
 # alcazar
-from .exceptions import SkipThisPage
-from .husker import TextHusker
 from .scraper import Scraper
 
 #----------------------------------------------------------------------------------------------------------------------------------

@@ -69,7 +69,7 @@ class TestFormParser(unittest.TestCase):
         ''')
         self.assertEqual(
             request.url,
-            join_urls(self.base_url, 'action?input=value'),
+            'action?input=value',
         )
 
     def test_default_action(self):

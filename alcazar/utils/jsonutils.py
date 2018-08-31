@@ -66,13 +66,13 @@ def lenient_json_loads(json_text):
     json_text = strip_js_comments(json_text)
     json_text = re.sub(
         r'(?:\\[^x]|\\x([0-9a-fA-F]{2}))',
-        lambda m: chr(int(m.group(1),16)) if m.group(1) else m.group(),
+        lambda m: chr(int(m.group(1), 16)) if m.group(1) else m.group(),
         json_text
     )
     json_text = RE_JSON_FIXES.sub(
         lambda m: next(
             f[1](g)
-            for f,g in zip(JSON_FIXES, m.groups())
+            for f, g in zip(JSON_FIXES, m.groups())
             if g is not None
         ),
         json_text

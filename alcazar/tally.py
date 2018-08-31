@@ -1,7 +1,11 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # includes
+
+# 2+3 compat
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
 from itertools import chain
@@ -18,6 +22,7 @@ class FewerItemsThanExpected(AlcazarException):
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class Tally(object):
+    # pylint: disable=attribute-defined-outside-init
 
     def __init__(self, label=None, log=logging):
         self.label = label

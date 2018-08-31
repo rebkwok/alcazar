@@ -21,7 +21,7 @@ class Form(object):
     def __init__(self, page, husker, encoding=None):
         self.page = page
         self.husker = husker
-        self.encoding = None
+        self.encoding = encoding
 
     def compile_fields(self, override={}):
         """
@@ -47,7 +47,7 @@ class Form(object):
                     else:
                         have_value = True
                 if not have_value:
-                    input_value = self._parse_node_value(node, input_type, input_name, is_click)
+                    input_value = self._parse_node_value(node, input_type, is_click)
                 if input_value is not None:
                     yield input_name, input_value
         for name, value in override_seq:
@@ -59,7 +59,7 @@ class Form(object):
         Like `compile_fields`, but the fields are further compiled into a `Request` object. See `compile_fields` for details.
         """
         method = (self.husker.attrib('method').str or 'GET').upper()
-        url = self.husker.attrib('action').str
+        url = self.husker.attrib('action').str or self.page.url
         key_value_pairs = list(self.compile_fields(override))
         # Shouldn't we just pass key/value pairs to Request rather than reimplement compiling?
         body = urlencode(key_value_pairs) if key_value_pairs else None
@@ -79,29 +79,31 @@ class Form(object):
             headers=headers,
         )
 
-    def _parse_node_value(self, node, input_type, input_name, is_click):
+    def _parse_node_value(self, node, input_type, is_click):
         attrib = lambda key, default=None: node.attrib(key, husk(default)).str
         if input_type in ('radio', 'checkbox'):
-            return attrib('value', 'on') if attrib('checked') else None
-        if input_type in ('submit', 'image'):
+            input_value = attrib('value', 'on') if attrib('checked') else None
+        elif input_type in ('submit', 'image'):
             if is_click:
-                return attrib('value') or ''
+                input_value = attrib('value') or ''
             else:
-                return None
-        if input_type == 'select':
+                input_value = None
+        elif input_type == 'select':
             option = node.any_of(
                 './/option[@selected]',
                 './/option',
             )
             if option:
-                return option.attrib('value').str or ''
+                input_value = option.attrib('value').str or ''
             else:
-                return None
-        if input_type == 'button':
+                input_value = None
+        elif input_type == 'button':
             # NB if you want to specify which submit button was clicked you have to pass it as an override
-            return None
-        # Everything else: "text", "password", "hidden", "search", and any unknown value
-        return attrib('value') or ''
+            input_value = None
+        else:
+            # Everything else: "text", "password", "hidden", "search", and any unknown value
+            input_value = attrib('value') or ''
+        return input_value
 
     def _iter_input_nodes(self):
         for node in self.husker.descendants():

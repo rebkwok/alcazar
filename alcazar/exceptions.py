@@ -7,13 +7,6 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-# standards
-from functools import wraps
-import logging
-from time import sleep
-from traceback import format_exc
-from types import GeneratorType
-
 # alcazar
 from .utils.compatibility import native_string
 

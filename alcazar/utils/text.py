@@ -18,6 +18,9 @@ RE_SPACES = re.compile(r'[\s\uFEFF\u200B\u2028]+', re.UNICODE)
 #----------------------------------------------------------------------------------------------------------------------------------
 
 def normalize_spaces(text, do_strip=True):
-    return RE_SPACES.sub(' ', text).strip()
+    text = RE_SPACES.sub(' ', text)
+    if do_strip:
+        text = text.strip()
+    return text
 
 #----------------------------------------------------------------------------------------------------------------------------------

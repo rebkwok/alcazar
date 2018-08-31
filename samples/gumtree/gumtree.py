@@ -16,7 +16,7 @@ from alcazar.utils.compatibility import urlquote_plus
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class Gumtree(alcazar.CatalogParser, alcazar.Scraper):
+class Gumtree(alcazar.CatalogParser):
 
     cache_root_path = 'cache'
 

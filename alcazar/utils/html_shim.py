@@ -2,8 +2,15 @@
 General functions for HTML manipulation.
 """
 
+# 2+3 compat
+from __future__ import absolute_import, division, print_function, unicode_literals
+# we have unicode_literals, it's cool pylint: disable=anomalous-unicode-escape-in-string
+# also it's not my code and I'm not maintaining it, so pylint: disable=invalid-name, too-many-return-statements
+
+
 # 2018-08-19 - this is a copy-paste of https://raw.githubusercontent.com/python/cpython/3.5/Lib/html/__init__.py, so that we can
 # run this on Python 3.2 and 3.3, which don't have `unescape`
+
 
 import re as _re
 from html.entities import html5 as _html5
@@ -114,8 +121,7 @@ def _replace_charref(s):
         for x in range(len(s)-1, 1, -1):
             if s[:x] in _html5:
                 return _html5[s[:x]] + s[x:]
-        else:
-            return '&' + s
+        return '&' + s
 
 
 _charref = _re.compile(r'&(#[0-9]+;?'

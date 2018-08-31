@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# pylint: disable=invalid-name, unused-import
+
 #----------------------------------------------------------------------------------------------------------------------------------
 # includes
 
@@ -58,7 +60,7 @@ if PY2:
                 except KeyError:
                     pass
             return text # leave as is
-        return re.sub("&#?\w+;", fixup, text)
+        return re.sub(r"&#?\w+;", fixup, text)
 
 else:
     text_type = str

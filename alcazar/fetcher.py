@@ -16,7 +16,6 @@ from .datastructures import Page, Request
 from .etree_parser import parse_html_etree, parse_xml_etree
 from .http import HttpClient
 from .husker import ElementHusker, JmesPathHusker
-from .utils.compatibility import urljoin
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

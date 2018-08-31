@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# We have a few methods in here whose exact signature varies from class to class -- pylint: disable=arguments-differ
+# Also we access ._value and ET._Comment, even though their names start with underscores -- pylint: disable=protected-access
+
 #----------------------------------------------------------------------------------------------------------------------------------
 # includes
 
@@ -22,7 +25,7 @@ import lxml.etree as ET
 try:
     from lxml.cssselect import CSSSelector
 except ImportError:
-    CSSSelector = NotImplemented
+    CSSSelector = NotImplemented # pylint: disable=invalid-name
 
 # alcazar
 from .exceptions import ScraperError
@@ -34,8 +37,8 @@ from .utils.text import normalize_spaces
 #----------------------------------------------------------------------------------------------------------------------------------
 # globals
 
-_builtin_int = int
-_unspecified = object()
+_builtin_int = int # pylint: disable=invalid-name
+_unspecified = object() # pylint: disable=invalid-name
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # exceptions
@@ -60,7 +63,7 @@ class HuskerLookupError(HuskerError):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class Selector(object):
+class SelectorMixin(object):
     # This could as well be part of `Husker`, it's separated only for readability and an aesthetic separation of concerns
 
     @property
@@ -212,7 +215,7 @@ def _forward_to_value(method_name, return_type):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class Husker(Selector):
+class Husker(SelectorMixin):
     """
     A Husker is used to extract from a raw document those bits of data that are of relevance to our scraper. It does not concern
     itself with cleaning or converting that data -- that's for the `Cleaner` to do. A Husker is just about locating the document
@@ -294,7 +297,7 @@ class Husker(Selector):
         """
         A husker evaluates as truthy iff it holds a value at all, irrespective of what that value's truthiness is.
         """
-        return self._value is not None        
+        return self._value is not None
 
     if PY2:
         # NB don't just say `__nonzero__ = __bool__` because `__bool__` is overriden in some subclasses
@@ -424,7 +427,7 @@ class ElementHusker(Husker):
         selected = ET.XPath(
             xpath,
             # you can use regexes in your paths, e.g. '//a[re:test(text(),"reg(?:ular)?","i")]'
-            namespaces = {'re':'http://exslt.org/regular-expressions'},
+            namespaces={'re':'http://exslt.org/regular-expressions'},
         )(self._value)
         return ListHusker(
             husk(self._ensure_decoded(v))
@@ -509,7 +512,7 @@ class ElementHusker(Husker):
 
     def js(self, strip_comments=True):
         js = "\n".join(
-            re.sub('^\s*<!--', '', re.sub('-->\s*$', '', js_text))
+            re.sub(r'^\s*<!--', '', re.sub(r'-->\s*$', '', js_text))
             for js_text in self._value.xpath('.//script/text()')
         )
         if strip_comments:
@@ -524,11 +527,11 @@ class ElementHusker(Husker):
 
     def repr_value(self, max_width=200, max_lines=100, min_trim=10):
         source_text = self.html_source()
-        source_text = re.sub(r'(?<=.{%d}).+' % max_width, '\u2026', source_text)
+        source_text = re.sub(r'(?<=.{%d}).+' % max_width, u'\u2026', source_text)
         lines = source_text.split('\n')
         if len(lines) >= max_lines + min_trim:
             lines = lines[:max_lines//2] \
-                + ['', '    [\u2026 %d lines snipped \u2026]' % (len(lines) - max_lines), ''] \
+                + ['', u'    [\u2026 %d lines snipped \u2026]' % (len(lines) - max_lines), ''] \
                 + lines[-max_lines//2:]
             source_text = '\n'.join(lines)
         return 'etree:\n\n%s\n%s\n%s\n' % (
@@ -552,9 +555,9 @@ class ElementHusker(Husker):
         return CSSSelector(path).path
 
     _PARAGRAPH_BREAKING_TAGS = frozenset((
-        'address', 'applet', 'blockquote', 'body', 'center', 'cite', 'dd', 'div', 'dl', 'dt', 'fieldset', 'form', 'frame', 'frameset',
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'hr', 'iframe', 'li', 'noscript', 'object', 'ol', 'p', 'table', 'tbody', 'td',
-        'textarea', 'tfoot', 'th', 'thead', 'title', 'tr', 'ul',
+        'address', 'applet', 'blockquote', 'body', 'center', 'cite', 'dd', 'div', 'dl', 'dt', 'fieldset', 'form', 'frame',
+        'frameset', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'hr', 'iframe', 'li', 'noscript', 'object', 'ol', 'p', 'table',
+        'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'title', 'tr', 'ul',
     ))
 
     _NON_TEXT_TAGS = frozenset((
@@ -724,13 +727,13 @@ class ListHusker(Husker):
                 deduped.append(child)
         return ListHusker(deduped)
 
-    def _mapped_property(name, cls=None):
+    def _mapped_property(name, cls=None): # pylint: disable=no-self-argument
         return property(lambda self: (cls or self.__class__)(
             getattr(child, name)
             for child in self._value
         ))
 
-    def _mapped_operation(name, cls=None):
+    def _mapped_operation(name, cls=None): # pylint: disable=no-self-argument
         def operation(self, *args, **kwargs):
             list_cls = cls or self.__class__
             return list_cls(
@@ -764,10 +767,6 @@ class ListHusker(Husker):
             for element in self
             if function(element)
         )
-
-    @property
-    def raw(self):
-        return [element.raw for element in self._value]
 
     def join(self, sep):
         return TextHusker(sep.join(e.str for e in self))

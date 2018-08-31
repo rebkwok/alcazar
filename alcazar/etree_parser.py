@@ -48,13 +48,13 @@ def _repair_html_before_parse(html_string):
 # 2011-12-08 - Standard browsers (e.g. Firefox) render &#151; as &mdash;. This is technically incorrect, but this usage seems well
 # entrenched, and high-profile websites rely on it, so a good scraper must follow popular usage lest it misinterpret these
 # websites' data.
-# 
+#
 # As per the HTML standards, numerical entities are supposed to use Unicode codepoints. So for instance "&#151;" should render as
 # Unicode character 151, "end of guarded area" (whatever that is). The proper numerical entity for the em dash is "&#8212;".
-# 
+#
 # But major browsers depart from the HTML standard, and, presumably for historical reasons, interpret numerical entities between
 # 128 and 160 as Windows-1252 codepoints.
-# 
+#
 # This aims to copy that behaviour.
 
 _HTML_ENTITIES_SPECIAL_CASES = {
