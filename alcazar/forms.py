@@ -114,6 +114,6 @@ class Form(object):
         return (self.husker.attrib('method').str or 'GET').upper()
 
     def _parse_url(self):
-        return self.page.link(self.husker.attrib('action').str)
+        return self.page.link_url(self.husker.attrib('action').str)
 
 #----------------------------------------------------------------------------------------------------------------------------------

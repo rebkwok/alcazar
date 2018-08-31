@@ -145,7 +145,7 @@ def POST(url, data=None, **kwargs):
 
 class Query(object):
 
-    def __init__(self, request, methods, extras):
+    def __init__(self, request, methods, extras, depth=0):
 
         # This holds whatever our fetcher's `compile_request` method returns, typically a Request instance
         self.request = request
@@ -159,15 +159,19 @@ class Query(object):
         # for implementations to use however they need.
         self.extras = extras
 
+        # How far from the start query we are. Use `page.link` for this to be set automatically
+        self.depth = depth
+
     @property
     def url(self):
         return self.request and self.request.url
 
     def __repr__(self):
-        return "Query(%r, %r, %r)" % (
+        return "Query(%r, %r, %r%s)" % (
             self.request,
             self.methods,
             self.extras,
+            (' depth=%d' % self.depth) if self.depth else '',
         )
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -217,7 +221,7 @@ class Page(object):
     def extras(self):
         return self.query.extras
 
-    def link(self, relative_url):
+    def link_url(self, relative_url):
         self_url = self.url
         if not self_url:
             return relative_url
@@ -227,6 +231,16 @@ class Page(object):
             relative_url = text_type(relative_url)
         relative_url = re.sub(r'#.*', '', relative_url)
         return join_urls(self_url, relative_url)
+
+    def link(self, relative_url, methods={}, extras={}):
+        merged_extras = dict(self.query.extras)
+        merged_extras.update(extras)
+        return Query(
+            request=self.link_url(relative_url),
+            methods=methods,
+            extras=merged_extras,
+            depth=self.query.depth + 1,
+        )
 
     def __call__(self, *args, **kwargs):
         return self.husker(*args, **kwargs)

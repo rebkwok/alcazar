@@ -65,7 +65,7 @@ class CatalogParser(object):
                 for item in result_list.items:
                     try:
                         yield self.scrape(self.compile_catalog_item_query(
-                            result_list.page.link(self.husk_item_request(result_list, item)),
+                            result_list.page.link_url(self.husk_item_request(result_list, item)),
                             item,
                             **query.extras
                         ))
