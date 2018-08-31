@@ -40,6 +40,7 @@ class Fetcher(object):
         self.strip_namespaces = strip_namespaces
 
     def fetch_response(self, request, **kwargs):
+        request = self.compile_request(request)
         if kwargs.pop('attempt_i', 0) > 0:
             kwargs.setdefault('force_cache_stale', True)
         return self.http.request(request, **kwargs)
