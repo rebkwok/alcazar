@@ -27,7 +27,7 @@ class Request(object):
         if method:
             assert method.isupper(), repr(method) # just to make sure caller doesn't swap method and url
         else:
-            method = 'POST' if data else 'GET'
+            method = 'POST' if data or json else 'GET'
         self._url = url
         self._method = method
         self._params = params
