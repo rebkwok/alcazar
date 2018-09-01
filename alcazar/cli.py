@@ -13,7 +13,9 @@ from os import path
 from sys import argv, stdout
 
 # this library
+from alcazar.etree_parser import parse_html_etree
 from alcazar.http.cache import DiskCache
+from alcazar.husker import husk
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -29,6 +31,7 @@ class AlcazarCli(object):
             print()
             if request.body:
                 stdout.write(request.body)
+                print()
 
     def response(self, cache_file_path):
         response = self._lookup_response(cache_file_path)
@@ -37,10 +40,15 @@ class AlcazarCli(object):
             for item in sorted(response.headers.items()):
                 print("%s: %s" % item)
 
+    def text(self, cache_file_path):
+        response = self._lookup_response(cache_file_path)
+        husker = husk(parse_html_etree(response.text))
+        print(husker.text.normalized)
+
     def _lookup_response(self, cache_file_path):
         cache = self._load_cache(cache_file_path)
         cache_key = self._cache_key(cache_file_path)
-        cache_entry = cache.index.lookup(cache_key, min_timestamp=0)
+        cache_entry = cache.get(cache_key, min_timestamp=0)
         if cache_entry is None:
             logging.error("%r not in cache", cache_key)
             return None
