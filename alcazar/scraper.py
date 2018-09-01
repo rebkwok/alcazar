@@ -42,10 +42,6 @@ class Scraper(object):
         if kwargs:
             raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
 
-    def compile_request(self, *args, **kwargs):
-        # A convenience shortcut. The list of parameters, and the returned type, are up to the fetcher.
-        return self.fetcher.compile_request(*args, **kwargs)
-
     def fetch(self, query, **kwargs):
         # If you want to set fetcher kwargs for a request submitted via `scrape`, you'll need to override this.
         return self.fetcher.fetch(
@@ -149,6 +145,10 @@ class Scraper(object):
             for chunk in page.response.iter_content():
                 file_out.write(chunk)
         rename(part_file_path, page.extras['local_file_path'])
+
+    def compile_request(self, *args, **kwargs):
+        # A convenience shortcut. The list of parameters, and the returned type, are up to the fetcher.
+        return self.fetcher.compile_request(*args, **kwargs)
 
     def compile_query(self, request_or_query, **kwargs):
         if isinstance(request_or_query, Query):

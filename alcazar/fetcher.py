@@ -44,11 +44,12 @@ class Fetcher(object):
             kwargs.setdefault('force_cache_stale', True)
         return self.http.request(request, **kwargs)
 
-    def compile_request(self, request_or_url):
+    def compile_request(self, request_or_url, **kwargs):
         if isinstance(request_or_url, Request):
+            assert not kwargs, "Can't specify kwargs when a Request is used: %r" % kwargs
             return request_or_url
         else:
-            return Request(request_or_url)
+            return Request(request_or_url, **kwargs)
 
     def fetch(self, query, **kwargs):
         with closing(self.fetch_response(query.request, **kwargs)) as response:
