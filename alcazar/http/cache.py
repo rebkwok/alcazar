@@ -369,7 +369,7 @@ class FlatFileStorage(object):
             # cache without expanding CPU cycles for it. However it means that in order to provide the user with decoded data, we
             # need to recreate an HTTPResponse object, since that's the object doing the decoding. Trying to pickle that got messy,
             # so we reconstruct it like this, which isn't pretty, but works.
-            headers=urllib3._collections.HTTPHeaderDict(entry.raw_headers),
+            headers=urllib3._collections.HTTPHeaderDict(entry.raw_headers if entry.raw_headers is not None else response.headers),
             status=response.status_code,
             reason=response.reason,
             request_method=response.request.method,
