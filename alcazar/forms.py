@@ -7,6 +7,9 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+# standards
+from collections import OrderedDict
+
 # alcazar
 from .datastructures import Request
 from .husker import husk
@@ -60,22 +63,19 @@ class Form(object):
         """
         method = (self.husker.attrib('method').str or 'GET').upper()
         url = self.husker.attrib('action').str or self.page.url
-        key_value_pairs = list(self.compile_fields(override))
-        # Shouldn't we just pass key/value pairs to Request rather than reimplement compiling?
-        body = urlencode(key_value_pairs) if key_value_pairs else None
+        key_value_pairs = OrderedDict(self.compile_fields(override))
+        params = data = None
         headers = {}
         if method in ('GET', 'HEAD'):
-            url = url + ('&' if '?' in url else '?') + body
-            body = None
-            # ... and the URL stays unencoded?
+            params = key_value_pairs
         else:
-            headers['Content-Type'] = 'application/x-www-form-urlencoded'
-            if body is not None and self.encoding:
-                body = body.encode(self.encoding)
+            # FIXME this is where we'd need to honour self.encoding
+            data = key_value_pairs
         return Request(
             url,
             method=method,
-            data=body,
+            params=params,
+            data=data,
             headers=headers,
         )
 

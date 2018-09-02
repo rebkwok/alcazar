@@ -41,10 +41,10 @@ class Request(object):
     def _compile(self):
         headers = self._headers
         params = self._params
-        if params:
+        if params and not isinstance(params, OrderedDict):
             params = OrderedDict(sorted(params.items())) # to avoid thwarting the cache
         data = self._data
-        if data and isinstance(data, dict):
+        if data and isinstance(data, dict) and not isinstance(data, OrderedDict):
             data = OrderedDict(sorted(data.items())) # ditto
         if self._json:
             assert data is None

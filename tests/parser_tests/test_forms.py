@@ -8,6 +8,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
+from collections import OrderedDict
 import unittest
 
 # alcazar
@@ -86,7 +87,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="text" value="value">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=value')
+        self.assertEqual(request.data, {'input': 'value'})
 
     def test_untyped_value(self):
         request = self._parse_form('''
@@ -94,7 +95,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" value="value">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=value')
+        self.assertEqual(request.data, {'input': 'value'})
 
     def test_empty_text_value(self):
         request = self._parse_form('''
@@ -102,7 +103,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="text">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=')
+        self.assertEqual(request.data, {'input': ''})
 
     def test_password_value(self):
         request = self._parse_form('''
@@ -110,7 +111,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="password" value="value">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=value')
+        self.assertEqual(request.data, {'input': 'value'})
 
     def test_hidden_value(self):
         request = self._parse_form('''
@@ -118,7 +119,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="hidden" value="value">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=value')
+        self.assertEqual(request.data, {'input': 'value'})
 
     def test_radio_value(self):
         request = self._parse_form('''
@@ -127,7 +128,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="radio" value="notthis">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=value')
+        self.assertEqual(request.data, {'input': 'value'})
 
     def test_radio_value_none_checked(self):
         request = self._parse_form('''
@@ -136,7 +137,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="radio" value="notthat">
            </form>
         ''')
-        self.assertIsNone(request.data)
+        self.assertEqual(request.data, {})
 
     def test_radio_default_value(self):
         request = self._parse_form('''
@@ -145,7 +146,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="radio" value="notthis">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=on')
+        self.assertEqual(request.data, {'input': 'on'})
 
     def test_checkbox_value(self):
         request = self._parse_form('''
@@ -153,7 +154,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="checkbox" value="value" checked="yes">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=value')
+        self.assertEqual(request.data, {'input': 'value'})
 
     def test_checkbox_value_unchecked(self):
         request = self._parse_form('''
@@ -161,7 +162,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="checkbox" value="notthis">
            </form>
         ''')
-        self.assertIsNone(request.data)
+        self.assertEqual(request.data, {})
 
     def test_checkbox_default_value(self):
         request = self._parse_form('''
@@ -169,7 +170,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="checkbox" checked="yes">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=on')
+        self.assertEqual(request.data, {'input': 'on'})
 
     def test_submit_value_default(self):
         request = self._parse_form('''
@@ -178,7 +179,7 @@ class TestFormParser(unittest.TestCase):
               <input name="submit" type="submit">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=value')
+        self.assertEqual(request.data, {'input': 'value'})
 
     def test_select(self):
         request = self._parse_form('''
@@ -189,7 +190,7 @@ class TestFormParser(unittest.TestCase):
               </select>
            </form>
         ''')
-        self.assertEqual(request.data, 'selector=2')
+        self.assertEqual(request.data, {'selector': '2'})
 
     def test_select_none_preselected(self):
         request = self._parse_form('''
@@ -200,7 +201,7 @@ class TestFormParser(unittest.TestCase):
               </select>
            </form>
         ''')
-        self.assertEqual(request.data, 'selector=1')
+        self.assertEqual(request.data, {'selector': '1'})
 
     def test_override_add_fields(self):
         request = self._parse_form(
@@ -213,7 +214,13 @@ class TestFormParser(unittest.TestCase):
                 'bob': 'uncle',
             },
         )
-        self.assertEqual(request.data, 'input=value&bob=uncle')
+        self.assertEqual(
+            request.data,
+            OrderedDict([
+                ('input', 'value'),
+                ('bob', 'uncle'),
+            ]),
+        )
 
     def test_override_change_fields(self):
         request = self._parse_form(
@@ -227,7 +234,13 @@ class TestFormParser(unittest.TestCase):
                 'bob': 'uncle',
             },
         )
-        self.assertEqual(request.data, 'input=othervalue&bob=uncle')
+        self.assertEqual(
+            request.data,
+            OrderedDict([
+                ('input', 'othervalue'),
+                ('bob', 'uncle'),
+            ]),
+        )
 
     def test_override_add_fields_from_pairs(self):
         request = self._parse_form(
@@ -241,7 +254,14 @@ class TestFormParser(unittest.TestCase):
                 ('jane', 'aunt'),
             ],
         )
-        self.assertEqual(request.data, 'input=value&bob=uncle&jane=aunt')
+        self.assertEqual(
+            request.data,
+            OrderedDict([
+                ('input', 'value'),
+                ('bob', 'uncle'),
+                ('jane', 'aunt'),
+            ]),
+        )
 
     def test_override_remove_fields(self):
         request = self._parse_form(
@@ -256,7 +276,13 @@ class TestFormParser(unittest.TestCase):
                 'bob': 'uncle',
             },
         )
-        self.assertEqual(request.data, 'input=value&bob=uncle')
+        self.assertEqual(
+            request.data,
+            OrderedDict([
+                ('input', 'value'),
+                ('bob', 'uncle'),
+            ]),
+        )
 
     def test_override_clicked_input(self):
         request = self._parse_form(
@@ -268,7 +294,13 @@ class TestFormParser(unittest.TestCase):
             ''',
             override={'button': Form.CLICK},
         )
-        self.assertEqual(request.data, 'input=value&button=clicky')
+        self.assertEqual(
+            request.data,
+            OrderedDict([
+                ('input', 'value'),
+                ('button', 'clicky'),
+            ]),
+        )
 
     def test_clicked_input_no_value(self):
         request = self._parse_form(
@@ -280,7 +312,13 @@ class TestFormParser(unittest.TestCase):
             ''',
             override={'button': Form.CLICK},
         )
-        self.assertEqual(request.data, 'input=value&button=')
+        self.assertEqual(
+            request.data,
+            OrderedDict([
+                ('input', 'value'),
+                ('button', ''),
+            ]),
+        )
 
     def test_unknown_input_types(self):
         request = self._parse_form('''
@@ -288,6 +326,6 @@ class TestFormParser(unittest.TestCase):
               <input name="input" type="youdontknowme" value="value">
            </form>
         ''')
-        self.assertEqual(request.data, 'input=value')
+        self.assertEqual(request.data, {'input': 'value'})
 
 #----------------------------------------------------------------------------------------------------------------------------------
