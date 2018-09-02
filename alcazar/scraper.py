@@ -188,6 +188,7 @@ class Scraper(object):
 # to use it. I ended up concluding this was overkill, and hence this little blemish.
 
 FETCHER_KWARGS = (
+    'allow_redirects',
     'cache_id',
     'cache_key',
     'cache_key_salt',
@@ -195,7 +196,6 @@ FETCHER_KWARGS = (
     'courtesy_seconds',
     'encoding',
     'encoding_errors',
-    'follow_redirects',
     'max_cache_life',
     'timeout',
     'use_cache',
