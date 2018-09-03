@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/saintamh/alcazar.svg?branch=master)](https://travis-ci.org/saintamh/alcazar)
-[![PyPI version](https://badge.fury.io/py/alcazar.svg)](https://badge.fury.io/py/alcazar)
+[![PyPI version](https://badge.fury.io/py/alcazar.svg)](https://pypi.org/project/alcazar/)
 
 Alcazar is a Python library that simplifies the task of writing web scrapers.
 
