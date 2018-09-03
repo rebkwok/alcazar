@@ -219,6 +219,13 @@ class HeadersTests(object):
             dict(self.client.session.cookies),
         )
 
+    def test_can_set_default_headers(self):
+        self.client.default_headers['Something'] = 'Else'
+        self.assertEqual(
+            'Else',
+            self.fetch().json().get('Something'),
+        )
+
 #----------------------------------------------------------------------------------------------------------------------------------
 
 compile_test_case_classes(globals()) 

@@ -120,4 +120,9 @@ class Fetcher(object):
         husker = JmesPathHusker(response.json())
         return Page(query, response, husker)
 
+    @property
+    def default_headers(self):
+        # NB this should return the original, modifyable header dict
+        return self.http.default_headers
+
 #----------------------------------------------------------------------------------------------------------------------------------

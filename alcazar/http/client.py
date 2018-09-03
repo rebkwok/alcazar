@@ -129,4 +129,9 @@ class HttpClient(object):
     def close(self):
         self.session.close()
 
+    @property
+    def default_headers(self):
+        # NB this returns the original, modifyable header dict
+        return self.session.headers
+
 #----------------------------------------------------------------------------------------------------------------------------------
