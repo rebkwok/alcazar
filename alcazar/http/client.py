@@ -93,7 +93,7 @@ class HttpClient(object):
                 raise HttpRedirect('HTTP %s' % response.status_code, reason=response)
             return response
         except requests.HTTPError as error:
-            error_class = getattr(HttpError, 'HTTP_%d' % error.response.status_code, HttpError)
+            error_class = getattr(HttpError, 'Http%d' % error.response.status_code, HttpError)
             raise error_class(str(error), reason=error)
         except requests.RequestException as exception:
             raise ScraperError(str(exception), reason=exception)

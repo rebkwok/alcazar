@@ -101,7 +101,7 @@ class HeadersTests(object):
             self.fetch('/?status_code=404')
 
     def test_404_raises_httperror404(self):
-        with self.assertRaises(alcazar.HttpError.HTTP_404):
+        with self.assertRaises(alcazar.HttpError.Http404):
             self.fetch('/?status_code=404')
 
 #----------------------------------------------------------------------------------------------------------------------------------

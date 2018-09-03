@@ -36,9 +36,9 @@ for _status_code in range(100, 600):
     _superclass = HttpRedirect if 300 <= _status_code < 400 else HttpError
     setattr(
         HttpError,
-        native_string('HTTP_%d') % _status_code,
+        native_string('Http%d') % _status_code,
         type(
-            native_string('HTTP_%s') % _status_code,
+            native_string('Http%d') % _status_code,
             (_superclass,),
             {native_string('status_code'): _status_code},
         ),
