@@ -45,6 +45,15 @@ class AlcazarCli(object):
         husker = husk(parse_html_etree(response.text))
         print(husker.text.normalized)
 
+    def uncache(self, cache_file_path):
+        cache = self._load_cache(cache_file_path)
+        cache_key = self._cache_key(cache_file_path)
+        was_present = cache.discard(cache_key)
+        print("%s: %s" % (
+            cache_key,
+            "uncached" if was_present else "no such key",
+        ))
+
     def _lookup_response(self, cache_file_path):
         cache = self._load_cache(cache_file_path)
         cache_key = self._cache_key(cache_file_path)
