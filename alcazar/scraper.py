@@ -196,6 +196,7 @@ FETCHER_KWARGS = (
     'courtesy_seconds',
     'encoding',
     'encoding_errors',
+    'force_cache_stale',
     'max_cache_life',
     'timeout',
     'use_cache',
