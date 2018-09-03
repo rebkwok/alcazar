@@ -178,6 +178,12 @@ class Cache(object):
         """
         raise NotImplementedError
 
+    def discard(self, key):
+        """
+        Removed an entry from the cache, if present. Returns a bool indicating whether the entry was present in the cache.
+        """
+        raise NotImplementedError
+
     def purge(self, min_timestamp):
         """
         Removes from the cache all entries whose `timestamp` is less than the given min_timestamp.
@@ -246,8 +252,12 @@ class DiskCache(Cache):
         for key in all_keys:
             entry = self.index.lookup(key)
             if entry is not None and entry.timestamp < min_timestamp:
-                self.index.delete(key)
-                self.storage.remove(key)
+                self.discard(key)
+
+    def discard(self, key):
+        was_present = self.index.delete(key)
+        self.storage.remove(key)
+        return was_present
 
     def close(self):
         self.index.close()
@@ -321,7 +331,8 @@ class ShelfIndex(object):
                 setattr(entry.response, key, value)
 
     def delete(self, key):
-        self.db.pop(self._key_to_string(key), None)
+        entry = self.db.pop(self._key_to_string(key), None)
+        return entry is not None
 
     def keys(self):
         for key_string in self.db.keys():
@@ -416,7 +427,8 @@ class FlatFileStorage(object):
 
     def remove(self, key):
         file_path = self._file_path(key)
-        unlink(file_path)
+        if path.isfile(file_path):
+            unlink(file_path)
         self._remove_empty_directories(path.dirname(file_path))
 
     def _remove_empty_directories(self, dir_path):
@@ -545,6 +557,9 @@ class NullCache(Cache):
 
     def put(self, key, entry):
         pass
+
+    def discard(self, key):
+        return False
 
     def purge(self, min_timestamp):
         pass
