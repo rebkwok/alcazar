@@ -958,6 +958,13 @@ class JmesPathHuskerTest(AlcazarTest):
             "OK",
         )
 
+    def test_getitem(self):
+        husker = JmesPathHusker(self.data)
+        self.assertEqual(
+            husker["status"],
+            "OK",
+        )
+
     def test_one_list_element(self):
         husker = JmesPathHusker(self.data)
         self.assertEqual(

@@ -603,6 +603,9 @@ class JmesPathHusker(Husker):
             raise HuskerError("value is a %s, not a list" % self._value.__class__.__name__)
         return ListHusker(map(self._child, self._value))
 
+    def __getitem__(self, item):
+        return self.one(item)
+
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class TextHusker(Husker):
