@@ -223,7 +223,10 @@ class Page(object):
         return self.husker(*args, **kwargs)
 
     def __getattr__(self, attr):
-        return getattr(self.husker, attr)
+        value = getattr(self.husker, attr, None)
+        if value is None:
+            return super(Page, self).__getattr__(attr)
+        return value
 
     def __repr__(self):
         return "Page(%r, %r, %r)" % (self.query, self.response, self.husker)
