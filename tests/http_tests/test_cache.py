@@ -481,7 +481,7 @@ class ErrorHandlingTests(object):
     class SilentScraperWithErrorRecord(SilentScraper):
 
         def __init__(self, on_error, **kwargs):
-            super().__init__(**kwargs)
+            super(ErrorHandlingTests.SilentScraperWithErrorRecord, self).__init__(**kwargs)
             self.on_error = on_error
 
         def record_error(self, query, error):
