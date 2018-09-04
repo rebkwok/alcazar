@@ -59,7 +59,7 @@ class TestFormParser(unittest.TestCase):
            </form>
         ''')
         self.assertEqual(request.method, 'GET')
-        self.assertEqual(request.url, self.base_url + '?input=value')
+        self.assertEqual(request.url, '?input=value')
         self.assertIsNone(request.data)
 
     def test_action(self):
@@ -79,7 +79,7 @@ class TestFormParser(unittest.TestCase):
               <input name="input">
            </form>
         ''')
-        self.assertEqual(request.url, self.base_url + '?input=')
+        self.assertEqual(request.url, '?input=')
 
     def test_text_value(self):
         request = self._parse_form('''

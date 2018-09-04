@@ -120,7 +120,7 @@ class Request(object):
     def url(self):
         url = self._url
         if self._params:
-            url += '?' + urlencode(OrderedDict(self._params.items()))
+            url = (url or '') + '?' + urlencode(OrderedDict(self._params.items()))
         return url
 
     @property
