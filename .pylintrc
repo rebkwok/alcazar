@@ -4,16 +4,20 @@ disable=
     abstract-class-little-used,
     abstract-class-not-used,
     abstract-method,
+    bad-continuation,
     broad-except,
     dangerous-default-value,
     fixme,
     import-error,
+    len-as-condition,
     locally-disabled,
     maybe-no-member,
     missing-docstring,
+    no-else-return,
     no-name-in-module, 
     no-self-use,
     redefined-builtin,
+    simplifiable-if-statement,
     star-args,
     too-few-public-methods,
     too-many-public-methods,
@@ -23,6 +27,7 @@ disable=
 
 # Tells whether to display a full report or only the messages
 reports=no
+score=no
 
 
 [VARIABLES]

@@ -66,7 +66,7 @@ class AlcazarSession(requests.Session):
         self.mount('http://', adapter)
         self.mount('https://', adapter)
 
-    def send(self, prepared_request, **kwargs):
+    def send(self, prepared_request, **kwargs): # pylint: disable=arguments-differ
         # NB this calls itself via indirect recursion (in requests.Session) to handle redirects
         kwargs['is_redirect'] = not kwargs.get('allow_redirects', True)
         kwargs['log'] = LogEntry(is_redirect=kwargs['is_redirect'])

@@ -11,11 +11,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import json
 
-# alcazar
-from .utils.compatibility import parse_qsl, urlencode, urlparse
-
 # 3rd parties
 import requests
+
+# alcazar
+from .utils.compatibility import parse_qsl, urlencode, urlparse
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

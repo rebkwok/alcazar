@@ -13,7 +13,6 @@ from collections import OrderedDict
 # alcazar
 from .datastructures import Request
 from .husker import husk
-from .utils.compatibility import urlencode
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

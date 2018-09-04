@@ -10,15 +10,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 import re
 
-# alcazar
-from .utils.compatibility import text_type
-
 # 3rd parties
 #
 # NB this file should be the only place where we explicitly specify the etree library we use, so that we have a shot at perhaps one
 # day swapping them.
 #
 import lxml.etree as ET
+
+# alcazar
+from .utils.compatibility import text_type
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # parse HTML
