@@ -27,13 +27,13 @@ class Fetcher(object):
     """
 
     def __init__(self,
-                 http=None,
+                 http_client=None,
                  encoding=None,
                  encoding_errors='strict',
                  strip_namespaces=True,
                  **kwargs
                 ):
-        self.http = http if http is not None else HttpClient(**kwargs)
+        self.http = http_client if http_client is not None else HttpClient(**kwargs)
         self.encoding = encoding
         self.encoding_errors = encoding_errors
         self.strip_namespaces = strip_namespaces

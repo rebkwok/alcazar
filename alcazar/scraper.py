@@ -38,6 +38,7 @@ class Scraper(object):
         if not self.id and self.__class__.__name__ != 'Scraper':
             self.id = self.__class__.__name__
         self.cache_id = kwargs.pop('cache_id', self.cache_id) or self.id
+        self.num_attempts_per_scrape = kwargs.pop('num_attempts_per_scrape', self.num_attempts_per_scrape)
         self.fetcher = Fetcher(**_extract_fetcher_kwargs(kwargs, self))
         if kwargs:
             raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
@@ -84,9 +85,7 @@ class Scraper(object):
                 return self.record_skipped_page(query, reason)
             except ScraperError as error:
                 if attempt_i+1 < num_attempts:
-                    delay = 5 ** attempt_i
-                    logging.error(format_exc())
-                    logging.info("sleeping %d sec%s", delay, '' if delay == 1 else 's')
+                    delay = self.handle_failed_attempt(attempt_i)
                 else:
                     substitute = methods.record_error(query, error)
                     if substitute:
@@ -98,6 +97,12 @@ class Scraper(object):
             # Sleep outside the `except` handler so that a KeyboardInterrupt won't be chained with the ScraperError, which just
             # obfuscates the output
             sleep(delay)
+
+    def handle_failed_attempt(self, attempt_i):
+        delay = 5 ** attempt_i
+        logging.error(format_exc())
+        logging.info("sleeping %d sec%s", delay, '' if delay == 1 else 's')
+        return delay
 
     def link_url(self, page, url):
         base_url = page.url
@@ -197,6 +202,7 @@ FETCHER_KWARGS = (
     'encoding',
     'encoding_errors',
     'force_cache_stale',
+    'http_client',
     'max_cache_life',
     'timeout',
     'use_cache',

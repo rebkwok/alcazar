@@ -24,6 +24,7 @@ import requests
 from alcazar.exceptions import HttpError
 from alcazar.http import HttpClient
 from alcazar.http.cache import DiskCache
+from alcazar.scraper import Scraper
 from alcazar.utils.compatibility import native_string
 
 # tests
@@ -463,6 +464,82 @@ class CachedContentEncodingTests(ContentEncodingTestsDoubled):
         with self.assertRaises(requests.exceptions.ContentDecodingError):
             # actually trying to decode it should fail
             bytes().join(self.fetch('/invalid', stream=True).iter_content())
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+class ErrorHandlingTests(object):
+
+    class SilentScraper(Scraper):
+        # pylint: disable=unused-argument
+
+        def handle_failed_attempt(self, attempt_i):
+            return 0 # Don't log, don't sleep
+
+        def record_error(self, query, error):
+            pass
+
+    class SilentScraperWithErrorRecord(SilentScraper):
+
+        def __init__(self, on_error, **kwargs):
+            super().__init__(**kwargs)
+            self.on_error = on_error
+
+        def record_error(self, query, error):
+            return self.on_error
+
+    __fixtures__ = (
+        CacheFixture.__subclasses__(),
+        [ClientFixture],
+        [ServerFixture],
+    )
+
+    new_server = CacheTestServer
+
+    def test_fetch_doesnt_retry(self):
+        scraper = self.SilentScraper(http_client=self.client)
+        with self.assertRaises(HttpError) as raised:
+            scraper.fetch(self.server_url('/five_hundred'))
+        self.assertEqual(
+            raised.exception.reason.response.text,
+            'I have failed 0 times',
+        )
+
+    def test_scrape_does_retry(self):
+        scraper = self.SilentScraper(http_client=self.client)
+        with self.assertRaises(HttpError) as raised:
+            scraper.scrape(self.server_url('/five_hundred'))
+        self.assertEqual(
+            raised.exception.reason.response.text,
+            'I have failed %d times' % (scraper.num_attempts_per_scrape - 1),
+        )
+
+    def test_scrape_doesnt_retry_if_constructor_num_attempts_is_one(self):
+        scraper = self.SilentScraper(http_client=self.client, num_attempts_per_scrape=1)
+        with self.assertRaises(HttpError) as raised:
+            scraper.scrape(self.server_url('/five_hundred'))
+        self.assertEqual(
+            raised.exception.reason.response.text,
+            'I have failed 0 times',
+        )
+
+    def test_scrape_doesnt_retry_if_method_num_attempts_is_one(self):
+        scraper = self.SilentScraper(http_client=self.client)
+        with self.assertRaises(HttpError) as raised:
+            scraper.scrape(self.server_url('/five_hundred'), num_attempts=1)
+        self.assertEqual(
+            raised.exception.reason.response.text,
+            'I have failed 0 times',
+        )
+
+    def test_record_error_doesnt_swallow_error_if_returns_None(self):
+        scraper = self.SilentScraperWithErrorRecord(None, http_client=self.client)
+        with self.assertRaises(HttpError) as raised:
+            scraper.scrape(self.server_url('/five_hundred'))
+
+    def test_record_error_does_swallow_error_if_returns_value(self):
+        scraper = self.SilentScraperWithErrorRecord('substitute', http_client=self.client)
+        payload = scraper.scrape(self.server_url('/five_hundred'))
+        self.assertEqual(payload, 'substitute')
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
