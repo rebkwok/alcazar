@@ -171,8 +171,8 @@ class Scraper(object):
                 extras=extras,
             )
 
-    def parse_form(self, page, husker):
-        return Form(page, husker)
+    def parse_form(self, husker):
+        return Form(husker)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # config utils

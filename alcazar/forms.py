@@ -21,8 +21,7 @@ class Form(object):
 
     CLICK = object()
 
-    def __init__(self, page, husker, encoding=None):
-        self.page = page
+    def __init__(self, husker, encoding=None):
         self.husker = husker
         self.encoding = encoding
 
@@ -62,7 +61,7 @@ class Form(object):
         Like `compile_fields`, but the fields are further compiled into a `Request` object. See `compile_fields` for details.
         """
         method = (self.husker.attrib('method').str or 'GET').upper()
-        url = self.husker.attrib('action').str or self.page.url
+        url = self.husker.attrib('action').str
         key_value_pairs = OrderedDict(self.compile_fields(override))
         params = data = None
         headers = {}
