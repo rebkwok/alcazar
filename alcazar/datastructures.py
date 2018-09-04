@@ -225,7 +225,7 @@ class Page(object):
     def __getattr__(self, attr):
         value = getattr(self.husker, attr, None)
         if value is None:
-            return super(Page, self).__getattr__(attr)
+            raise AttributeError("%r object has no attribute %r" % (self.__class__.__name__, attr))
         return value
 
     def __repr__(self):
