@@ -41,7 +41,7 @@ class Fetcher(object):
     def fetch_response(self, request, **kwargs):
         request = self.compile_request(request)
         if kwargs.pop('attempt_i', 0) > 0:
-            kwargs.setdefault('force_cache_stale', True)
+            kwargs['force_cache_stale'] = True
         return self.http.request(request, **kwargs)
 
     def compile_request(self, request_or_url, **kwargs):
