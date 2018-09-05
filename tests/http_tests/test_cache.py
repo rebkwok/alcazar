@@ -186,7 +186,7 @@ class CachedTests(object):
     def test_cache_life_zero_disables_cache(self):
         self.assertEqual(self.fetch('/counter').text, '0')
         self.assertEqual(self.fetch('/counter').text, '0')
-        self.assertEqual(self.fetch('/counter', cache_life=0).text, '1')
+        self.assertEqual(self.fetch('/counter', max_cache_life=0).text, '1')
         self.assertEqual(self.fetch('/counter').text, '1')
 
     def test_exception_response_is_cached(self):
