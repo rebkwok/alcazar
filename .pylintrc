@@ -19,6 +19,7 @@ disable=
     redefined-builtin,
     simplifiable-if-statement,
     star-args,
+    superfluous-parens,
     too-few-public-methods,
     too-many-public-methods,
 

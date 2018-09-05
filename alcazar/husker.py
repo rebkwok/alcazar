@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # We have a few methods in here whose exact signature varies from class to class -- pylint: disable=arguments-differ
-# Also we access ._value and ET._Comment, even though their names start with underscores -- pylint: disable=protected-access
+# Also we access husker._value all over, the name starts with an underscores but that's ok, pylint: disable=protected-access
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # includes
@@ -30,7 +30,7 @@ except ImportError:
 # alcazar
 from .exceptions import ScraperError
 from .utils.compatibility import PY2, bytes_type, string_types, text_type, unescape_html
-from .utils.etree import detach_node
+from .utils.etree import detach_node, extract_multiline_text
 from .utils.jsonutils import lenient_json_loads, strip_js_comments
 from .utils.text import normalize_spaces
 
@@ -460,31 +460,7 @@ class ElementHusker(Husker):
 
     @property
     def multiline(self):
-        return TextHusker(self._multiline_text())
-
-    def _multiline_text(self):
-        def visit(node, inside_pre=False):
-            if node.tag == 'pre':
-                inside_pre = True
-            if node.tag == 'br':
-                yield "\n"
-            elif node.tag in self._PARAGRAPH_BREAKING_TAGS:
-                yield "\n\n"
-            if node.tag not in self._NON_TEXT_TAGS and not isinstance(node, ET._Comment):
-                if node.text:
-                    yield node.text if inside_pre else normalize_spaces(node.text)
-                for child in node:
-                    for value in visit(child, inside_pre):
-                        yield value
-            if node.tag in self._PARAGRAPH_BREAKING_TAGS:
-                yield "\n\n"
-            if node.tail:
-                yield node.tail if inside_pre else normalize_spaces(node.tail)
-        return re.sub(
-            r'\s+',
-            lambda m: "\n\n" if "\n\n" in m.group() else "\n" if "\n" in m.group() else " ",
-            ''.join(visit(self._value)),
-        ).strip()
+        return TextHusker(extract_multiline_text(self._value))
 
     @property
     def head(self):
@@ -553,16 +529,6 @@ class ElementHusker(Husker):
         if CSSSelector is NotImplemented:
             raise NotImplementedError("lxml.cssselect module not found")
         return CSSSelector(path).path
-
-    _PARAGRAPH_BREAKING_TAGS = frozenset((
-        'address', 'applet', 'blockquote', 'body', 'center', 'cite', 'dd', 'div', 'dl', 'dt', 'fieldset', 'form', 'frame',
-        'frameset', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'hr', 'iframe', 'li', 'noscript', 'object', 'ol', 'p', 'table',
-        'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'title', 'tr', 'ul',
-    ))
-
-    _NON_TEXT_TAGS = frozenset((
-        'script', 'style',
-    ))
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
