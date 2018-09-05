@@ -78,7 +78,7 @@ class CacheAdapterMixin(object):
             self,
             prepared_request,
             use_cache=True,
-            cache_life=None,
+            max_cache_life=None,
             cache_key=None,
             cache_key_salt=None,
             force_cache_stale=False,
@@ -89,7 +89,7 @@ class CacheAdapterMixin(object):
         stream = rest.get('stream', False)
         rest['stream'] = True
         log = rest['log']
-        cache_key, entry = self._get(prepared_request, cache_life, cache_key, cache_key_salt, force_cache_stale)
+        cache_key, entry = self._get(prepared_request, max_cache_life, cache_key, cache_key_salt, force_cache_stale)
         log['cache_key'] = cache_key
         if entry is None:
             log['cache_or_courtesy'] = ''
@@ -108,9 +108,10 @@ class CacheAdapterMixin(object):
         else:
             return entry.response
 
-    def _get(self, prepared_request, cache_life, cache_key, cache_key_salt, force_cache_stale):
+    def _get(self, prepared_request, max_cache_life, cache_key, cache_key_salt, force_cache_stale):
         now = time()
         if self.needs_purge:
+            # NB the per-request max_cache_life is never used to purge the whole cache
             self.cache.purge(now - self.max_cache_life)
             self.needs_purge = False
         if cache_key is None:
@@ -118,9 +119,9 @@ class CacheAdapterMixin(object):
         if force_cache_stale:
             entry = None
         else:
-            if cache_life is None:
-                cache_life = self.max_cache_life
-            min_timestamp = 0 if cache_life is None else (now - cache_life)
+            if max_cache_life is None:
+                max_cache_life = self.max_cache_life
+            min_timestamp = 0 if max_cache_life is None else (now - max_cache_life)
             entry = self.cache.get(cache_key, min_timestamp)
         return cache_key, entry
 
