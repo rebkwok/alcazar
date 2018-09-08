@@ -33,7 +33,7 @@ if version_info[0] == 2:
 #----------------------------------------------------------------------------------------------------------------------------------
 
 def run(root_dir, url, key):
-    scraper = alcazar.Scraper(cache_root_path='./cache')
+    scraper = alcazar.Scraper()
     page = scraper.fetch(url)
     with temp_dir() as temp_dir_path:
         temp_file_path = lambda ext: path.join(temp_dir_path, '%s.%s' % (key, ext))
