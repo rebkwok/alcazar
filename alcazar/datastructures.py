@@ -216,6 +216,10 @@ class Page(object):
             return self.response.url
 
     @property
+    def headers(self):
+        return self.response.headers
+
+    @property
     def extras(self):
         return self.query.extras
 

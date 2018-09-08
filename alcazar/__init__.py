@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __version__ = '0.2.4'
 
 # alcazar
+from .bodytext import ArticleParser
 from .catalogparser import CatalogParser, CatalogResultList
 from .crawler import Crawler
 from .datastructures import GET, Page, POST, Query, Request

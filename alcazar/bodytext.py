@@ -114,7 +114,7 @@ class Article(object):
 
 class ArticleParser(object):
 
-    def extract_article(self, article_html, **kwargs):
+    def parse_article(self, article_html, **kwargs):
         self._clean_html_before_parsing(article_html)
         return Article(
             title=self._grab_title(article_html),
@@ -460,7 +460,7 @@ def main():
     input_fh.close()
 
     parser = ArticleParser()
-    article = parser.extract_article(parse_html_etree(input_html_str))
+    article = parser.parse_article(parse_html_etree(input_html_str))
 
     output_fh = open(cmdline_opt.output_filename, 'wb') if cmdline_opt.output_filename else stdout.buffer
     if article.title:
