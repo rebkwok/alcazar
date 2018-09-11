@@ -7,7 +7,7 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-__version__ = '0.2.4'
+__version__ = '0.3.0'
 
 # alcazar
 from .bodytext import ArticleParser
