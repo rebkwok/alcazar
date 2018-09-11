@@ -121,6 +121,8 @@ class CatalogParser(Scraper):
     def husk_no_results_apology(self, page):
         if self.no_results_apology_path is not None:
             return page.some(self.no_results_apology_path)
+        else:
+            return None
 
     def husk_result_items(self, page, list_el): # pylint: disable=unused-argument
         return list_el.all(self.result_item_path)
@@ -128,6 +130,8 @@ class CatalogParser(Scraper):
     def husk_expected_total_items(self, page):
         if self.expected_total_items_path is not None:
             return page(self.expected_total_items_path).text.sub(r',', '').one(r'(\d+)').int
+        else:
+            return None
 
     def parse_next_page_queries(self, page):
         for request in self.husk_next_page_requests(page):

@@ -63,9 +63,9 @@ class Scraper(object):
         # Same as record_payload. The error will be raised unless this returns a truthy value.
         logging.error(format_exc())
 
-    def record_skipped_page(self, query, reason):
+    def record_skipped_page(self, query, reason): # pylint: disable=useless-return
         logging.info("Skipped %s (%s)", query.request, reason)
-        return None
+        return None # but implementing subclasses could choose to return something
 
     def scrape(self, request_or_query, **kwargs):
         num_attempts = kwargs.pop('num_attempts', self.num_attempts_per_scrape)

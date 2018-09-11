@@ -314,6 +314,8 @@ class ShelfIndex(object):
         # )
         if entry is not None and entry.timestamp >= (min_timestamp or 0):
             return entry
+        else:
+            return None
 
     def insert(self, key, entry):
         with self._modify_for_pickling(entry):

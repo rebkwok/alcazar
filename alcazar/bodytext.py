@@ -20,18 +20,18 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 from copy import deepcopy
 from math import floor
-from optparse import OptionParser
+from optparse import OptionParser # i'll upgrade to argparse tomorrow, pylint: disable=deprecated-module
 import re
 from sys import stdin, stdout
+
+# 3rd party libs
+import lxml.etree as ET
 
 # alcazar
 from .etree_parser import parse_html_etree
 from .utils.compatibility import text_type
 from .utils.etree import detach_node, extract_multiline_text, walk_subtree_allowing_edits
 from .utils.text import normalize_spaces
-
-# 3rd party libs
-import lxml.etree as ET
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # globals, constants
@@ -433,6 +433,7 @@ class ArticleParser(object):
                     link_density = self._get_link_density(node_to_remove)
                     content_length = len(node_to_remove_text)
 
+                    # sorry, pylint: disable=too-many-boolean-expressions
                     if (
                         img > p
                         or (li > p and node_to_remove.tag not in ('ul', 'ol'))

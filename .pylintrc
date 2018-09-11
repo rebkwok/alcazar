@@ -22,6 +22,7 @@ disable=
     superfluous-parens,
     too-few-public-methods,
     too-many-public-methods,
+    useless-object-inheritance,
 
 
 [REPORTS]
