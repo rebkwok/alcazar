@@ -27,6 +27,7 @@ setuptools.setup(
     entry_points={
         'console_scripts': [
             'alcazar = alcazar.cli:main',
+            'bodytext = alcazar.bodytext:main',
         ],
     },
     install_requires=[

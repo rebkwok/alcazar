@@ -22,14 +22,13 @@ from copy import deepcopy
 from math import floor
 from optparse import OptionParser # i'll upgrade to argparse tomorrow, pylint: disable=deprecated-module
 import re
-from sys import stdin, stdout
 
 # 3rd party libs
 import lxml.etree as ET
 
 # alcazar
 from .etree_parser import parse_html_etree
-from .utils.compatibility import text_type
+from .utils.compatibility import stdin_buffer, stdout_buffer, text_type
 from .utils.etree import detach_node, extract_multiline_text, walk_subtree_allowing_edits
 from .utils.text import normalize_spaces
 
@@ -456,14 +455,14 @@ def main():
     cmdline.add_option('--output-encoding', dest='output_encoding', default='UTF-8', metavar='ENCODING')
     cmdline_opt, _args_unused = cmdline.parse_args()
 
-    input_fh = open(cmdline_opt.input_filename, 'rb') if cmdline_opt.input_filename else stdin
+    input_fh = open(cmdline_opt.input_filename, 'rb') if cmdline_opt.input_filename else stdin_buffer
     input_html_str = input_fh.read().decode(cmdline_opt.input_encoding)
     input_fh.close()
 
     parser = ArticleParser()
     article = parser.parse_article(parse_html_etree(input_html_str))
 
-    output_fh = open(cmdline_opt.output_filename, 'wb') if cmdline_opt.output_filename else stdout.buffer
+    output_fh = open(cmdline_opt.output_filename, 'wb') if cmdline_opt.output_filename else stdout_buffer
     if article.title:
         output_fh.write(article.title.encode(cmdline_opt.output_encoding))
         output_fh.write(b'\n\n')

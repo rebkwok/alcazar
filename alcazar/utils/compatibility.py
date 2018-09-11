@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # standards
 import re
-from sys import version_info
+from sys import stdin, stdout, version_info
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # globals
@@ -23,6 +23,9 @@ if PY2:
     bytes_type = str
     string_types = (str, unicode)
     integer_types = (int, long)
+
+    stdin_buffer = stdin
+    stdout_buffer = stdout
 
     import anydbm as dbm
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -67,6 +70,9 @@ else:
     bytes_type = bytes
     string_types = (bytes, str)
     integer_types = (int,)
+
+    stdin_buffer = stdin.buffer
+    stdout_buffer = stdout.buffer
 
     import dbm
     from http.server import BaseHTTPRequestHandler, HTTPServer
