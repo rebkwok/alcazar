@@ -28,7 +28,7 @@ import lxml.etree as ET
 
 # alcazar
 from .etree_parser import parse_html_etree
-from .utils.compatibility import stdin_buffer, stdout_buffer, text_type
+from .utils.compatibility import bytes_type, stdin_buffer, stdout_buffer, text_type
 from .utils.etree import detach_node, extract_multiline_text, walk_subtree_allowing_edits
 from .utils.text import normalize_spaces
 
@@ -445,6 +445,24 @@ class ArticleParser(object):
                         detach_node(node_to_remove)
 
 #----------------------------------------------------------------------------------------------------------------------------------
+# convenience
+
+def parse_article(source):
+    if isinstance(source, bytes_type):
+        raise TypeError("You must decode those bytes before we can parse them")
+    if isinstance(source, text_type):
+        article_html = parse_html_etree(source)
+    else:
+        # it better be an etree element or something compatible
+        article_html = source
+    parser = ArticleParser()
+    return parser.parse_article(article_html)
+
+
+def parse_body_text(source):
+    return parse_article(source).body_text
+
+#----------------------------------------------------------------------------------------------------------------------------------
 # cmd line interface
 
 def main():
@@ -459,8 +477,7 @@ def main():
     input_html_str = input_fh.read().decode(cmdline_opt.input_encoding)
     input_fh.close()
 
-    parser = ArticleParser()
-    article = parser.parse_article(parse_html_etree(input_html_str))
+    article = parse_article(input_html_str)
 
     output_fh = open(cmdline_opt.output_filename, 'wb') if cmdline_opt.output_filename else stdout_buffer
     if article.title:
