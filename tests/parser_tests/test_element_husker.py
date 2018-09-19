@@ -12,7 +12,7 @@ from datetime import date, datetime
 import re
 
 # alcazar
-from alcazar.husker import ElementHusker, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, JmesPathHusker, TextHusker
+from alcazar.husker import ElementHusker, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique
 from alcazar.utils.compatibility import PY2, text_type
 
 # tests
@@ -900,97 +900,6 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertEqual(
             self.husker.some('#thiswontmatch').text, # but not .str
             None,
-        )
-
-#----------------------------------------------------------------------------------------------------------------------------------
-
-class TextHuskerTest(AlcazarTest):
-
-    text_str = """
-        This is my text.
-        There are many like it but this one is mine.
-    """
-
-    def test_normalized(self):
-        text_husker = TextHusker(self.text_str)
-        self.assertEqual(
-            text_husker.raw,
-            self.text_str,
-        )
-        self.assertEqual(
-            text_husker.normalized.raw,
-            "This is my text. There are many like it but this one is mine.",
-        )
-
-    def test_regex_as_str(self):
-        self.assertEqual(
-            TextHusker(self.text_str).one('This is my (\w+)'),
-            'text',
-        )
-
-    def test_regex_as_compiled(self):
-        self.assertEqual(
-            TextHusker(self.text_str).one(re.compile('This is my (\w+)')),
-            'text',
-        )
-
-#----------------------------------------------------------------------------------------------------------------------------------
-
-class JmesPathHuskerTest(AlcazarTest):
-
-    data = {
-        "status": "OK",
-        "results": [
-            {
-                "title": "The first result",
-                "rank": 1,
-            }, {
-                "title": "The second result",
-                "rank": 2,
-            },
-        ]
-    }
-
-    def test_one_string(self):
-        husker = JmesPathHusker(self.data)
-        self.assertEqual(
-            husker.one("status"),
-            "OK",
-        )
-
-    def test_getitem(self):
-        husker = JmesPathHusker(self.data)
-        self.assertEqual(
-            husker["status"],
-            "OK",
-        )
-
-    def test_one_list_element(self):
-        husker = JmesPathHusker(self.data)
-        self.assertEqual(
-            husker.one("results[?rank == `1`]").one("title"),
-            "The first result",
-        )
-
-    def test_one_list(self):
-        husker = JmesPathHusker(self.data)
-        self.assertEqual(
-            [element("title") for element in husker.one("results").list],
-            ["The first result", "The second result"],
-        )
-
-    def test_all_list_elements(self):
-        husker = JmesPathHusker(self.data)
-        self.assertEqual(
-            [result('title') for result in husker.all("results[*]")],
-            ["The first result", "The second result"],
-        )
-
-    def test_all_list_elements_with_indirection(self):
-        husker = JmesPathHusker(self.data)
-        self.assertEqual(
-            [result('title') for result in husker.one("results").all("[*]")],
-            ["The first result", "The second result"],
         )
 
 #----------------------------------------------------------------------------------------------------------------------------------

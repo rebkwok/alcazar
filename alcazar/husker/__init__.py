@@ -11,8 +11,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from types import GeneratorType
 
 # alcazar
-from ..utils.compatibility import text_type
-from .base import Husker, ListHusker, NULL_HUSKER, NullHusker
+from ..utils.compatibility import integer_types, text_type
+from .base import Husker, ListHusker, NULL_HUSKER, NullHusker, ScalarHusker
 from .element import ElementHusker
 from .exceptions import (
     HuskerError, HuskerAttributeNotFound, HuskerMismatch, HuskerNotUnique, HuskerMultipleSpecMatch, HuskerLookupError,
@@ -23,8 +23,12 @@ from .text import TextHusker
 #----------------------------------------------------------------------------------------------------------------------------------
 
 def husk(value):
-    if isinstance(value, text_type):
+    if isinstance(value, Husker):
+        return value
+    elif isinstance(value, text_type):
         return TextHusker(value)
+    elif isinstance(value, integer_types + (float, bool)):
+        return ScalarHusker(value)
     elif callable(getattr(value, 'xpath', None)):
         return ElementHusker(value)
     elif isinstance(value, (tuple, list, GeneratorType)):

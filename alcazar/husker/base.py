@@ -13,6 +13,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 from datetime import datetime
 from decimal import Decimal
+import operator
 
 # alcazar
 from ..utils.compatibility import PY2
@@ -158,12 +159,9 @@ class SelectorMixin(object):
 #----------------------------------------------------------------------------------------------------------------------------------
 # utils
 
-def _forward_to_value(method_name, return_type):
-    def method(self, *args, **kwargs):
-        wrapped = getattr(self._value, method_name, None)
-        if not callable(wrapped):
-            raise NotImplementedError((self.__class__.__name__, self._value.__class__.__name__, method_name))
-        raw = wrapped(*args, **kwargs)
+def _forward_to_value(operator_function, return_type):
+    def method(self, other):
+        raw = operator_function(self._value, other)
         if raw is NotImplemented:
             return NotImplemented
         return return_type(raw)
@@ -181,13 +179,7 @@ class Husker(SelectorMixin):
     def __init__(self, value):
         self._value = value
 
-    @property
-    def text(self):
-        """
-        Returns a TextHusker, whose value is this husker's text contents. The definition of what constitutes "this husker's text
-        contents" is up to the implementing subclass.
-        """
-        raise NotImplementedError(repr(self))
+    # NB `text` is monkey-patched into here from TextHusker. Some subclasses override it.
 
     @property
     def multiline(self):
@@ -274,13 +266,15 @@ class Husker(SelectorMixin):
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self._value)
 
-    __hash__ = _forward_to_value('__hash__', _builtin_int)
-    __eq__ = _forward_to_value('__eq__', bool)
-    __ne__ = _forward_to_value('__ne__', bool)
-    __lt__ = _forward_to_value('__lt__', bool)
-    __le__ = _forward_to_value('__le__', bool)
-    __gt__ = _forward_to_value('__gt__', bool)
-    __ge__ = _forward_to_value('__ge__', bool)
+    def __hash__(self):
+        return hash(self._value)
+
+    __eq__ = _forward_to_value(operator.eq, bool)
+    __ne__ = _forward_to_value(operator.ne, bool)
+    __lt__ = _forward_to_value(operator.lt, bool)
+    __le__ = _forward_to_value(operator.le, bool)
+    __gt__ = _forward_to_value(operator.gt, bool)
+    __ge__ = _forward_to_value(operator.ge, bool)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -373,6 +367,27 @@ class ListHusker(Husker):
 
 
 EMPTY_LIST_HUSKER = ListHusker([])
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+class ScalarHusker(Husker):
+
+    def __init__(self, value):
+        assert value is not None
+        super(ScalarHusker, self).__init__(value)
+
+    def selection(self, *spec):
+        return EMPTY_LIST_HUSKER
+
+    def repr_spec(self, regex, flags=''):
+        del flags
+        return regex
+
+    def __bool__(self):
+        return bool(self._value)
+
+    def __str__(self):
+        return str(self._value)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
