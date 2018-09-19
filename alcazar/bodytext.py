@@ -107,7 +107,7 @@ class Article(object):
 
     @property
     def body_text(self):
-        return self.body_node and extract_multiline_text(self.body_node)
+        return self.body_node is not None and extract_multiline_text(self.body_node)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
