@@ -13,53 +13,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 from datetime import datetime
 from decimal import Decimal
-from functools import reduce
-import json
-import operator
-import re
-from types import GeneratorType
-
-# 3rd parties
-import jmespath
-import lxml.etree as ET
-try:
-    from lxml.cssselect import CSSSelector
-except ImportError:
-    CSSSelector = NotImplemented # pylint: disable=invalid-name
 
 # alcazar
-from .exceptions import ScraperError
-from .utils.compatibility import PY2, bytes_type, string_types, text_type, unescape_html
-from .utils.etree import detach_node, extract_multiline_text
-from .utils.jsonutils import lenient_json_loads, strip_js_comments
-from .utils.text import normalize_spaces
+from ..utils.compatibility import PY2
+from .exceptions import HuskerLookupError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # globals
 
 _builtin_int = int # pylint: disable=invalid-name
 _unspecified = object() # pylint: disable=invalid-name
-
-#----------------------------------------------------------------------------------------------------------------------------------
-# exceptions
-
-class HuskerError(ScraperError):
-    pass
-
-class HuskerAttributeNotFound(HuskerError):
-    pass
-
-class HuskerMismatch(HuskerError):
-    pass
-
-class HuskerNotUnique(HuskerError):
-    pass
-
-class HuskerMultipleSpecMatch(HuskerNotUnique):
-    pass
-
-class HuskerLookupError(HuskerError):
-    pass
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -197,20 +160,13 @@ class SelectorMixin(object):
 
 def _forward_to_value(method_name, return_type):
     def method(self, *args, **kwargs):
-        if return_type is text_type:
-            convert = TextHusker
-        elif return_type is list:
-            convert = lambda values: ListHusker(map(TextHusker, values))
-        else:
-            convert = return_type
         wrapped = getattr(self._value, method_name, None)
-        if callable(wrapped):
-            raw = wrapped(*args, **kwargs)
-            if raw is NotImplemented:
-                return raw
-            return convert(raw)
-        else:
+        if not callable(wrapped):
             raise NotImplementedError((self.__class__.__name__, self._value.__class__.__name__, method_name))
+        raw = wrapped(*args, **kwargs)
+        if raw is NotImplemented:
+            return NotImplemented
+        return return_type(raw)
     return method
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -238,9 +194,6 @@ class Husker(SelectorMixin):
         """ Same as `text`, but preserves line breaks """
         raise NotImplementedError(repr(self))
 
-    def json(self):
-        return JmesPathHusker(lenient_json_loads(self.str))
-
     @property
     def str(self):
         return self.text._value
@@ -266,6 +219,8 @@ class Husker(SelectorMixin):
             '',
         )
         return datetime.strptime(text.str, fmt)
+
+    # NB method `json` is moneky-patched into here from JmesPathHusker
 
     def map_raw(self, function):
         return function(self.raw)
@@ -326,330 +281,6 @@ class Husker(SelectorMixin):
     __le__ = _forward_to_value('__le__', bool)
     __gt__ = _forward_to_value('__gt__', bool)
     __ge__ = _forward_to_value('__ge__', bool)
-
-#----------------------------------------------------------------------------------------------------------------------------------
-
-class NullHusker(Husker):
-
-    def __init__(self):
-        super(NullHusker, self).__init__(None)
-
-    _returns_null = lambda *args, **kwargs: NULL_HUSKER
-    _returns_none = lambda *args, **kwargs: None
-
-    selection = _returns_null
-    one = _returns_null
-    some = _returns_null
-    first = _returns_null
-    last = _returns_null
-    any = _returns_null
-    all = _returns_null
-    one_of = _returns_null
-    some_of = _returns_null
-    first_of = _returns_null
-    any_of = _returns_null
-    all_of = _returns_null
-    selection_of = _returns_null
-
-    text = property(_returns_null)
-    multiline = property(_returns_null)
-    join = _returns_null
-    list = _returns_null
-    sub = _returns_null
-    lower = _returns_null
-    upper = _returns_null
-
-    __getitem__ = _returns_null
-    attrib = _returns_null
-
-    json = _returns_null
-    str = property(_returns_none)
-    int = property(_returns_none)
-    float = property(_returns_none)
-    date = _returns_none
-    datetime = _returns_none
-
-    map = _returns_null
-    map_raw = _returns_none
-    filter = _returns_null
-    lookup = _returns_none
-
-    __eq__ = lambda self, other: other is None
-    __ne__ = lambda self, other: other is not None
-    __lt__ = lambda self, other: False
-    __le__ = lambda self, other: False
-    __gt__ = lambda self, other: False
-    __ge__ = lambda self, other: False
-
-    def __str__(self):
-        return '<Null>'
-
-NULL_HUSKER = NullHusker()
-
-#----------------------------------------------------------------------------------------------------------------------------------
-
-class ElementHusker(Husker):
-
-    def __init__(self, value, is_full_document=False):
-        assert value is not None
-        super(ElementHusker, self).__init__(value)
-        self.is_full_document = is_full_document
-
-    def __iter__(self):
-        for child in self._value:
-            yield ElementHusker(child)
-
-    def __len__(self):
-        return len(self._value)
-
-    def __getitem__(self, item):
-        value = self._value.attrib.get(item, _unspecified)
-        if value is _unspecified:
-            raise HuskerAttributeNotFound(repr(item))
-        return TextHusker(unescape_html(self._ensure_decoded(value)))
-
-    def attrib(self, item, default=NULL_HUSKER):
-        value = self._value.attrib.get(item, _unspecified)
-        if value is _unspecified:
-            return default
-        return TextHusker(unescape_html(self._ensure_decoded(value)))
-
-    @property
-    def children(self):
-        return ListHusker(map(ElementHusker, self._value))
-
-    def descendants(self):
-        for descendant in self._value.iter():
-            yield ElementHusker(descendant)
-
-    def selection(self, path):
-        xpath = self._compile_xpath(path)
-        selected = ET.XPath(
-            xpath,
-            # you can use regexes in your paths, e.g. '//a[re:test(text(),"reg(?:ular)?","i")]'
-            namespaces={'re':'http://exslt.org/regular-expressions'},
-        )(self._value)
-        return ListHusker(
-            husk(self._ensure_decoded(v))
-            for v in selected
-        )
-
-    def _compile_xpath(self, path):
-        if re.search(r'(?:^\.(?=/)|/|@|^\w+$)', path):
-            return re.sub(
-                r'^(\.?)(/{,2})',
-                lambda m: '%s%s' % (
-                    m.group(1) if self.is_full_document else '.',
-                    m.group(2) or '//',
-                ),
-                path
-            )
-        else:
-            return self._css_path_to_xpath(path)
-
-    @staticmethod
-    def _ensure_decoded(value):
-        # lxml returns bytes when the data is ASCII, even when the input was text, which feels wrong but hey
-        if isinstance(value, bytes_type):
-            value = value.decode('us-ascii')
-        return value
-
-    @property
-    def text(self):
-        return TextHusker(normalize_spaces(''.join(self._value.itertext())))
-
-    @property
-    def multiline(self):
-        return TextHusker(extract_multiline_text(self._value))
-
-    @property
-    def head(self):
-        return husk(self._ensure_decoded(self._value.text))
-
-    @property
-    def tail(self):
-        return husk(self._ensure_decoded(self._value.tail))
-
-    @property
-    def next(self):
-        return husk(self._value.getnext())
-
-    @property
-    def previous(self):
-        return husk(self._value.getprevious())
-
-    @property
-    def parent(self):
-        return husk(self._value.getparent())
-
-    @property
-    def tag(self):
-        return TextHusker(self._ensure_decoded(self._value.tag))
-
-    def js(self, strip_comments=True):
-        js = "\n".join(
-            re.sub(r'^\s*<!--', '', re.sub(r'-->\s*$', '', js_text))
-            for js_text in self._value.xpath('.//script/text()')
-        )
-        if strip_comments:
-            js = strip_js_comments(js)
-        return TextHusker(js)
-
-    def detach(self, reattach_tail=True):
-        detach_node(self._value, reattach_tail=reattach_tail)
-
-    def repr_spec(self, path):
-        return "'%s'" % path
-
-    def repr_value(self, max_width=200, max_lines=100, min_trim=10):
-        source_text = self.html_source()
-        source_text = re.sub(r'(?<=.{%d}).+' % max_width, u'\u2026', source_text)
-        lines = source_text.split('\n')
-        if len(lines) >= max_lines + min_trim:
-            lines = lines[:max_lines//2] \
-                + ['', u'    [\u2026 %d lines snipped \u2026]' % (len(lines) - max_lines), ''] \
-                + lines[-max_lines//2:]
-            source_text = '\n'.join(lines)
-        return 'etree:\n\n%s\n%s\n%s\n' % (
-            '-' * max_width,
-            source_text.strip(),
-            '-' * max_width,
-        )
-
-    def html_source(self):
-        return ET.tostring(
-            self._value,
-            pretty_print=True,
-            method='HTML',
-            encoding=text_type,
-        )
-
-    @staticmethod
-    def _css_path_to_xpath(path):
-        if CSSSelector is NotImplemented:
-            raise NotImplementedError("lxml.cssselect module not found")
-        return CSSSelector(path).path
-
-#----------------------------------------------------------------------------------------------------------------------------------
-
-class JmesPathHusker(Husker):
-
-    @classmethod
-    def _child(cls, value):
-        if value is None:
-            return NULL_HUSKER
-        elif isinstance(value, str):
-            return TextHusker(value)
-        else:
-            return JmesPathHusker(value)
-
-    def selection(self, path):
-        selected = jmespath.search(path, self._value)
-        if '[' not in path:
-            selected = [selected]
-        return ListHusker(map(self._child, selected))
-
-    @property
-    def text(self):
-        text = self._value
-        if not isinstance(text, str):
-            text = json.dumps(text, sort_keys=True)
-        return TextHusker(text)
-
-    @property
-    def multiline(self):
-        text = self._value
-        if not isinstance(text, str):
-            text = json.dumps(text, indent=4, sort_keys=True)
-        return TextHusker(text)
-
-    @property
-    def list(self):
-        if not isinstance(self._value, list):
-            raise HuskerError("value is a %s, not a list" % self._value.__class__.__name__)
-        return ListHusker(map(self._child, self._value))
-
-    def __getitem__(self, item):
-        return self.one(item)
-
-#----------------------------------------------------------------------------------------------------------------------------------
-
-class TextHusker(Husker):
-
-    def __init__(self, value):
-        assert value is not None
-        super(TextHusker, self).__init__(value)
-
-    def selection(self, regex, flags=''):
-        regex = self._compile(regex, flags)
-        selected = regex.finditer(self._value)
-        if regex.groups < 2:
-            return ListHusker(map(husk, (
-                m.group(regex.groups)
-                for m in selected
-            )))
-        else:
-            return ListHusker(
-                ListHusker(map(husk, m.groups()))
-                for m in selected
-            )
-
-    def sub(self, regex, replacement, flags=''):
-        return TextHusker(
-            self._compile(regex, flags).sub(
-                replacement,
-                self._value,
-            )
-        )
-
-    @property
-    def text(self):
-        return self
-
-    @property
-    def multiline(self):
-        return self
-
-    @property
-    def normalized(self):
-        return TextHusker(normalize_spaces(self._value))
-
-    def lower(self):
-        return TextHusker(self._value.lower())
-
-    def upper(self):
-        return TextHusker(self._value.upper())
-
-    def repr_spec(self, regex, flags=''):
-        return "%s%s" % (
-            re.sub(r'^u?[\'\"](.*)[\'\"]$', r'/\1/', regex),
-            flags,
-        )
-
-    def __add__(self, other):
-        return TextHusker(self._value + other._value)
-
-    def __bool__(self):
-        return bool(self._value)
-
-    def __str__(self):
-        return self._value
-
-    @staticmethod
-    def _compile(regex, flags):
-        if isinstance(regex, string_types):
-            return re.compile(
-                regex,
-                reduce(
-                    operator.or_,
-                    (getattr(re, f.upper()) for f in flags),
-                    0,
-                ),
-            )
-        elif flags == '':
-            return regex
-        else:
-            raise ValueError((regex, flags))
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -737,29 +368,70 @@ class ListHusker(Husker):
             if function(element)
         )
 
-    def join(self, sep):
-        return TextHusker(sep.join(e.str for e in self))
-
     def __str__(self):
         return repr(self._value)
+
 
 EMPTY_LIST_HUSKER = ListHusker([])
 
 #----------------------------------------------------------------------------------------------------------------------------------
-# public utils
 
-def husk(value):
-    if isinstance(value, text_type):
-        # NB this includes _ElementStringResult objects that lxml returns when your xpath ends in "/text()"
-        return TextHusker(value)
-    elif callable(getattr(value, 'xpath', None)):
-        return ElementHusker(value)
-    elif isinstance(value, (tuple, list, GeneratorType)):
-        return ListHusker(value)
-    elif value is None:
-        return NULL_HUSKER
-    else:
-        # NB this includes undecoded bytes
-        raise ValueError(repr(value))
+class NullHusker(Husker):
+
+    def __init__(self):
+        super(NullHusker, self).__init__(None)
+
+    _returns_null = lambda *args, **kwargs: NULL_HUSKER
+    _returns_none = lambda *args, **kwargs: None
+
+    selection = _returns_null
+    one = _returns_null
+    some = _returns_null
+    first = _returns_null
+    last = _returns_null
+    any = _returns_null
+    all = _returns_null
+    one_of = _returns_null
+    some_of = _returns_null
+    first_of = _returns_null
+    any_of = _returns_null
+    all_of = _returns_null
+    selection_of = _returns_null
+
+    text = property(_returns_null)
+    multiline = property(_returns_null)
+    join = _returns_null
+    list = _returns_null
+    sub = _returns_null
+    lower = _returns_null
+    upper = _returns_null
+
+    __getitem__ = _returns_null
+    attrib = _returns_null
+
+    json = _returns_null
+    str = property(_returns_none)
+    int = property(_returns_none)
+    float = property(_returns_none)
+    date = _returns_none
+    datetime = _returns_none
+
+    map = _returns_null
+    map_raw = _returns_none
+    filter = _returns_null
+    lookup = _returns_none
+
+    __eq__ = lambda self, other: other is None
+    __ne__ = lambda self, other: other is not None
+    __lt__ = lambda self, other: False
+    __le__ = lambda self, other: False
+    __gt__ = lambda self, other: False
+    __ge__ = lambda self, other: False
+
+    def __str__(self):
+        return '<Null>'
+
+
+NULL_HUSKER = NullHusker()
 
 #----------------------------------------------------------------------------------------------------------------------------------
