@@ -1,0 +1,44 @@
+{
+    "int": 1,
+    "string": "oon",
+    "boolean": false,
+    "funny chars in key: '\"`!#$%^&*()_=-+[{}];:\\|/?,<>.": "boom",
+    "list_of_ints": [1, 2, 3],
+    "list_of_strings": ["one", "too", "tree"],
+    "list_of_bools": [true, false, true],
+    "list_of_lists_of_ints": [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ],
+    "list_of_dicts_of_ints": [
+        {"a": 1, "b": 2},
+        {"b": 2, "c": 3},
+        {"c": 3, "d": 4}
+    ],
+    "list_of_dicts_of_lists_of_ints": {
+        "one": {"a": [1, 2, 3], "b": [2, 3, 4]},
+        "too": {"b": [2, 3, 4], "c": [3, 4, 5]},
+        "tree": {"c": [3, 4, 5], "d": [4, 5, 6]}
+    },
+    "dict_of_ints": {
+        "one": 1,
+        "too": 2,
+        "tree": 3
+    },
+    "dict_of_strings": {
+        "one": "oh no",
+        "too": "dose",
+        "tree": "trays"
+    },
+    "dict_of_lists": {
+        "one": [1, 2, 3],
+        "too": [2, 3, 4],
+        "tree": [3, 4, 5]
+    },
+    "dict_of_dicts_of_strings": {
+        "one": {"fr": "un", "en": "one"},
+        "too": {"fr": "deux", "en": "two"},
+        "tree": {"fr": "trois", "en": "three"}
+    }
+}
