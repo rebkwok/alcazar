@@ -11,13 +11,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from datetime import date, datetime
 from decimal import Decimal
 import re
+from unittest import expectedFailure
 
 # alcazar
 from alcazar.husker import ElementHusker, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, HuskerValueError
 from alcazar.utils.compatibility import PY2, text_type
 
 # tests
-from .plumbing import AlcazarTest, HtmlFixture
+from .plumbing import AlcazarTest, HtmlFixture, with_inline_html
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -1107,5 +1108,26 @@ class InlineScriptsTest(HtmlHuskerTest, AlcazarTest):
             + "Before style text. After style text.\n\n"
             + "End text."
         )
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+class PreTagHandlingTest(AlcazarTest):
+
+    @expectedFailure
+    @with_inline_html('''
+        <p>In a  normal   paragraph   spaces  don't count.</p>
+        <p><pre>In a  pre   tag   they  do though.</pre></p>
+    ''')
+    def test_named_quote_in_attribute(self):
+        husker = ElementHusker(self.html)
+        print()
+        print(repr(husker.multiline.str))
+        self.assertEqual(
+            husker.multiline,
+            "In a normal paragraph spaces don't count.\n\n"
+            + "In a  pre   tag   they  do though."
+        )
+
+    # TODO: tail text on a pre tag is not pre-formatted
 
 #----------------------------------------------------------------------------------------------------------------------------------
