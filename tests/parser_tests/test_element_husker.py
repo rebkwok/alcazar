@@ -953,3 +953,159 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         )
 
 #----------------------------------------------------------------------------------------------------------------------------------
+
+class WhitespaceHandlingTest(HtmlHuskerTest, AlcazarTest):
+
+    fixture_file = "whitespace.html"
+    fixture_encoding = 'UTF-8'
+
+    def test_one_singleline(self):
+        self.assertEqual(
+            self.husker('#one').text,
+            "One line, some double spaces, some newlines. Whitespace at the end.",
+        )
+
+    def test_one_multiline(self):
+        self.assertEqual(
+            self.husker('#one').multiline,
+            "One line, some double spaces, some newlines. Whitespace at the end.",
+        )
+
+    def test_two_singleline(self):
+        self.assertEqual(
+            self.husker('#two').text,
+            "A tag just after a word.",
+        )
+
+    def test_two_multiline(self):
+        self.assertEqual(
+            self.husker('#two').multiline,
+            "A tag just after a word.",
+        )
+
+    def test_three_singleline(self):
+        self.assertEqual(
+            self.husker('#three').text,
+            "A tag inside white space.",
+        )
+
+    def test_three_multiline(self):
+        self.assertEqual(
+            self.husker('#three').multiline,
+            "A tag inside white space.",
+        )
+
+    def test_four_singleline(self):
+        self.assertEqual(
+            self.husker('#four').text,
+            "A tagwith no space around it.",
+        )
+
+    def test_four_multiline(self):
+        self.assertEqual(
+            self.husker('#four').multiline,
+            "A tagwith no space around it.",
+        )
+
+    def test_five_singleline(self):
+        self.assertEqual(
+            self.husker('#five').text,
+            "A br tag with no space.",
+        )
+
+    def test_five_multiline(self):
+        self.assertEqual(
+            self.husker('#five').multiline,
+            "A br\ntag with no space.",
+        )
+
+    def test_six_singleline(self):
+        self.assertEqual(
+            self.husker('#six').text,
+            "A br tag with a space after.",
+        )
+
+    def test_six_multiline(self):
+        self.assertEqual(
+            self.husker('#six').multiline,
+            "A br\ntag with a space after.",
+        )
+
+    def test_seven_singleline(self):
+        self.assertEqual(
+            self.husker('#seven').text,
+            "A br tag with a space before.",
+        )
+
+    def test_seven_multiline(self):
+        self.assertEqual(
+            self.husker('#seven').multiline,
+            "A br\ntag with a space before.",
+        )
+
+    def test_eight_singleline(self):
+        self.assertEqual(
+            self.husker('#eight').text,
+            "Three br tags in a row.",
+        )
+
+    def test_eight_multiline(self):
+        self.assertEqual(
+            self.husker('#eight').multiline,
+            "Three br tags\n\nin a row.",
+        )
+
+    def test_nine_singleline(self):
+        self.assertEqual(
+            self.husker('#nine').text,
+            "A header, then a paragraph, then a div and then a list item.",
+        )
+
+    def test_nine_multiline(self):
+        self.assertEqual(
+            self.husker('#nine').multiline,
+            "A header,\n\n"
+            + "then\n\n"
+            + "a paragraph,\n\n"
+            + "then\n\n"
+            + "a div\n\n"
+            + "and then\n\n"
+            + "a list item."
+        )
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+class InlineScriptsTest(HtmlHuskerTest, AlcazarTest):
+
+    fixture_file = "inline-scripts.html"
+    fixture_encoding = 'UTF-8'
+
+    def test_simple_text_with_inline_scripts(self):
+        self.assertEqual(
+            self.husker('body').text,
+            "Start text. "
+            + "Tail text. "
+            + "More text. "
+            + "More tail text. "
+            + "Noscript text. "
+            + "Noscript tail text. "
+            + "Third text. "
+            + "Before style text. After style text. "
+            + "End text."
+        )
+
+    def test_multiline_text_with_inline_scripts(self):
+        self.assertEqual(
+            self.husker('body').multiline,
+            "Start text.\n\n"
+            + "Tail text.\n\n"
+            + "More text.\n\n"
+            + "More tail text.\n\n"
+            + "Noscript text.\n\n"
+            + "Noscript tail text.\n\n"
+            + "Third text.\n\n"
+            + "Before style text. After style text.\n\n"
+            + "End text."
+        )
+
+#----------------------------------------------------------------------------------------------------------------------------------

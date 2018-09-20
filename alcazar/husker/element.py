@@ -21,9 +21,8 @@ except ImportError:
 
 # alcazar
 from ..utils.compatibility import bytes_type, text_type, unescape_html
-from ..utils.etree import detach_node, extract_multiline_text
+from ..utils.etree import detach_node, extract_multiline_text, extract_single_line_text
 from ..utils.jsonutils import strip_js_comments
-from ..utils.text import normalize_spaces
 from .base import Husker, ListHusker, NULL_HUSKER
 from .exceptions import HuskerAttributeNotFound
 from .text import TextHusker
@@ -103,7 +102,7 @@ class ElementHusker(Husker):
 
     @property
     def text(self):
-        return TextHusker(normalize_spaces(''.join(self._value.itertext())))
+        return TextHusker(extract_single_line_text(self._value))
 
     @property
     def multiline(self):

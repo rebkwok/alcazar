@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>A test fixture with scripts</title>
+    <meta charset="UTF-8"></meta>
+  </head>
+  <body>
+    <p>Start text.</p>
+    <script><!--
+      thisIs({a: "script, in HTML comments"});
+    //--></script>
+    Tail text.
+    <p>More text.</p>
+    <script>
+      thisIs({a: "script, not in comments"});
+    </script>
+    More tail text.
+    <noscript>
+      Noscript text.
+    </noscript>
+    Noscript tail text.
+    <p>Third text.</p>
+    Before style text.
+    <style>
+      .inline {
+        text-style: "css";
+      }
+    </style>
+    After style text.
+    <p>End text.</p>
+  </body>
+</html>

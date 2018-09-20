@@ -47,14 +47,19 @@ def detach_node(node, reattach_tail=True):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
+def extract_single_line_text(node):
+    return normalize_spaces(
+        ''.join(_multiline_parts(node, include_tail=False)),
+    )
+
 def extract_multiline_text(node):
     return re.sub(
         r'\s+',
         lambda m: "\n\n" if "\n\n" in m.group() else "\n" if "\n" in m.group() else " ",
-        ''.join(_multiline_parts(node)),
+        ''.join(_multiline_parts(node, include_tail=False)),
     ).strip()
 
-def _multiline_parts(node, inside_pre=False):
+def _multiline_parts(node, inside_pre=False, include_tail=True):
     if node.tag == 'pre':
         inside_pre = True
     if node.tag == 'br':
@@ -63,14 +68,14 @@ def _multiline_parts(node, inside_pre=False):
         yield "\n\n"
     if node.tag not in NON_TEXT_TAGS and not isinstance(node, ET._Comment): # pylint: disable=protected-access
         if node.text:
-            yield node.text if inside_pre else normalize_spaces(node.text)
+            yield node.text if inside_pre else normalize_spaces(node.text, do_strip=False)
         for child in node:
             for value in _multiline_parts(child, inside_pre):
                 yield value
     if node.tag in PARAGRAPH_BREAKING_TAGS:
         yield "\n\n"
-    if node.tail:
-        yield node.tail if inside_pre else normalize_spaces(node.tail)
+    if include_tail and node.tail:
+        yield node.tail if inside_pre else normalize_spaces(node.tail, do_strip=False)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
