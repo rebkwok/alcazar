@@ -16,6 +16,7 @@ from .base import Husker, ListHusker, NULL_HUSKER, NullHusker, ScalarHusker
 from .element import ElementHusker
 from .exceptions import (
     HuskerError, HuskerAttributeNotFound, HuskerMismatch, HuskerNotUnique, HuskerMultipleSpecMatch, HuskerLookupError,
+    HuskerValueError,
 )
 from .jmespath import JmesPathHusker
 from .text import TextHusker

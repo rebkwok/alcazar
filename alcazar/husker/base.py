@@ -12,12 +12,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # standards
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
+from functools import wraps
 import operator
 
 # alcazar
 from ..utils.compatibility import PY2
-from .exceptions import HuskerLookupError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique
+from .exceptions import HuskerLookupError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, HuskerValueError
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # globals
@@ -167,6 +168,17 @@ def _forward_to_value(operator_function, return_type):
         return return_type(raw)
     return method
 
+def _value_errors_as_husker_errors(exception_class=ValueError):
+    def make_wrapper(function):
+        @wraps(function)
+        def wrapped(*args, **kwargs):
+            try:
+                return function(*args, **kwargs)
+            except exception_class as error:
+                raise HuskerValueError(*error.args)
+        return wrapped
+    return make_wrapper
+
 #----------------------------------------------------------------------------------------------------------------------------------
 
 class Husker(SelectorMixin):
@@ -191,20 +203,25 @@ class Husker(SelectorMixin):
         return self.text._value
 
     @property
+    @_value_errors_as_husker_errors()
     def int(self):
         return int(self.str)
 
     @property
+    @_value_errors_as_husker_errors()
     def float(self):
         return float(self.str)
 
     @property
+    @_value_errors_as_husker_errors(exception_class=InvalidOperation)
     def decimal(self):
         return Decimal(self.str)
 
+    @_value_errors_as_husker_errors()
     def date(self, fmt='%Y-%m-%d'):
         return datetime.strptime(self.str, fmt).date()
 
+    @_value_errors_as_husker_errors()
     def datetime(self, fmt='%Y-%m-%dT%H:%M:%S'):
         text = self.text.sub(
             r'(?:\.\d+|[\+\-]\d\d?(?::\d\d?)?|Z)*$',
@@ -346,6 +363,7 @@ class ListHusker(Husker):
     str = _mapped_property('str', cls=list)
     int = _mapped_property('int', cls=list)
     float = _mapped_property('float', cls=list)
+    decimal = _mapped_property('decimal', cls=list)
     date = _mapped_operation('date', cls=list)
     datetime = _mapped_operation('datetime', cls=list)
 
@@ -428,6 +446,7 @@ class NullHusker(Husker):
     str = property(_returns_none)
     int = property(_returns_none)
     float = property(_returns_none)
+    decimal = property(_returns_none)
     date = _returns_none
     datetime = _returns_none
 

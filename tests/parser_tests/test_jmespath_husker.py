@@ -30,21 +30,39 @@ class JmesPathHuskerTest(AlcazarTest):
 
 class ComprehensiveJmesPathTests(JmesPathHuskerTest):
 
-    def test_simple_string(self):
+    def test_one_simple_string(self):
         self.assertEqual(
             self.husker.one("string"),
             "oon",
         )
 
-    def test_simple_int(self):
+    def test_one_simple_int(self):
         self.assertEqual(
             self.husker.one("int"),
             1,
         )
 
-    def test_simple_boolean(self):
+    def test_one_simple_boolean(self):
         self.assertFalse(
             self.husker.one("boolean"),
+        )
+
+    def test_all_simple_string(self):
+        self.assertEqual(
+            self.husker.all("string"),
+            ["oon"],
+        )
+
+    def test_all_simple_int(self):
+        self.assertEqual(
+            self.husker.all("int"),
+            [1],
+        )
+
+    def test_all_simple_boolean(self):
+        self.assertEqual(
+            self.husker.all("boolean"),
+            [False],
         )
 
     ### list_of_ints

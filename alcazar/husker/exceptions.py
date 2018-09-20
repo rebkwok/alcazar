@@ -30,4 +30,7 @@ class HuskerMultipleSpecMatch(HuskerNotUnique):
 class HuskerLookupError(HuskerError):
     pass
 
+class HuskerValueError(HuskerError):
+    pass
+
 #----------------------------------------------------------------------------------------------------------------------------------
