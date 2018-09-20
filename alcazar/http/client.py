@@ -33,6 +33,7 @@ class AdapterBase(object):
 
     def send_base(self, prepared_request, **kwargs):
         """ This is only here so that tests can override it """
+        kwargs.pop('redirect_count', None) # this is for internal Alcazar use only
         return super(AdapterBase, self).send(prepared_request, **kwargs)
 
 
@@ -68,8 +69,8 @@ class AlcazarSession(requests.Session):
 
     def send(self, prepared_request, **kwargs): # pylint: disable=arguments-differ
         # NB this calls itself via indirect recursion (in requests.Session) to handle redirects
-        kwargs['is_redirect'] = not kwargs.get('allow_redirects', True)
-        kwargs['log'] = LogEntry(is_redirect=kwargs['is_redirect'])
+        kwargs['redirect_count'] = kwargs.get('redirect_count', -1) + 1
+        kwargs['log'] = LogEntry(is_redirect=(kwargs['redirect_count'] > 0))
         return super(AlcazarSession, self).send(prepared_request, **kwargs)
 
 #----------------------------------------------------------------------------------------------------------------------------------

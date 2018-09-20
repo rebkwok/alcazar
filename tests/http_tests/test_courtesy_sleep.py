@@ -130,6 +130,14 @@ class CourtesySleepTests(object):
         )
         self.assertDidntSleep()
 
+    def test_allow_redirects_false_still_sleeps(self):
+        for sweep in (1, 2):
+            self.fetch('/redirect', allow_redirects=False)
+            if sweep == 1:
+                self.assertDidntSleep()
+            else:
+                self.assertDidSleep()
+
     def test_set_courtesy_sleep_in_constructor(self):
         with self.alt_client(courtesy_seconds=10):
             self.fetch('http://a.test/')

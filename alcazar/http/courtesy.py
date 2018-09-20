@@ -33,7 +33,7 @@ class CourtesySleepAdapterMixin(object):
 
     def send(self, prepared_request, **kwargs):
         courtesy_seconds = kwargs.pop('courtesy_seconds', self.courtesy_seconds)
-        if kwargs.pop('is_redirect'):
+        if kwargs.get('redirect_count', 0) > 0:
             courtesy_seconds = 0
         if courtesy_seconds:
             key = self._key(prepared_request)
