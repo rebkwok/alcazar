@@ -18,6 +18,10 @@ from .text import normalize_spaces
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
+LINE_BREAKING_TAGS = frozenset((
+    'br',
+))
+
 PARAGRAPH_BREAKING_TAGS = frozenset((
     'address', 'applet', 'blockquote', 'body', 'center', 'cite', 'dd', 'div', 'dl', 'dt', 'fieldset', 'form', 'frame', 'frameset',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'hr', 'iframe', 'li', 'noscript', 'object', 'ol', 'p', 'table', 'tbody', 'td',
@@ -47,35 +51,89 @@ def detach_node(node, reattach_tail=True):
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
+class NodeWalk:
+
+    def walk(self, node):
+        if node.tag not in NON_TEXT_TAGS and not isinstance(node, ET._Comment): # pylint: disable=protected-access
+            if node.text:
+                self.text(node.text)
+            for child in node:
+                self.node(child)
+                if child.tail:
+                    self.text(child.tail)
+
+    def node(self, node):
+        self.walk(node)
+
+    def text(self, text):
+        pass
+
+    def finish(self):
+        return None
+
+    def __call__(self, node):
+        self.walk(node)
+        return self.finish()
+
+
+class SingleLineTextExtractor(NodeWalk):
+
+    def __init__(self):
+        self.parts = []
+
+    def node(self, node):
+        insertion = ' ' if node.tag in LINE_BREAKING_TAGS or node.tag in PARAGRAPH_BREAKING_TAGS else None
+        if insertion:
+            self.parts.append(insertion)
+        self.walk(node)
+        if insertion:
+            self.parts.append(insertion)
+
+    def text(self, text):
+        self.parts.append(text)
+
+    def finish(self):
+        return normalize_spaces(''.join(self.parts))
+
+
 def extract_single_line_text(node):
-    return normalize_spaces(
-        ''.join(_multiline_parts(node, include_tail=False)),
-    )
+    return SingleLineTextExtractor()(node)
+
+
+class MultiLineTextExtractor(NodeWalk):
+
+    def __init__(self):
+        self.parts = []
+
+    def node(self, node):
+        if node.tag in LINE_BREAKING_TAGS:
+            insert_before = '\n'
+            insert_after = None
+        elif node.tag in PARAGRAPH_BREAKING_TAGS:
+            insert_before = insert_after = '\n\n'
+        else:
+            insert_before = insert_after = None
+        if insert_before:
+            self.parts.append(insert_before)
+        elif node.tag in PARAGRAPH_BREAKING_TAGS:
+            self.parts.append('\n\n')
+        self.walk(node)
+        if insert_after:
+            self.parts.append(insert_after)
+
+    def text(self, text):
+        self.parts.append(normalize_spaces(text, do_strip=False))
+
+    def finish(self):
+        return re.sub(
+            r'\s+',
+            lambda m: "\n\n" if "\n\n" in m.group() else "\n" if "\n" in m.group() else " ",
+            ''.join(self.parts),
+        ).strip()
+
 
 def extract_multiline_text(node):
-    return re.sub(
-        r'\s+',
-        lambda m: "\n\n" if "\n\n" in m.group() else "\n" if "\n" in m.group() else " ",
-        ''.join(_multiline_parts(node, include_tail=False)),
-    ).strip()
-
-def _multiline_parts(node, inside_pre=False, include_tail=True):
-    if node.tag == 'pre':
-        inside_pre = True
-    if node.tag == 'br':
-        yield "\n"
-    elif node.tag in PARAGRAPH_BREAKING_TAGS:
-        yield "\n\n"
-    if node.tag not in NON_TEXT_TAGS and not isinstance(node, ET._Comment): # pylint: disable=protected-access
-        if node.text:
-            yield node.text if inside_pre else normalize_spaces(node.text, do_strip=False)
-        for child in node:
-            for value in _multiline_parts(child, inside_pre):
-                yield value
-    if node.tag in PARAGRAPH_BREAKING_TAGS:
-        yield "\n\n"
-    if include_tail and node.tail:
-        yield node.tail if inside_pre else normalize_spaces(node.tail, do_strip=False)
+    return MultiLineTextExtractor()(node)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
