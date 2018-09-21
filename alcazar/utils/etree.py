@@ -56,15 +56,20 @@ class NodeWalk:
 
     def walk(self, node):
         if node.tag not in NON_TEXT_TAGS and not isinstance(node, ET._Comment): # pylint: disable=protected-access
+            baton = self.open(node)
             if node.text:
                 self.text(node.text)
             for child in node:
-                self.node(child)
+                self.walk(child)
                 if child.tail:
                     self.text(child.tail)
+            self.close(node, baton)
 
-    def node(self, node):
-        self.walk(node)
+    def open(self, node):
+        pass
+
+    def close(self, node, baton):
+        pass
 
     def text(self, text):
         pass
@@ -82,11 +87,13 @@ class SingleLineTextExtractor(NodeWalk):
     def __init__(self):
         self.parts = []
 
-    def node(self, node):
+    def open(self, node):
         insertion = ' ' if node.tag in LINE_BREAKING_TAGS or node.tag in PARAGRAPH_BREAKING_TAGS else None
         if insertion:
             self.parts.append(insertion)
-        self.walk(node)
+        return insertion
+
+    def close(self, node, insertion):
         if insertion:
             self.parts.append(insertion)
 
@@ -105,8 +112,9 @@ class MultiLineTextExtractor(NodeWalk):
 
     def __init__(self):
         self.parts = []
+        self.in_pre = 0
 
-    def node(self, node):
+    def open(self, node):
         if node.tag in LINE_BREAKING_TAGS:
             insert_before = '\n'
             insert_after = None
@@ -116,9 +124,9 @@ class MultiLineTextExtractor(NodeWalk):
             insert_before = insert_after = None
         if insert_before:
             self.parts.append(insert_before)
-        elif node.tag in PARAGRAPH_BREAKING_TAGS:
-            self.parts.append('\n\n')
-        self.walk(node)
+        return insert_after
+
+    def close(self, node, insert_after):
         if insert_after:
             self.parts.append(insert_after)
 
