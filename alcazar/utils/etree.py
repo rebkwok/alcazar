@@ -23,9 +23,10 @@ LINE_BREAKING_TAGS = frozenset((
 ))
 
 PARAGRAPH_BREAKING_TAGS = frozenset((
-    'address', 'applet', 'blockquote', 'body', 'center', 'cite', 'dd', 'div', 'dl', 'dt', 'fieldset', 'form', 'frame', 'frameset',
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'hr', 'iframe', 'li', 'noscript', 'object', 'ol', 'p', 'table', 'tbody', 'td',
-    'textarea', 'tfoot', 'th', 'thead', 'title', 'tr', 'ul',
+    'address', 'applet', 'article', 'aside', 'blockquote', 'body', 'canvas', 'center', 'cite', 'dd', 'div', 'dl', 'dt', 'fieldset',
+    'figcaption', 'figure', 'footer', 'form', 'frame', 'frameset', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hr',
+    'iframe', 'li', 'main', 'nav', 'noscript', 'object', 'ol', 'output', 'p', 'pre', 'section', 'table', 'tbody', 'td', 'textarea',
+    'tfoot', 'th', 'thead', 'title', 'tr', 'ul', 'video',
 ))
 
 NON_TEXT_TAGS = frozenset((
