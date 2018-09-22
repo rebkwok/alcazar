@@ -114,6 +114,7 @@ class MultiLineTextExtractor(NodeWalk):
         self.parts = ['']
         self.buffer = ''
         self.newlines = 0
+        self.in_pre = 0
 
     def open(self, node):
         if node.tag in LINE_BREAKING_TAGS:
@@ -122,24 +123,30 @@ class MultiLineTextExtractor(NodeWalk):
         elif node.tag in PARAGRAPH_BREAKING_TAGS:
             self.newlines += 2
             newlines_after = 2
+            if node.tag == 'pre':
+                self._flush()
+                self.in_pre += 1
         else:
             newlines_after = 0
         return newlines_after
 
     def close(self, node, newlines_after): # pylint: disable=arguments-differ
         self.newlines += newlines_after
+        if node.tag == 'pre':
+            self._flush()
+            self.in_pre -= 1
 
     def text(self, text):
         if self.newlines == 0:
             self.buffer += text
-        elif RE_NON_SPACE.search(text):
+        elif RE_NON_SPACE.search(text) or self.in_pre:
             self._flush()
             self.buffer = text
         else:
             pass # drop spaces after newlines
 
     def _flush(self):
-        self.parts[-1] += normalize_spaces(self.buffer)
+        self.parts[-1] += self.buffer if self.in_pre else normalize_spaces(self.buffer)
         if self.newlines == 1:
             self.parts[-1] += "\n"
         elif self.newlines > 1 and self.parts[-1]:
@@ -150,6 +157,8 @@ class MultiLineTextExtractor(NodeWalk):
     def finish(self):
         self.newlines = 0
         self._flush()
+        while self.parts and not self.parts[-1]:
+            self.parts.pop()
         return '\n\n'.join(self.parts)
 
 
