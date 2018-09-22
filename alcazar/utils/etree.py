@@ -14,7 +14,7 @@ import re
 import lxml.etree as ET
 
 # alcazar
-from .text import normalize_spaces
+from .text import RE_NON_SPACE, normalize_spaces
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -56,7 +56,7 @@ class NodeWalk:
 
     def walk(self, node):
         if node.tag not in NON_TEXT_TAGS and not isinstance(node, ET._Comment): # pylint: disable=protected-access
-            baton = self.open(node)
+            baton = self.open(node) # it's polymorphic, pylint: disable=assignment-from-no-return
             if node.text:
                 self.text(node.text)
             for child in node:
@@ -93,7 +93,7 @@ class SingleLineTextExtractor(NodeWalk):
             self.parts.append(insertion)
         return insertion
 
-    def close(self, node, insertion):
+    def close(self, node, insertion): # pylint: disable=arguments-differ
         if insertion:
             self.parts.append(insertion)
 
@@ -111,34 +111,46 @@ def extract_single_line_text(node):
 class MultiLineTextExtractor(NodeWalk):
 
     def __init__(self):
-        self.parts = []
-        self.in_pre = 0
+        self.parts = ['']
+        self.buffer = ''
+        self.newlines = 0
 
     def open(self, node):
         if node.tag in LINE_BREAKING_TAGS:
-            insert_before = '\n'
-            insert_after = None
+            self.newlines += 1
+            newlines_after = 0
         elif node.tag in PARAGRAPH_BREAKING_TAGS:
-            insert_before = insert_after = '\n\n'
+            self.newlines += 2
+            newlines_after = 2
         else:
-            insert_before = insert_after = None
-        if insert_before:
-            self.parts.append(insert_before)
-        return insert_after
+            newlines_after = 0
+        return newlines_after
 
-    def close(self, node, insert_after):
-        if insert_after:
-            self.parts.append(insert_after)
+    def close(self, node, newlines_after): # pylint: disable=arguments-differ
+        self.newlines += newlines_after
 
     def text(self, text):
-        self.parts.append(normalize_spaces(text, do_strip=False))
+        if self.newlines == 0:
+            self.buffer += text
+        elif RE_NON_SPACE.search(text):
+            self._flush()
+            self.buffer = text
+        else:
+            pass # drop spaces after newlines
+
+    def _flush(self):
+        self.parts[-1] += normalize_spaces(self.buffer)
+        if self.newlines == 1:
+            self.parts[-1] += "\n"
+        elif self.newlines > 1 and self.parts[-1]:
+            self.parts.append('')
+        self.newlines = 0
+        self.buffer = ''
 
     def finish(self):
-        return re.sub(
-            r'\s+',
-            lambda m: "\n\n" if "\n\n" in m.group() else "\n" if "\n" in m.group() else " ",
-            ''.join(self.parts),
-        ).strip()
+        self.newlines = 0
+        self._flush()
+        return '\n\n'.join(self.parts)
 
 
 def extract_multiline_text(node):
