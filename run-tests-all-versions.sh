@@ -20,8 +20,7 @@ tested_versions=()
 summary=""
 exit_status=0
 
-pylint --rcfile=.pylintrc alcazar \
-    || exit "$?"
+./run-pylint.sh || exit "$?"
 
 for v in ${supported_versions[@]}; do
     cmd="python$v"
