@@ -7,9 +7,6 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-# standards
-import re
-
 # 3rd parties
 import lxml.etree as ET
 
