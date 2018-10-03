@@ -156,11 +156,11 @@ class MultiLineTextExtractor(NodeWalk):
         self._flush()
         while self.parts and not self.parts[-1]:
             self.parts.pop()
-        return '\n\n'.join(self.parts)
+        return self.parts
 
 
 def extract_multiline_text(node):
-    return MultiLineTextExtractor()(node)
+    return '\n\n'.join(MultiLineTextExtractor()(node))
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

@@ -20,8 +20,10 @@ from .forms import Form
 from .http import HttpClient
 from .husker import Husker, HuskerError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, husk
 from .scraper import Scraper
+from .skeleton import Skeleton, SkeletonItem
 from .tally import Tally
 from .utils import compatibility
+from .utils.etree import MultiLineTextExtractor, SingleLineTextExtractor, extract_multiline_text, extract_single_line_text
 from .utils.urls import join_urls
 
 #----------------------------------------------------------------------------------------------------------------------------------

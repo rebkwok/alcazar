@@ -28,8 +28,9 @@ import lxml.etree as ET
 
 # alcazar
 from .etree_parser import parse_html_etree
+from .skeleton import Skeleton, SkeletonItem
 from .utils.compatibility import bytes_type, stdin_buffer, stdout_buffer, text_type
-from .utils.etree import detach_node, extract_multiline_text, walk_subtree_allowing_edits
+from .utils.etree import MultiLineTextExtractor, detach_node, extract_multiline_text, walk_subtree_allowing_edits
 from .utils.text import normalize_spaces
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -108,6 +109,21 @@ class Article(object):
     @property
     def body_text(self):
         return self.body_node is not None and extract_multiline_text(self.body_node)
+
+    @property
+    def skeleton(self):
+        # 2018-09-23 - for now we "reconstitute" this from the text form, but the hope is that soon enough the algorithm will
+        # evolve to use skeleton segments internally, and the situation will be reversed -- we'll compose the text by joining
+        # segments
+        items = []
+        if self.title:
+            items.append(SkeletonItem('title', self.title))
+        if self.body_node is not None:
+            items.extend(
+                SkeletonItem('p', paragraph)
+                for paragraph in MultiLineTextExtractor()(self.body_node)
+            )
+        return Skeleton.build(items)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
