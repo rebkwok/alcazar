@@ -63,16 +63,24 @@ class Scraper(object):
         # Same as record_payload. The error will be raised unless this returns a truthy value.
         logging.error(format_exc())
 
-    def record_skipped_page(self, query, reason): # pylint: disable=useless-return
+    def handle_error(self, _query_unused, _error_unused, attempt_i):
+        """
+        Called when an error has been encountered but the request will be re-attempted.
+        """
+        delay = 5 ** attempt_i
+        logging.error(format_exc())
+        logging.info("sleeping %d sec%s", delay, '' if delay == 1 else 's')
+        sleep(delay)
+
+    def record_skipped_page(self, query, reason):
         logging.info("Skipped %s (%s)", query.request, reason)
-        return None # but implementing subclasses could choose to return something
+        return None
 
     def scrape(self, request_or_query, **kwargs):
         num_attempts = kwargs.pop('num_attempts', self.num_attempts_per_scrape)
         query = self.compile_query(request_or_query, **kwargs)
         methods = query.methods
         for attempt_i in range(num_attempts):
-            delay = None
             try:
                 # NB it's up to the Fetcher implementation to translate this attempt_i kwarg into config options that disable the
                 # cache
@@ -82,10 +90,10 @@ class Scraper(object):
                     # consume the generator here so that we can catch any exceptions it might raise
                     payload = tuple(payload)
             except SkipThisPage as reason:
-                return self.record_skipped_page(query, reason)
+                return methods.record_skipped_page(query, reason)
             except ScraperError as error:
                 if attempt_i+1 < num_attempts:
-                    delay = self.handle_failed_attempt(attempt_i)
+                    methods.handle_error(query, error, attempt_i)
                 else:
                     substitute = methods.record_error(query, error)
                     if substitute:
@@ -94,15 +102,6 @@ class Scraper(object):
                         raise
             else:
                 return methods.record_payload(page, payload)
-            # Sleep outside the `except` handler so that a KeyboardInterrupt won't be chained with the ScraperError, which just
-            # obfuscates the output
-            sleep(delay)
-
-    def handle_failed_attempt(self, attempt_i):
-        delay = 5 ** attempt_i
-        logging.error(format_exc())
-        logging.info("sleeping %d sec%s", delay, '' if delay == 1 else 's')
-        return delay
 
     def link_url(self, page, url):
         base_url = page.url

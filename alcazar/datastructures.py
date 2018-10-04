@@ -180,6 +180,8 @@ class QueryMethods(object):
         'fetch',
         'parse',
         'record_payload',
+        'record_skipped_page',
+        'handle_error',
         'record_error',
     )
 

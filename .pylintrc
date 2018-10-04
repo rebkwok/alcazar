@@ -6,6 +6,7 @@ disable=
     abstract-method,
     bad-continuation,
     broad-except,
+    c-extension-no-member,
     dangerous-default-value,
     fixme,
     import-error,
@@ -23,6 +24,7 @@ disable=
     too-few-public-methods,
     too-many-public-methods,
     useless-object-inheritance,
+    useless-return,
 
 
 [REPORTS]

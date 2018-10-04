@@ -472,7 +472,7 @@ class ErrorHandlingTests(object):
     class SilentScraper(Scraper):
         # pylint: disable=unused-argument
 
-        def handle_failed_attempt(self, attempt_i):
+        def handle_error(self, query, error, attempt_i):
             return 0 # Don't log, don't sleep
 
         def record_error(self, query, error):
