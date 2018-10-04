@@ -536,6 +536,7 @@ class NullHusker(Husker):
     __getitem__ = _returns_null
     attrib = _returns_null
 
+    form = _returns_none
     json = _returns_null
     str = property(_returns_none)
     int = property(_returns_none)

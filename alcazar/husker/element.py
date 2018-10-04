@@ -20,6 +20,7 @@ except ImportError:
     CSSSelector = NotImplemented # pylint: disable=invalid-name
 
 # alcazar
+from ..forms import Form
 from ..utils.compatibility import bytes_type, text_type, unescape_html
 from ..utils.etree import detach_node, extract_multiline_text, extract_single_line_text
 from ..utils.jsonutils import strip_js_comments
@@ -130,6 +131,9 @@ class ElementHusker(Husker):
     @property
     def tag(self):
         return TextHusker(self._ensure_decoded(self._value.tag))
+
+    def form(self):
+        return Form(self)
 
     def js(self, strip_comments=True):
         js = "\n".join(
