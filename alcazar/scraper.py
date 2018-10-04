@@ -46,7 +46,7 @@ class Scraper(object):
     def fetch(self, query, **kwargs):
         # If you want to set fetcher kwargs for a request submitted via `scrape`, you'll need to override this.
         return self.fetcher.fetch(
-            self.compile_query(query),
+            self.query(query),
             **kwargs
         )
 
@@ -78,7 +78,7 @@ class Scraper(object):
 
     def scrape(self, request_or_query, **kwargs):
         num_attempts = kwargs.pop('num_attempts', self.num_attempts_per_scrape)
-        query = self.compile_query(request_or_query, **kwargs)
+        query = self.query(request_or_query, **kwargs)
         methods = query.methods
         for attempt_i in range(num_attempts):
             try:
@@ -125,13 +125,13 @@ class Scraper(object):
         merged_extras.update(kwargs.pop('extras', {}))
         kwargs['extras'] = merged_extras
         kwargs['depth'] = page.query.depth + 1
-        return self.compile_query(
+        return self.query(
             self.link_request(page, request),
             **kwargs
         )
 
     def download(self, request_or_query, local_file_path, overwrite=False, **kwargs):
-        query = self.compile_query(request_or_query, **kwargs)
+        query = self.query(request_or_query, **kwargs)
         if overwrite or not path.exists(local_file_path):
             kwargs['stream'] = True
             self.scrape(
@@ -150,11 +150,11 @@ class Scraper(object):
                 file_out.write(chunk)
         rename(part_file_path, page.extras['local_file_path'])
 
-    def compile_request(self, *args, **kwargs):
+    def request(self, *args, **kwargs):
         # A convenience shortcut. The list of parameters, and the returned type, are up to the fetcher.
-        return self.fetcher.compile_request(*args, **kwargs)
+        return self.fetcher.request(*args, **kwargs)
 
-    def compile_query(self, request_or_query, **kwargs):
+    def query(self, request_or_query, **kwargs):
         if isinstance(request_or_query, Query):
             assert not kwargs, "Can't specify kwargs when a Query is used: %r" % kwargs
             return request_or_query
@@ -170,7 +170,7 @@ class Scraper(object):
             if kwargs:
                 raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
             return Query(
-                self.fetcher.compile_request(request_or_query),
+                self.request(request_or_query),
                 methods=QueryMethods(**methods),
                 extras=extras,
             )

@@ -92,12 +92,12 @@ class Crawler(Scraper):
         pass
 
     def enqueue(self, request_or_query, **kwargs):
-        self.scheduler.add(self.compile_query(request_or_query, **kwargs))
+        self.scheduler.add(self.query(request_or_query, **kwargs))
 
     def enqueue_many(self, requests_or_queries, **kwargs):
         queries = [
             # Consume and convert them all first, so that any HuskerError or such gets raised before we start adding to the queue
-            self.compile_query(request_or_query, **kwargs)
+            self.query(request_or_query, **kwargs)
             for request_or_query in requests_or_queries
         ]
         self.scheduler.add_many(queries)

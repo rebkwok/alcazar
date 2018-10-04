@@ -166,8 +166,8 @@ class GetReq(FetcherFixture):
         client = kwargs.pop('client', self.client)
         kwargs['url'] = self.url(url)
         kwargs['method'] = 'GET'
-        request, rest = client._compile_request(**kwargs)
-        return client.request(request, **rest)
+        request, rest = client._build_request(**kwargs)
+        return client.submit(request, **rest)
 
 
 class PostReq(FetcherFixture):
@@ -177,8 +177,8 @@ class PostReq(FetcherFixture):
         kwargs['url'] = self.url(url)
         kwargs['data'] = b''
         kwargs['method'] = 'POST'
-        request, rest = client._compile_request(**kwargs)
-        return client.request(request, **rest)
+        request, rest = client._build_request(**kwargs)
+        return client.submit(request, **rest)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

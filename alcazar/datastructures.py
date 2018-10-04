@@ -145,7 +145,7 @@ class Query(object):
 
     def __init__(self, request, methods, extras, depth=0):
 
-        # This holds whatever our fetcher's `compile_request` method returns, typically a Request instance
+        # This holds whatever our fetcher's `request` method returns, typically a Request instance
         self.request = request
 
         # QueryMethods object that maps the main steps ('fetch' and 'parse') to callables of the correct signature. I've got this

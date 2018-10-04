@@ -82,7 +82,7 @@ class HttpClient(object):
         self.auto_raise_for_redirect = auto_raise_for_redirect
         self.session = AlcazarSession(**kwargs)
 
-    def request(self, request, **kwargs):
+    def submit(self, request, **kwargs):
         auto_raise_for_status = kwargs.pop('auto_raise_for_status', self.auto_raise_for_status)
         auto_raise_for_redirect = kwargs.pop('auto_raise_for_redirect', self.auto_raise_for_redirect)
         try:
@@ -102,17 +102,17 @@ class HttpClient(object):
     def get(self, url, **kwargs):
         kwargs['url'] = url
         kwargs['method'] = 'GET'
-        request, rest = self._compile_request(**kwargs)
-        return self.request(request, **rest)
+        request, rest = self._build_request(**kwargs)
+        return self.submit(request, **rest)
 
     def post(self, url, data, **kwargs):
         kwargs['url'] = url
         kwargs['data'] = data
         kwargs['method'] = 'POST'
-        request, rest = self._compile_request(**kwargs)
-        return self.request(request, **rest)
+        request, rest = self._build_request(**kwargs)
+        return self.submit(request, **rest)
 
-    def _compile_request(self, **kwargs):
+    def _build_request(self, **kwargs):
         request = Request(
             url=kwargs.pop('url'),
             data=kwargs.pop('data', None),

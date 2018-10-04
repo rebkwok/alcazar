@@ -55,7 +55,7 @@ class CatalogParser(Scraper):
     ### core loop
 
     def scrape_catalog(self, start_queries):
-        queue = list(map(self.compile_result_list_query, start_queries))
+        queue = list(map(self.result_list_query, start_queries))
         queue.reverse()
         with self.seen_items_counter() as counter:
             while queue:
@@ -63,7 +63,7 @@ class CatalogParser(Scraper):
                 result_list = self.scrape(query)
                 for item in result_list.items:
                     try:
-                        yield self.scrape(self.compile_catalog_item_query(
+                        yield self.scrape(self.catalog_item_query(
                             result_list.page.link_url(self.husk_item_request(result_list, item)),
                             item,
                             **query.extras
@@ -78,12 +78,12 @@ class CatalogParser(Scraper):
 
     ### result list handling
 
-    def compile_result_list_query(self, request, **extras):
+    def result_list_query(self, request, **extras):
         if isinstance(request, Query):
             assert not extras, (request, extras)
             return request
         else:
-            return self.compile_query(
+            return self.query(
                 request,
                 fetch=self.fetch_result_list,
                 parse=self.parse_result_list,
@@ -135,7 +135,7 @@ class CatalogParser(Scraper):
 
     def parse_next_page_queries(self, page):
         for request in self.husk_next_page_requests(page):
-            yield self.compile_result_list_query(request, **page.query.extras)
+            yield self.result_list_query(request, **page.query.extras)
 
     def husk_next_page_requests(self, page):
         # This default implementation assumes there's only 1. If you have a tree-shaped list you need to override this.
@@ -165,8 +165,8 @@ class CatalogParser(Scraper):
 
     ### catalog item handling
 
-    def compile_catalog_item_query(self, request, item, **extras):
-        return self.compile_query(
+    def catalog_item_query(self, request, item, **extras):
+        return self.query(
             request,
             fetch=self.fetch_catalog_item,
             parse=lambda page: self.parse_catalog_item(page, item),

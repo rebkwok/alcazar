@@ -51,9 +51,9 @@ class CourtesySleepTestClient(HttpClient):
         adapter._sleep = lambda seconds: setattr(self, 'actual_sleep', seconds)
         adapter.send_base = make_send_base_wrapper(adapter.send_base)
 
-    def request(self, request, **kwargs):
+    def submit(self, request, **kwargs):
         self.actual_sleep = 0
-        return super(CourtesySleepTestClient, self).request(request, **kwargs)
+        return super(CourtesySleepTestClient, self).submit(request, **kwargs)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

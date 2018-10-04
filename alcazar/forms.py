@@ -24,7 +24,7 @@ class Form(object):
         self.husker = husker
         self.encoding = encoding
 
-    def compile_fields(self, override={}):
+    def fields(self, override={}):
         """
         Parses the HTML form fields, and returns sequence of name/value pairs for the fields in the form.
 
@@ -55,13 +55,13 @@ class Form(object):
             if name in override_dict:
                 yield name, value
 
-    def compile_request(self, override={}):
+    def request(self, override={}):
         """
-        Like `compile_fields`, but the fields are further compiled into a `Request` object. See `compile_fields` for details.
+        Like `fields`, but the fields are further compiled into a `Request` object. See `fields` for details.
         """
         method = (self.husker.attrib('method').str or 'GET').upper()
         url = self.husker.attrib('action').str
-        key_value_pairs = OrderedDict(self.compile_fields(override))
+        key_value_pairs = OrderedDict(self.fields(override))
         params = data = None
         headers = {}
         if method in ('GET', 'HEAD'):

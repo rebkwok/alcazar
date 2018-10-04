@@ -39,12 +39,12 @@ class Fetcher(object):
         self.strip_namespaces = strip_namespaces
 
     def fetch_response(self, request, **kwargs):
-        request = self.compile_request(request)
+        request = self.request(request)
         if kwargs.pop('attempt_i', 0) > 0:
             kwargs['force_cache_stale'] = True
-        return self.http.request(request, **kwargs)
+        return self.http.submit(request, **kwargs)
 
-    def compile_request(self, request_or_url, **kwargs):
+    def request(self, request_or_url, **kwargs):
         if isinstance(request_or_url, Request):
             assert not kwargs, "Can't specify kwargs when a Request is used: %r" % kwargs
             return request_or_url

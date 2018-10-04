@@ -34,7 +34,7 @@ class TestFormParser(unittest.TestCase):
             response=None,
             husker=husker,
         )
-        return Form(husker).compile_request(**kwargs)
+        return Form(husker).request(**kwargs)
 
     def test_put_method(self):
         request = self._parse_form('''
