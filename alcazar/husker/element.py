@@ -23,9 +23,8 @@ except ImportError:
 from ..utils.compatibility import bytes_type, text_type, unescape_html
 from ..utils.etree import detach_node, extract_multiline_text, extract_single_line_text
 from ..utils.jsonutils import strip_js_comments
-from .base import Husker, ListHusker, NULL_HUSKER
+from .base import Husker, ListHusker, NULL_HUSKER, TextHusker
 from .exceptions import HuskerAttributeNotFound
-from .text import TextHusker
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # globals
@@ -101,8 +100,8 @@ class ElementHusker(Husker):
         return value
 
     @property
-    def text(self):
-        return TextHusker(extract_single_line_text(self._value))
+    def str(self):
+        return extract_single_line_text(self._value)
 
     @property
     def multiline(self):

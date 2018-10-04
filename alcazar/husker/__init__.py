@@ -12,14 +12,13 @@ from types import GeneratorType
 
 # alcazar
 from ..utils.compatibility import integer_types, text_type
-from .base import Husker, ListHusker, NULL_HUSKER, NullHusker, ScalarHusker
+from .base import Husker, ListHusker, NULL_HUSKER, NullHusker, ScalarHusker, TextHusker
 from .element import ElementHusker
 from .exceptions import (
     HuskerError, HuskerAttributeNotFound, HuskerMismatch, HuskerNotUnique, HuskerMultipleSpecMatch, HuskerLookupError,
     HuskerValueError,
 )
 from .jmespath import JmesPathHusker
-from .text import TextHusker
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

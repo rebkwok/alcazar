@@ -9,14 +9,16 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+# standards
+import json
+
 # 3rd parties
 import jmespath
 
 # alcazar
 from ..utils.compatibility import native_string, text_type
 from ..utils.jsonutils import lenient_json_loads
-from .base import Husker, ListHusker, NULL_HUSKER, ScalarHusker
-from .text import TextHusker
+from .base import Husker, ListHusker, NULL_HUSKER, ScalarHusker, TextHusker
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # Here we play with JmesPathHusker's internals so that we have a way of distinguishing between lists that JmesPath creates (such as
@@ -98,6 +100,10 @@ class JmesPathHusker(Husker):
             return ListHusker(map(_husk, selected))
         else:
             return _husk([selected])
+
+    @property
+    def str(self):
+        return json.dumps(self._value)
 
     def __getitem__(self, item):
         return self.one(item)
