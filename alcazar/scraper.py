@@ -96,7 +96,7 @@ class Scraper(object):
                     methods.handle_error(query, error, attempt_i)
                 else:
                     substitute = methods.record_error(query, error)
-                    if substitute:
+                    if substitute is not None:
                         return substitute
                     else:
                         raise
