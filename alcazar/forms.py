@@ -12,7 +12,6 @@ from collections import OrderedDict
 
 # alcazar
 from .datastructures import Request
-from .husker import husk
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -78,7 +77,11 @@ class Form(object):
         )
 
     def _parse_node_value(self, node, input_type, is_click):
-        attrib = lambda key, default=None: node.attrib(key, husk(default)).str
+        def attrib(key, default=None):
+            value = node.attrib(key, default)
+            if value is not None:
+                value = str(value)
+            return value
         if input_type in ('radio', 'checkbox'):
             input_value = attrib('value', 'on') if attrib('checked') else None
         elif input_type in ('submit', 'image'):
