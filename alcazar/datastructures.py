@@ -17,6 +17,7 @@ import requests
 # alcazar
 from .config import DEFAULT_CONFIG
 from .utils.compatibility import parse_qsl, urlencode, urlparse
+from .utils.urls import join_urls
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -220,6 +221,9 @@ class Page(object):
             return self.query.url
         else:
             return self.response.url
+
+    def link(self, url):
+        return join_urls(self.url, url)
 
     @property
     def headers(self):

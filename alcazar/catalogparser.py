@@ -64,7 +64,7 @@ class CatalogParser(Scraper):
                 for item in result_list.items:
                     try:
                         yield self.scrape(self.catalog_item_query(
-                            result_list.page.link_url(self.husk_item_request(result_list, item)),
+                            result_list.page.link(self.husk_item_request(result_list, item)),
                             item,
                             **query.extras
                         ))
@@ -139,9 +139,9 @@ class CatalogParser(Scraper):
 
     def husk_next_page_requests(self, page):
         # This default implementation assumes there's only 1. If you have a tree-shaped list you need to override this.
-        request = page.selection(self.next_page_request_path).dedup().some()
-        if request:
-            yield page.link_request(request)
+        url = page.selection(self.next_page_request_path).dedup().some()
+        if url:
+            yield page.link(url)
 
     def record_result_list_error(self, query, error):
         return self.record_error(query, error)
