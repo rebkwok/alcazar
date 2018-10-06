@@ -20,7 +20,7 @@ from threading import Event, Thread
 from unittest import TestCase
 
 # alcazar
-from alcazar import HttpClient
+from alcazar import HttpClient, Request
 from alcazar.config import DEFAULT_CONFIG, ScraperConfig
 from alcazar.utils.compatibility import PY2, BaseHTTPRequestHandler, HTTPServer, bytes_type, native_string, parse_qsl, urljoin
 
@@ -146,21 +146,14 @@ class FetcherFixture(object):
         else:
             return url
 
-
-class Get(FetcherFixture):
-
-    def fetch(self, url='/', **kwargs):
-        client = kwargs.pop('client', self.client)
-        config = ScraperConfig.from_kwargs(kwargs)
-        return client.get(self.url(url), config, **kwargs)
-
-
-class Post(FetcherFixture):
-
-    def fetch(self, url='/', **kwargs):
-        client = kwargs.pop('client', self.client)
-        config = ScraperConfig.from_kwargs(kwargs)
-        return client.post(self.url(url), b'', config, **kwargs)
+    def _build_request(self, **kwargs):
+        request = Request(
+            url=kwargs.pop('url'),
+            data=kwargs.pop('data', None),
+            headers=kwargs.pop('headers', {}),
+            method=kwargs.pop('method'),
+        )
+        return request, kwargs
 
 
 class GetReq(FetcherFixture):
@@ -170,7 +163,7 @@ class GetReq(FetcherFixture):
         kwargs['url'] = self.url(url)
         kwargs['method'] = 'GET'
         config = ScraperConfig.from_kwargs(kwargs)
-        request, rest = client._build_request(**kwargs)
+        request, rest = self._build_request(**kwargs)
         return client.submit(request, config, **rest)
 
 
@@ -182,7 +175,7 @@ class PostReq(FetcherFixture):
         kwargs['data'] = b''
         kwargs['method'] = 'POST'
         config = ScraperConfig.from_kwargs(kwargs)
-        request, rest = client._build_request(**kwargs)
+        request, rest = self._build_request(**kwargs)
         return client.submit(request, config, **rest)
 
 #----------------------------------------------------------------------------------------------------------------------------------

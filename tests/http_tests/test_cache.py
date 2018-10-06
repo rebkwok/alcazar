@@ -21,6 +21,8 @@ from tempfile import mkdtemp
 import requests
 
 # alcazar
+from alcazar.config import DEFAULT_CONFIG
+from alcazar.datastructures import GET, POST
 from alcazar.exceptions import HttpError
 from alcazar.http import HttpClient
 from alcazar.http.cache import DiskCache
@@ -162,7 +164,7 @@ class CachedTests(object):
 
     def fetch(self, path, **kwargs):
         client = kwargs.pop('client', self.client)
-        return client.get(self.server_url(path), **kwargs)
+        return client.submit(GET(self.server_url(path)), DEFAULT_CONFIG, **kwargs)
 
     def test_counter_is_frozen(self):
         for _ in ('live', 'from-cache'):
@@ -334,18 +336,21 @@ class CachedTestsWithCustomMethods(object):
 
     def test_cache_key_includes_method(self):
         for _ in ('live', 'from-cache'):
-            self.assertEqual(self.client.get(self.server_url('/counter')).text, '0')
-            self.assertEqual(self.client.post(self.server_url('/counter'), b'data').text, '1')
+            self.assertEqual(self.client.submit(GET(self.server_url('/counter')), DEFAULT_CONFIG).text, '0')
+            self.assertEqual(self.client.submit(POST(self.server_url('/counter'), b'data'), DEFAULT_CONFIG).text, '1')
 
     def test_cache_key_includes_data(self):
         for _ in ('live', 'from-cache'):
-            self.assertEqual(self.client.post(self.server_url('/counter'), b'data_0').text, '0')
-            self.assertEqual(self.client.post(self.server_url('/counter'), b'data_1').text, '1')
+            self.assertEqual(self.client.submit(POST(self.server_url('/counter'), b'data_0'), DEFAULT_CONFIG).text, '0')
+            self.assertEqual(self.client.submit(POST(self.server_url('/counter'), b'data_1'), DEFAULT_CONFIG).text, '1')
 
     def _get_x_headers(self, request_headers):
-        response = self.client.get(
-            self.server_url('/echo_headers'),
-            headers=request_headers
+        response = self.client.submit(
+            GET(
+                self.server_url('/echo_headers'),
+                headers=request_headers
+            ),
+            DEFAULT_CONFIG,
         )
         return {
             key.title(): value
@@ -374,8 +379,14 @@ class CachedTestsWithCustomMethods(object):
         )
 
     def test_double_headers_are_available(self):
-        headers_live = self.client.get(self.server_url('/double_cookie')).raw.headers._container
-        headers_from_cache = self.client.get(self.server_url('/double_cookie')).raw.headers._container
+        headers_live = self.client.submit(
+            GET(self.server_url('/double_cookie')),
+            DEFAULT_CONFIG
+        ).raw.headers._container
+        headers_from_cache = self.client.submit(
+            GET(self.server_url('/double_cookie')),
+            DEFAULT_CONFIG,
+        ).raw.headers._container
         self.assertEqual(
             headers_live,
             headers_from_cache,
@@ -441,14 +452,14 @@ class CachedContentEncodingTests(ContentEncodingTestsDoubled):
             raise ValueError(check_output(['zcat', file_path]))
 
     def test_unzipped_contents_also_stored_gzipped(self):
-        content = self.client.get(self.server_url('/unzipped')).content
+        content = self.client.submit(GET(self.server_url('/unzipped')), DEFAULT_CONFIG).content
         self.assertEqual(content, b"This is the text")
         file_path = self._find_cached_data_file()
         with gzip.open(file_path, 'r') as handle:
             self.assertEqual(handle.read(), content)
 
     def test_identity_contents_also_stored_gzipped(self):
-        content = self.client.get(self.server_url('/identity')).content
+        content = self.client.submit(GET(self.server_url('/identity')), DEFAULT_CONFIG).content
         self.assertEqual(content, b"This is the text")
         file_path = self._find_cached_data_file()
         with gzip.open(file_path, 'r') as handle:

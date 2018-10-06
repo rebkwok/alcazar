@@ -14,7 +14,6 @@ from requests.structures import CaseInsensitiveDict
 # alcazar
 from .. import __version__
 from ..config import DEFAULT_CONFIG
-from ..datastructures import Request
 from ..exceptions import HttpError, HttpRedirect, ScraperError
 from .cache import CacheAdapterMixin
 from .courtesy import CourtesySleepAdapterMixin
@@ -95,28 +94,6 @@ class HttpClient(object):
             raise error_class(str(error), reason=error)
         except requests.RequestException as exception:
             raise ScraperError(str(exception), reason=exception)
-
-    def get(self, url, config=DEFAULT_CONFIG, **kwargs):
-        kwargs['url'] = url
-        kwargs['method'] = 'GET'
-        request, rest = self._build_request(**kwargs)
-        return self.submit(request, config, **rest)
-
-    def post(self, url, data, config=DEFAULT_CONFIG, **kwargs):
-        kwargs['url'] = url
-        kwargs['data'] = data
-        kwargs['method'] = 'POST'
-        request, rest = self._build_request(**kwargs)
-        return self.submit(request, config, **rest)
-
-    def _build_request(self, **kwargs):
-        request = Request(
-            url=kwargs.pop('url'),
-            data=kwargs.pop('data', None),
-            headers=CaseInsensitiveDict(kwargs.pop('headers', {})),
-            method=kwargs.pop('method'),
-        )
-        return request, kwargs
 
     def __enter__(self):
         return self
