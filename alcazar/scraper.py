@@ -39,8 +39,10 @@ class Scraper(object):
         if not self.id and self.__class__.__name__ != 'Scraper':
             self.id = self.__class__.__name__
         self.cache_id = kwargs.pop('cache_id', self.cache_id) or self.id
-        self.fetcher = Fetcher(**_extract_fetcher_kwargs(kwargs, self))
-        self.default_config = ScraperConfig.from_kwargs(kwargs, self, consume_all_kwargs_for='Scraper')
+        self.default_config = ScraperConfig.from_kwargs(kwargs, self)
+        self.fetcher = Fetcher(self.default_config, **_extract_fetcher_kwargs(kwargs, self))
+        if kwargs:
+            raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
 
     def fetch(self, query, **kwargs):
         # If you want to set fetcher kwargs for a request submitted via `scrape`, you'll need to override this.
@@ -195,8 +197,6 @@ FETCHER_KWARGS = (
     'cache_key_salt',
     'cache_root_path',
     'courtesy_seconds',
-    'encoding',
-    'encoding_errors',
     'force_cache_stale',
     'http_client',
     'max_cache_life',

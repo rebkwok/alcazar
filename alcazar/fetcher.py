@@ -26,17 +26,8 @@ class Fetcher(object):
     or a Chrome DevTools fetcher, that connect to external browser processes.
     """
 
-    def __init__(self,
-                 http_client=None,
-                 encoding=None,
-                 encoding_errors='strict',
-                 strip_namespaces=True,
-                 **kwargs
-                ):
-        self.http = http_client if http_client is not None else HttpClient(**kwargs)
-        self.encoding = encoding
-        self.encoding_errors = encoding_errors
-        self.strip_namespaces = strip_namespaces
+    def __init__(self, default_config, http_client=None, **kwargs):
+        self.http = http_client if http_client is not None else HttpClient(default_config, **kwargs)
 
     def fetch_response(self, request, **kwargs):
         request = self.request(request)
@@ -64,15 +55,8 @@ class Fetcher(object):
                 return self.unparsed_page(query, response)
 
     def fetch_html(self, query, **kwargs):
-        encoding = kwargs.pop('encoding', None)
-        encoding_errors = kwargs.pop('encoding_errors', None)
         with closing(self.fetch_response(query.request, **kwargs)) as response:
-            return self.html_page(
-                query,
-                response,
-                encoding=encoding,
-                encoding_errors=encoding_errors,
-            )
+            return self.html_page(query, response)
 
     def fetch_xml(self, query, **kwargs):
         with closing(self.fetch_response(query.request, **kwargs)) as response:
@@ -82,20 +66,10 @@ class Fetcher(object):
         with closing(self.fetch_response(query.request, **kwargs)) as response:
             return self.json_page(query, response)
 
-    def html_page(self, query, response, encoding=None, encoding_errors=None):
+    def html_page(self, query, response):
         html_string = response.content.decode(
-            encoding=(
-                encoding
-                or self.encoding
-                or response.encoding # declared
-                or response.apparent_encoding # autodetected
-                # NB if we really have no idea what encoding to use, we fall back on UTF-8, which feels safe because it's pretty
-                # hard to decode as UTF-8 data that's actually in another, incompatible encoding. We'd rather error out than
-                # silently decode using the wrong encoding, and this is what's basically guaranteed to happen if the data isn't
-                # UTF-8.
-                or 'UTF-8'
-            ),
-            errors=encoding_errors or self.encoding_errors,
+            encoding=self._pick_encoding(query, response),
+            errors=query.config.encoding_errors,
         )
         husker = ElementHusker(
             parse_html_etree(html_string),
@@ -103,12 +77,26 @@ class Fetcher(object):
         )
         return Page(query, response, husker)
 
-    def xml_page(self, query, response, **kwargs):
+    @staticmethod
+    def _pick_encoding(query, response):
+        return (
+            query.config.encoding
+            or response.encoding # declared
+            or response.apparent_encoding # autodetected
+            # NB if we really have no idea what encoding to use, we fall back on UTF-8, which feels safe because it's pretty hard
+            # to decode as UTF-8 data that's actually in another, incompatible encoding. We'd rather error out than silently decode
+            # using the wrong encoding, and this is what's basically guaranteed to happen if the data isn't UTF-8.
+            or 'UTF-8'
+        )
+
+    def xml_page(self, query, response):
         # NB we let lxml do the character decoding
         xml_bytes = response.content
-        kwargs.setdefault('strip_namespaces', self.strip_namespaces)
         husker = ElementHusker(
-            parse_xml_etree(xml_bytes, **kwargs),
+            parse_xml_etree(
+                xml_bytes,
+                strip_namespaces=query.config.strip_namespaces,
+            ),
             is_full_document=True,
         )
         return Page(query, response, husker)
