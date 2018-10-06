@@ -15,6 +15,7 @@ import json
 import requests
 
 # alcazar
+from .config import DEFAULT_CONFIG
 from .utils.compatibility import parse_qsl, urlencode, urlparse
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -143,7 +144,7 @@ def POST(url, data=None, **kwargs): # pylint: disable=invalid-name
 
 class Query(object):
 
-    def __init__(self, request, methods, extras, depth=0):
+    def __init__(self, request, methods={}, config=DEFAULT_CONFIG, extras={}, depth=0):
 
         # This holds whatever our fetcher's `request` method returns, typically a Request instance
         self.request = request
@@ -152,6 +153,9 @@ class Query(object):
         # idea that if one day Alcazar is extended to support distributed scraping, then the values here, instead of being
         # callables, could be strings that name their respective methods on the crawler object, but that's still to be refined.
         self.methods = methods
+
+        # Immutable object that specifies the various user-set configuration options to be used for this query.
+        self.config = config
 
         # A dict of extra kwargs to be passed to the parse function. The framework doesn't care what goes in here, it's available
         # for implementations to use however they need.

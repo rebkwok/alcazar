@@ -525,7 +525,7 @@ class ErrorHandlingTests(object):
     def test_scrape_doesnt_retry_if_method_num_attempts_is_one(self):
         scraper = self.SilentScraper(http_client=self.client)
         with self.assertRaises(HttpError) as raised:
-            scraper.scrape(self.server_url('/five_hundred'), num_attempts=1)
+            scraper.scrape(self.server_url('/five_hundred'), num_attempts_per_scrape=1)
         self.assertEqual(
             raised.exception.reason.response.text,
             'I have failed 0 times',

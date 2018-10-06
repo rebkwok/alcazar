@@ -17,6 +17,7 @@ from traceback import format_exc
 from types import GeneratorType
 
 # alcazar
+from .config import ScraperConfig
 from .datastructures import Query, QueryMethods, Request
 from .exceptions import ScraperError, SkipThisPage
 from .fetcher import Fetcher
@@ -38,10 +39,8 @@ class Scraper(object):
         if not self.id and self.__class__.__name__ != 'Scraper':
             self.id = self.__class__.__name__
         self.cache_id = kwargs.pop('cache_id', self.cache_id) or self.id
-        self.num_attempts_per_scrape = kwargs.pop('num_attempts_per_scrape', self.num_attempts_per_scrape)
         self.fetcher = Fetcher(**_extract_fetcher_kwargs(kwargs, self))
-        if kwargs:
-            raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
+        self.default_config = ScraperConfig.from_kwargs(kwargs, self, consume_all_kwargs_for='Scraper')
 
     def fetch(self, query, **kwargs):
         # If you want to set fetcher kwargs for a request submitted via `scrape`, you'll need to override this.
@@ -77,10 +76,9 @@ class Scraper(object):
         return None
 
     def scrape(self, request_or_query, **kwargs):
-        num_attempts = kwargs.pop('num_attempts', self.num_attempts_per_scrape)
         query = self.query(request_or_query, **kwargs)
         methods = query.methods
-        for attempt_i in range(num_attempts):
+        for attempt_i in range(query.config.num_attempts_per_scrape):
             try:
                 # NB it's up to the Fetcher implementation to translate this attempt_i kwarg into config options that disable the
                 # cache
@@ -92,7 +90,7 @@ class Scraper(object):
             except SkipThisPage as reason:
                 return methods.record_skipped_page(query, reason)
             except ScraperError as error:
-                if attempt_i+1 < num_attempts:
+                if attempt_i + 1 < query.config.num_attempts_per_scrape:
                     methods.handle_error(query, error, attempt_i)
                 else:
                     substitute = methods.record_error(query, error)
@@ -158,22 +156,21 @@ class Scraper(object):
         if isinstance(request_or_query, Query):
             assert not kwargs, "Can't specify kwargs when a Query is used: %r" % kwargs
             return request_or_query
-        else:
-            methods = {
-                name: kwargs.pop(name, getattr(self, name))
-                for name in QueryMethods.method_names
-            }
-            fetcher_kwargs = _extract_fetcher_kwargs(kwargs)
-            if fetcher_kwargs:
-                methods['fetch'] = partial(methods['fetch'], **fetcher_kwargs)
-            extras = kwargs.pop('extras', {})
-            if kwargs:
-                raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
-            return Query(
-                self.request(request_or_query),
-                methods=QueryMethods(**methods),
-                extras=extras,
-            )
+        methods = {
+            name: kwargs.pop(name, getattr(self, name))
+            for name in QueryMethods.method_names
+        }
+        fetcher_kwargs = _extract_fetcher_kwargs(kwargs)
+        if fetcher_kwargs:
+            methods['fetch'] = partial(methods['fetch'], **fetcher_kwargs)
+        extras = kwargs.pop('extras', {})
+        config = ScraperConfig.from_kwargs(kwargs, self.default_config, consume_all_kwargs_for='query')
+        return Query(
+            self.request(request_or_query),
+            methods=QueryMethods(**methods),
+            config=config,
+            extras=extras,
+        )
 
     def parse_form(self, husker):
         return Form(husker)
