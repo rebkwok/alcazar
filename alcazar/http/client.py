@@ -13,6 +13,7 @@ from requests.structures import CaseInsensitiveDict
 
 # alcazar
 from .. import __version__
+from ..config import DEFAULT_CONFIG
 from ..datastructures import Request
 from ..exceptions import HttpError, HttpRedirect, ScraperError
 from .cache import CacheAdapterMixin
@@ -77,20 +78,16 @@ class AlcazarSession(requests.Session):
 
 class HttpClient(object):
 
-    def __init__(self, auto_raise_for_status=True, auto_raise_for_redirect=False, **kwargs):
-        self.auto_raise_for_status = auto_raise_for_status
-        self.auto_raise_for_redirect = auto_raise_for_redirect
+    def __init__(self, _default_config_unused=DEFAULT_CONFIG, **kwargs):
         self.session = AlcazarSession(**kwargs)
 
-    def submit(self, request, **kwargs):
-        auto_raise_for_status = kwargs.pop('auto_raise_for_status', self.auto_raise_for_status)
-        auto_raise_for_redirect = kwargs.pop('auto_raise_for_redirect', self.auto_raise_for_redirect)
+    def submit(self, request, config, **kwargs):
         try:
             prepared = self.session.prepare_request(request.to_requests_request())
             response = self.session.send(prepared, **kwargs)
-            if auto_raise_for_status:
+            if config.auto_raise_for_status:
                 response.raise_for_status()
-            if auto_raise_for_redirect and 300 <= response.status_code < 400:
+            if config.auto_raise_for_redirect and 300 <= response.status_code < 400:
                 raise HttpRedirect('HTTP %s' % response.status_code, reason=response)
             return response
         except requests.HTTPError as error:
@@ -99,18 +96,18 @@ class HttpClient(object):
         except requests.RequestException as exception:
             raise ScraperError(str(exception), reason=exception)
 
-    def get(self, url, **kwargs):
+    def get(self, url, config=DEFAULT_CONFIG, **kwargs):
         kwargs['url'] = url
         kwargs['method'] = 'GET'
         request, rest = self._build_request(**kwargs)
-        return self.submit(request, **rest)
+        return self.submit(request, config, **rest)
 
-    def post(self, url, data, **kwargs):
+    def post(self, url, data, config=DEFAULT_CONFIG, **kwargs):
         kwargs['url'] = url
         kwargs['data'] = data
         kwargs['method'] = 'POST'
         request, rest = self._build_request(**kwargs)
-        return self.submit(request, **rest)
+        return self.submit(request, config, **rest)
 
     def _build_request(self, **kwargs):
         request = Request(

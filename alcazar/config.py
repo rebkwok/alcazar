@@ -16,6 +16,8 @@ from . import __version__
 #----------------------------------------------------------------------------------------------------------------------------------
 
 _DEFAULT_VALUES = {
+    'auto_raise_for_status': True,
+    'auto_raise_for_redirect': False,
     'encoding': None,
     'encoding_errors': 'strict',
     'num_attempts_per_scrape': 5,

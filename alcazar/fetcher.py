@@ -12,6 +12,7 @@ from contextlib import closing
 import re
 
 # alcazar
+from .config import ScraperConfig
 from .datastructures import Page, Request
 from .etree_parser import parse_html_etree, parse_xml_etree
 from .http import HttpClient
@@ -27,13 +28,16 @@ class Fetcher(object):
     """
 
     def __init__(self, default_config, http_client=None, **kwargs):
+        self.default_config = default_config
         self.http = http_client if http_client is not None else HttpClient(default_config, **kwargs)
 
-    def fetch_response(self, request, **kwargs):
+    def fetch_response(self, request, config=None, **kwargs):
         request = self.request(request)
         if kwargs.pop('attempt_i', 0) > 0:
             kwargs['force_cache_stale'] = True
-        return self.http.submit(request, **kwargs)
+        if config is None:
+            config = ScraperConfig.from_kwargs(kwargs, self.default_config)
+        return self.http.submit(request, config, **kwargs)
 
     def request(self, request_or_url, **kwargs):
         if isinstance(request_or_url, Request):
@@ -43,7 +47,7 @@ class Fetcher(object):
             return Request(request_or_url, **kwargs)
 
     def fetch(self, query, **kwargs):
-        with closing(self.fetch_response(query.request, **kwargs)) as response:
+        with closing(self.fetch_response(query.request, query.config, **kwargs)) as response:
             content_type = re.sub(r'\s*;.*', '', response.headers.get('Content-Type') or '')
             if content_type == 'text/html':
                 return self.html_page(query, response)
@@ -55,15 +59,15 @@ class Fetcher(object):
                 return self.unparsed_page(query, response)
 
     def fetch_html(self, query, **kwargs):
-        with closing(self.fetch_response(query.request, **kwargs)) as response:
+        with closing(self.fetch_response(query.request, query.config, **kwargs)) as response:
             return self.html_page(query, response)
 
     def fetch_xml(self, query, **kwargs):
-        with closing(self.fetch_response(query.request, **kwargs)) as response:
+        with closing(self.fetch_response(query.request, query.config, **kwargs)) as response:
             return self.xml_page(query, response)
 
     def fetch_json(self, query, **kwargs):
-        with closing(self.fetch_response(query.request, **kwargs)) as response:
+        with closing(self.fetch_response(query.request, query.config, **kwargs)) as response:
             return self.json_page(query, response)
 
     def html_page(self, query, response):

@@ -21,6 +21,7 @@ from unittest import TestCase
 
 # alcazar
 from alcazar import HttpClient
+from alcazar.config import DEFAULT_CONFIG, ScraperConfig
 from alcazar.utils.compatibility import PY2, BaseHTTPRequestHandler, HTTPServer, bytes_type, native_string, parse_qsl, urljoin
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -150,14 +151,16 @@ class Get(FetcherFixture):
 
     def fetch(self, url='/', **kwargs):
         client = kwargs.pop('client', self.client)
-        return client.get(self.url(url), **kwargs)
+        config = ScraperConfig.from_kwargs(kwargs)
+        return client.get(self.url(url), config, **kwargs)
 
 
 class Post(FetcherFixture):
 
     def fetch(self, url='/', **kwargs):
         client = kwargs.pop('client', self.client)
-        return client.post(self.url(url), b'', **kwargs)
+        config = ScraperConfig.from_kwargs(kwargs)
+        return client.post(self.url(url), b'', config, **kwargs)
 
 
 class GetReq(FetcherFixture):
@@ -166,8 +169,9 @@ class GetReq(FetcherFixture):
         client = kwargs.pop('client', self.client)
         kwargs['url'] = self.url(url)
         kwargs['method'] = 'GET'
+        config = ScraperConfig.from_kwargs(kwargs)
         request, rest = client._build_request(**kwargs)
-        return client.submit(request, **rest)
+        return client.submit(request, config, **rest)
 
 
 class PostReq(FetcherFixture):
@@ -177,8 +181,9 @@ class PostReq(FetcherFixture):
         kwargs['url'] = self.url(url)
         kwargs['data'] = b''
         kwargs['method'] = 'POST'
+        config = ScraperConfig.from_kwargs(kwargs)
         request, rest = client._build_request(**kwargs)
-        return client.submit(request, **rest)
+        return client.submit(request, config, **rest)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
