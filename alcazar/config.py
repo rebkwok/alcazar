@@ -23,6 +23,7 @@ _DEFAULT_VALUES = {
     'num_attempts_per_scrape': 5,
     'strip_namespaces': True,
     'timeout': 30,
+    'user_agent': 'Alcazar/%s' % __version__,
 }
 
 #----------------------------------------------------------------------------------------------------------------------------------

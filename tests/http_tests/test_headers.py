@@ -12,6 +12,7 @@ import json
 
 # alcazar
 from alcazar import HttpClient
+from alcazar.config import DEFAULT_CONFIG
 
 # tests
 from .plumbing import FetcherFixture, ClientFixture, ServerFixture, compile_test_case_classes
@@ -175,7 +176,10 @@ class HeadersTests(object):
         )
 
     def test_can_set_user_agent(self):
-        with HttpClient(user_agent='Shabang 3.4', logger=None) as client:
+        config = DEFAULT_CONFIG._replace(
+            user_agent='Shabang 3.4',
+        )
+        with HttpClient(config, logger=None) as client:
             self.assertEqual(
                 'Shabang 3.4',
                 self.fetch(client=client).json().get('User-Agent', ''),

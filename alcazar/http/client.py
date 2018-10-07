@@ -9,10 +9,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # 3rd parties
 import requests
-from requests.structures import CaseInsensitiveDict
 
 # alcazar
-from .. import __version__
 from ..config import DEFAULT_CONFIG
 from ..exceptions import HttpError, HttpRedirect, ScraperError
 from .cache import CacheAdapterMixin
@@ -45,8 +43,6 @@ class AlcazarHttpAdapter(
 class AlcazarSession(requests.Session):
 
     default_headers = {
-        'User-Agent': 'Alcazar/%s' % __version__,
-
         # Many servers check the presence and content of the Accept header, and use it to block non-browser clients, so it's
         # important to use a browser-like value.
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -54,9 +50,7 @@ class AlcazarSession(requests.Session):
 
     def __init__(self, headers={}, **kwargs):
         super(AlcazarSession, self).__init__()
-        headers = CaseInsensitiveDict(self.default_headers, **headers)
-        if 'user_agent' in kwargs:
-            headers['User-Agent'] = kwargs.pop('user_agent')
+        self.headers.update(self.default_headers)
         self.headers.update(headers)
         adapter = AlcazarHttpAdapter(**kwargs)
         self.mount('http://', adapter)
@@ -72,7 +66,9 @@ class AlcazarSession(requests.Session):
 
 class HttpClient(object):
 
-    def __init__(self, _default_config_unused=DEFAULT_CONFIG, **kwargs):
+    def __init__(self, default_config=DEFAULT_CONFIG, **kwargs):
+        kwargs.setdefault('headers', {}) \
+            .setdefault('User-Agent', default_config.user_agent)
         self.session = AlcazarSession(**kwargs)
 
     def submit(self, request, config, **kwargs):
