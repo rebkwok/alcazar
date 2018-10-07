@@ -22,6 +22,7 @@ _DEFAULT_VALUES = {
     'encoding_errors': 'strict',
     'num_attempts_per_scrape': 5,
     'strip_namespaces': True,
+    'timeout': 30,
 }
 
 #----------------------------------------------------------------------------------------------------------------------------------

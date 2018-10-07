@@ -23,12 +23,7 @@ from .log import LogEntry, LoggingAdapterMixin
 
 class AdapterBase(object):
 
-    def __init__(self, timeout=30, **kwargs):
-        super(AdapterBase, self).__init__(**kwargs)
-        self.timeout = timeout
-
     def send(self, prepared_request, **kwargs):
-        kwargs.setdefault('timeout', self.timeout)
         return self.send_base(prepared_request, **kwargs)
 
     def send_base(self, prepared_request, **kwargs):
@@ -83,7 +78,10 @@ class HttpClient(object):
     def submit(self, request, config, **kwargs):
         try:
             prepared = self.session.prepare_request(request.to_requests_request())
-            response = self.session.send(prepared, **kwargs)
+            response = self.session.send(
+                prepared,
+                **self._requests_kwargs_from_config(config, **kwargs)
+            )
             if config.auto_raise_for_status:
                 response.raise_for_status()
             if config.auto_raise_for_redirect and 300 <= response.status_code < 400:
@@ -94,6 +92,11 @@ class HttpClient(object):
             raise error_class(str(error), reason=error)
         except requests.RequestException as exception:
             raise ScraperError(str(exception), reason=exception)
+
+    @staticmethod
+    def _requests_kwargs_from_config(config, **kwargs):
+        kwargs.setdefault('timeout', config.timeout)
+        return kwargs
 
     def __enter__(self):
         return self
