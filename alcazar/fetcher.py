@@ -26,9 +26,9 @@ class Fetcher(object):
     or a Chrome DevTools fetcher, that connect to external browser processes.
     """
 
-    def __init__(self, default_config, http_client=None, **kwargs):
-        self.default_config = default_config
-        self.http = http_client if http_client is not None else HttpClient(default_config, **kwargs)
+    def __init__(self, base_config, http_client=None, **kwargs):
+        self.base_config = base_config
+        self.http = http_client if http_client is not None else HttpClient(base_config, **kwargs)
 
     def fetch_response(self, query):
         return self.http.submit(query.request, query.config)

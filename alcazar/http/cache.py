@@ -51,10 +51,10 @@ class CacheAdapterMixin(object):
     Mixin for the AlcazarHttpClient that adds caching capabilities.
     """
 
-    def __init__(self, default_config, **kwargs):
+    def __init__(self, base_config, **kwargs):
         self.cache, rest = self._build_cache_from_kwargs(**kwargs)
-        super(CacheAdapterMixin, self).__init__(default_config, **rest)
-        self.needs_purge = default_config.max_cache_life is not None
+        super(CacheAdapterMixin, self).__init__(base_config, **rest)
+        self.needs_purge = base_config.max_cache_life is not None
 
     @staticmethod
     def _build_cache_from_kwargs(**kwargs):
@@ -102,7 +102,7 @@ class CacheAdapterMixin(object):
         now = time()
         if self.needs_purge:
             # NB the per-request config.max_cache_life is never used to purge the whole cache
-            self.cache.purge(now - self.default_config.max_cache_life)
+            self.cache.purge(now - self.base_config.max_cache_life)
             self.needs_purge = False
         cache_key = config.cache_key or self.compute_cache_key(prepared_request, config.cache_key_salt)
         if config.force_cache_stale:

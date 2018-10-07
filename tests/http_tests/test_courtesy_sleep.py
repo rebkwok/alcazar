@@ -45,9 +45,9 @@ def make_send_base_wrapper(send_base):
 
 class CourtesySleepTestClient(HttpClient):
 
-    def __init__(self, default_config, **kwargs):
+    def __init__(self, base_config, **kwargs):
         kwargs.setdefault('logger', None)
-        super(CourtesySleepTestClient, self).__init__(default_config, **kwargs)
+        super(CourtesySleepTestClient, self).__init__(base_config, **kwargs)
         adapter = self.session.adapters['http://']
         adapter._sleep = lambda seconds: setattr(self, 'actual_sleep', seconds)
         adapter.send_base = make_send_base_wrapper(adapter.send_base)
@@ -69,8 +69,8 @@ class CourtesySleepTests(object):
     new_server = CourtesySleepTestServer
 
     def new_client(self, **kwargs):
-        default_config = ScraperConfig.from_kwargs(kwargs)
-        return CourtesySleepTestClient(default_config)
+        base_config = ScraperConfig.from_kwargs(kwargs)
+        return CourtesySleepTestClient(base_config)
 
     def assertDidntSleep(self):
         return self.assertEqual(

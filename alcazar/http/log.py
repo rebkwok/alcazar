@@ -86,9 +86,9 @@ class DefaultLogger(Logger):
 
 class LoggingAdapterMixin(object):
 
-    def __init__(self, default_config, **kwargs):
+    def __init__(self, base_config, **kwargs):
         self.logger = kwargs.pop('logger', DefaultLogger()) or NullLogger()
-        super(LoggingAdapterMixin, self).__init__(default_config, **kwargs)
+        super(LoggingAdapterMixin, self).__init__(base_config, **kwargs)
 
     def send(self, prepared_request, config, log, **kwargs):
         log['prepared_request'] = prepared_request

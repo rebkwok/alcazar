@@ -37,8 +37,8 @@ class Scraper(object):
         if not self.id and self.__class__.__name__ != 'Scraper':
             self.id = self.__class__.__name__
         self.cache_id = kwargs.pop('cache_id', self.cache_id) or self.id
-        self.default_config = ScraperConfig.from_kwargs(kwargs, self)
-        self.fetcher = Fetcher(self.default_config, **_extract_fetcher_kwargs(kwargs, self))
+        self.base_config = ScraperConfig.from_kwargs(kwargs, self)
+        self.fetcher = Fetcher(self.base_config, **_extract_fetcher_kwargs(kwargs, self))
         if kwargs:
             raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
 
@@ -168,7 +168,7 @@ class Scraper(object):
                 extras=kwargs.pop('extras', {}),
                 config=ScraperConfig.from_kwargs(
                     kwargs,
-                    self.default_config,
+                    self.base_config,
                     consume_all_kwargs_for='query',
                 ),
             )

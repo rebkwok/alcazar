@@ -534,7 +534,7 @@ class ErrorHandlingTests(object):
             scraper.scrape(self.server_url('/five_hundred'))
         self.assertEqual(
             raised.exception.reason.response.text,
-            'I have failed %d times' % (scraper.default_config.num_attempts_per_scrape - 1),
+            'I have failed %d times' % (scraper.base_config.num_attempts_per_scrape - 1),
         )
 
     def test_scrape_doesnt_retry_if_constructor_num_attempts_is_one(self):

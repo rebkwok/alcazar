@@ -21,9 +21,9 @@ from .log import LogEntry, LoggingAdapterMixin
 
 class AdapterBaseMixin(object):
 
-    def __init__(self, default_config):
+    def __init__(self, base_config):
         super(AdapterBaseMixin, self).__init__()
-        self.default_config = default_config
+        self.base_config = base_config
 
     def send(self, prepared_request, _config_unused, **kwargs):
         return self.send_base(prepared_request, **kwargs)
@@ -52,11 +52,11 @@ class AlcazarSession(requests.Session):
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     }
 
-    def __init__(self, default_config, headers={}, **kwargs):
+    def __init__(self, base_config, headers={}, **kwargs):
         super(AlcazarSession, self).__init__()
         self.headers.update(self.default_headers)
         self.headers.update(headers)
-        adapter = AlcazarHttpAdapter(default_config, **kwargs)
+        adapter = AlcazarHttpAdapter(base_config, **kwargs)
         self.mount('http://', adapter)
         self.mount('https://', adapter)
 
@@ -70,10 +70,10 @@ class AlcazarSession(requests.Session):
 
 class HttpClient(object):
 
-    def __init__(self, default_config=DEFAULT_CONFIG, **kwargs):
+    def __init__(self, base_config=DEFAULT_CONFIG, **kwargs):
         kwargs.setdefault('headers', {}) \
-            .setdefault('User-Agent', default_config.user_agent)
-        self.session = AlcazarSession(default_config, **kwargs)
+            .setdefault('User-Agent', base_config.user_agent)
+        self.session = AlcazarSession(base_config, **kwargs)
 
     def submit(self, request, config):
         try:
