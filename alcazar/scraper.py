@@ -179,29 +179,10 @@ class Scraper(object):
 #----------------------------------------------------------------------------------------------------------------------------------
 # config utils
 
-# This is not especially elegant, but I wanted to be able to:
-#
-#  * subclass Scraper and set config options as subclass fields
-#  * alternatively, directly instantiate Scraper, setting config options as Scraper(**config)
-#  * not have to define every class' config options in one big list
-#  * not have to define default values more than once
-#
-# I tried a few 'clever' implementations, which did reduce typing, but meant you actually had to study the config system in order
-# to use it. I ended up concluding this was overkill, and hence this little blemish.
-
 FETCHER_KWARGS = (
-    'allow_redirects',
     'cache_id',
-    'cache_key',
-    'cache_key_salt',
     'cache_root_path',
-    'courtesy_seconds',
-    'force_cache_stale',
     'http_client',
-    'max_cache_life',
-    'timeout',
-    'use_cache',
-    'user_agent',
 )
 
 def _extract_fetcher_kwargs(kwargs, host=None):
