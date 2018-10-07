@@ -16,6 +16,7 @@ from . import __version__
 #----------------------------------------------------------------------------------------------------------------------------------
 
 _DEFAULT_VALUES = {
+    'allow_redirects': True,
     'auto_raise_for_redirect': False,
     'auto_raise_for_status': True,
     'cache_key': None,
@@ -26,6 +27,7 @@ _DEFAULT_VALUES = {
     'force_cache_stale': False,
     'max_cache_life': None,
     'num_attempts_per_scrape': 5,
+    'stream': False,
     'strip_namespaces': True,
     'timeout': 30,
     'use_cache': True,

@@ -164,8 +164,8 @@ class CachedTests(object):
 
     def fetch(self, path, **kwargs):
         client = kwargs.pop('client', self.client)
-        config = ScraperConfig.from_kwargs(kwargs)
-        return client.submit(GET(self.server_url(path)), config, **kwargs)
+        config = ScraperConfig.from_kwargs(kwargs, consume_all_kwargs_for='fetch')
+        return client.submit(GET(self.server_url(path)), config)
 
     def test_counter_is_frozen(self):
         for _ in ('live', 'from-cache'):
@@ -337,13 +337,25 @@ class CachedTestsWithCustomMethods(object):
 
     def test_cache_key_includes_method(self):
         for _ in ('live', 'from-cache'):
-            self.assertEqual(self.client.submit(GET(self.server_url('/counter')), DEFAULT_CONFIG).text, '0')
-            self.assertEqual(self.client.submit(POST(self.server_url('/counter'), b'data'), DEFAULT_CONFIG).text, '1')
+            self.assertEqual(
+                self.client.submit(GET(self.server_url('/counter')), DEFAULT_CONFIG).text,
+                '0',
+            )
+            self.assertEqual(
+                self.client.submit(POST(self.server_url('/counter'), b'data'), DEFAULT_CONFIG).text,
+                '1',
+            )
 
     def test_cache_key_includes_data(self):
         for _ in ('live', 'from-cache'):
-            self.assertEqual(self.client.submit(POST(self.server_url('/counter'), b'data_0'), DEFAULT_CONFIG).text, '0')
-            self.assertEqual(self.client.submit(POST(self.server_url('/counter'), b'data_1'), DEFAULT_CONFIG).text, '1')
+            self.assertEqual(
+                self.client.submit(POST(self.server_url('/counter'), b'data_0'), DEFAULT_CONFIG).text,
+                '0',
+            )
+            self.assertEqual(
+                self.client.submit(POST(self.server_url('/counter'), b'data_1'), DEFAULT_CONFIG).text,
+                '1',
+            )
 
     def _get_x_headers(self, request_headers):
         response = self.client.submit(

@@ -73,23 +73,23 @@ class CacheAdapterMixin(object):
                 cache = NullCache()
         return cache, kwargs
 
-    def send(self, prepared_request, config, **rest):
+    def send(self, prepared_request, config, **kwargs):
         if not config.use_cache:
-            return super(CacheAdapterMixin, self).send(prepared_request, config, **rest)
-        stream = rest.get('stream', False)
-        rest['stream'] = True
-        log = rest['log']
+            return super(CacheAdapterMixin, self).send(prepared_request, config, **kwargs)
+        config_stream = kwargs['stream'] # NB we've passed it from config to kwargs before invoking Session.send()
+        kwargs['stream'] = True # regardless of what config_stream is set to -- see below
+        log = kwargs['log']
         cache_key, entry = self._get(prepared_request, config)
         log['cache_key'] = cache_key
         if entry is None:
             log['cache_or_courtesy'] = ''
-            entry = self._fetch(prepared_request, config, rest)
+            entry = self._fetch(prepared_request, config, kwargs)
             self.cache.put(cache_key, entry)
         else:
             log['cache_or_courtesy'] = 'cached'
             log['prepared_request'] = prepared_request
             self.logger.flush(log, end='\n')
-        if entry.response is not None and not stream:
+        if entry.response is not None and not config_stream:
             # Reading the `content` property loads it to memory. We do this here because internally we always require stream=True,
             # but that might not be what the user wanted.
             entry.response.content # pylint: disable=pointless-statement
@@ -112,10 +112,10 @@ class CacheAdapterMixin(object):
             entry = self.cache.get(cache_key, min_timestamp)
         return cache_key, entry
 
-    def _fetch(self, prepared_request, config, rest):
+    def _fetch(self, prepared_request, config, kwargs):
         exception = None
         try:
-            response = super(CacheAdapterMixin, self).send(prepared_request, config, **rest)
+            response = super(CacheAdapterMixin, self).send(prepared_request, config, **kwargs)
         except Exception as _exception:
             exception = _exception
             response = getattr(exception, 'response', None)

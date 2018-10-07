@@ -75,13 +75,13 @@ class HttpClient(object):
             .setdefault('User-Agent', default_config.user_agent)
         self.session = AlcazarSession(default_config, **kwargs)
 
-    def submit(self, request, config, **kwargs):
+    def submit(self, request, config):
         try:
             prepared = self.session.prepare_request(request.to_requests_request())
             response = self.session.send(
                 prepared,
                 config,
-                **self._requests_kwargs_from_config(config, **kwargs)
+                **self._requests_kwargs_from_config(config)
             )
             if config.auto_raise_for_status:
                 response.raise_for_status()
@@ -95,9 +95,12 @@ class HttpClient(object):
             raise ScraperError(str(exception), reason=exception)
 
     @staticmethod
-    def _requests_kwargs_from_config(config, **kwargs):
-        kwargs.setdefault('timeout', config.timeout)
-        return kwargs
+    def _requests_kwargs_from_config(config):
+        return {
+            'allow_redirects': config.allow_redirects,
+            'stream': config.stream,
+            'timeout': config.timeout,
+        }
 
     def __enter__(self):
         return self

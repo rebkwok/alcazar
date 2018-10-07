@@ -162,9 +162,9 @@ class GetReq(FetcherFixture):
         client = kwargs.pop('client', self.client)
         kwargs['url'] = self.url(url)
         kwargs['method'] = 'GET'
-        config = ScraperConfig.from_kwargs(kwargs)
         request, rest = self._build_request(**kwargs)
-        return client.submit(request, config, **rest)
+        config = ScraperConfig.from_kwargs(rest, consume_all_kwargs_for='fetch')
+        return client.submit(request, config)
 
 
 class PostReq(FetcherFixture):
@@ -174,9 +174,9 @@ class PostReq(FetcherFixture):
         kwargs['url'] = self.url(url)
         kwargs['data'] = b''
         kwargs['method'] = 'POST'
-        config = ScraperConfig.from_kwargs(kwargs)
         request, rest = self._build_request(**kwargs)
-        return client.submit(request, config, **rest)
+        config = ScraperConfig.from_kwargs(rest, consume_all_kwargs_for='fetch')
+        return client.submit(request, config)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 

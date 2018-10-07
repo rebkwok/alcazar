@@ -45,8 +45,7 @@ class Scraper(object):
 
     def fetch(self, query, **kwargs):
         return self.fetcher.fetch(
-            self.query(query),
-            **kwargs
+            self.query(query, **kwargs),
         )
 
     def parse(self, page):
