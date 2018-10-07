@@ -286,7 +286,7 @@ class CachedTests(object):
         )
 
     def test_cacheNone_means_no_cache_not_default_cache(self):
-        with HttpClient(cache=None, courtesy_seconds=0, logger=None) as client:
+        with HttpClient(DEFAULT_CONFIG._replace(courtesy_seconds=0), cache=None, logger=None) as client:
             self.assertEqual(self.fetch('/counter', client=client).text, '0')
             self.assertEqual(self.fetch('/counter', client=client).text, '1')
 

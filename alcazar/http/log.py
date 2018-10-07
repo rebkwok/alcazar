@@ -90,12 +90,12 @@ class LoggingAdapterMixin(object):
         self.logger = kwargs.pop('logger', DefaultLogger()) or NullLogger()
         super(LoggingAdapterMixin, self).__init__(**kwargs)
 
-    def send(self, prepared_request, log, **kwargs):
+    def send(self, prepared_request, config, log, **kwargs):
         log['prepared_request'] = prepared_request
         self.logger.flush(log)
         time_before = time()
         try:
-            return super(LoggingAdapterMixin, self).send(prepared_request, **kwargs)
+            return super(LoggingAdapterMixin, self).send(prepared_request, config, **kwargs)
         finally:
             log['elapsed'] = time() - time_before
             self.logger.flush(log, end='\n')

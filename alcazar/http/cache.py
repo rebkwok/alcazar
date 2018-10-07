@@ -77,6 +77,7 @@ class CacheAdapterMixin(object):
     def send(
             self,
             prepared_request,
+            config,
             use_cache=True,
             max_cache_life=None,
             cache_key=None,
@@ -85,7 +86,7 @@ class CacheAdapterMixin(object):
             **rest
             ):
         if not use_cache:
-            return super(CacheAdapterMixin, self).send(prepared_request, **rest)
+            return super(CacheAdapterMixin, self).send(prepared_request, config, **rest)
         stream = rest.get('stream', False)
         rest['stream'] = True
         log = rest['log']
@@ -93,7 +94,7 @@ class CacheAdapterMixin(object):
         log['cache_key'] = cache_key
         if entry is None:
             log['cache_or_courtesy'] = ''
-            entry = self._fetch(prepared_request, rest)
+            entry = self._fetch(prepared_request, config, rest)
             self.cache.put(cache_key, entry)
         else:
             log['cache_or_courtesy'] = 'cached'
@@ -125,10 +126,10 @@ class CacheAdapterMixin(object):
             entry = self.cache.get(cache_key, min_timestamp)
         return cache_key, entry
 
-    def _fetch(self, prepared_request, rest):
+    def _fetch(self, prepared_request, config, rest):
         exception = None
         try:
-            response = super(CacheAdapterMixin, self).send(prepared_request, **rest)
+            response = super(CacheAdapterMixin, self).send(prepared_request, config, **rest)
         except Exception as _exception:
             exception = _exception
             response = getattr(exception, 'response', None)

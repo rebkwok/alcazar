@@ -189,7 +189,9 @@ class ClientFixture(object):
 
     def new_client(self):
         return HttpClient(
-            courtesy_seconds = self.courtesy_seconds,
+            DEFAULT_CONFIG._replace(
+                courtesy_seconds=self.courtesy_seconds,
+            ),
             cache = self.cache(),
             logger = None,
         )

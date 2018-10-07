@@ -21,7 +21,7 @@ from .log import LogEntry, LoggingAdapterMixin
 
 class AdapterBase(object):
 
-    def send(self, prepared_request, **kwargs):
+    def send(self, prepared_request, _config_unused, **kwargs):
         return self.send_base(prepared_request, **kwargs)
 
     def send_base(self, prepared_request, **kwargs):
@@ -56,11 +56,11 @@ class AlcazarSession(requests.Session):
         self.mount('http://', adapter)
         self.mount('https://', adapter)
 
-    def send(self, prepared_request, **kwargs): # pylint: disable=arguments-differ
+    def send(self, prepared_request, config, **kwargs): # pylint: disable=arguments-differ
         # NB this calls itself via indirect recursion (in requests.Session) to handle redirects
         kwargs['redirect_count'] = kwargs.get('redirect_count', -1) + 1
         kwargs['log'] = LogEntry(is_redirect=(kwargs['redirect_count'] > 0))
-        return super(AlcazarSession, self).send(prepared_request, **kwargs)
+        return super(AlcazarSession, self).send(prepared_request, config=config, **kwargs)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -76,6 +76,7 @@ class HttpClient(object):
             prepared = self.session.prepare_request(request.to_requests_request())
             response = self.session.send(
                 prepared,
+                config,
                 **self._requests_kwargs_from_config(config, **kwargs)
             )
             if config.auto_raise_for_status:

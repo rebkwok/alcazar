@@ -26,20 +26,17 @@ class CourtesySleepAdapterMixin(object):
         'https': 443,
     }
 
-    def __init__(self, courtesy_seconds=5, **rest):
+    def __init__(self, **rest):
         super(CourtesySleepAdapterMixin, self).__init__(**rest)
-        self.courtesy_seconds = courtesy_seconds
         self.last_request_time = OrderedDict()
 
-    def send(self, prepared_request, **kwargs):
-        courtesy_seconds = kwargs.pop('courtesy_seconds', self.courtesy_seconds)
-        if kwargs.get('redirect_count', 0) > 0:
-            courtesy_seconds = 0
+    def send(self, prepared_request, config, **kwargs):
+        courtesy_seconds = 0 if kwargs.get('redirect_count', 0) > 0 else config.courtesy_seconds
         if courtesy_seconds:
             key = self._key(prepared_request)
             self._courtesy_sleep(key, courtesy_seconds, kwargs['log'])
         try:
-            return super(CourtesySleepAdapterMixin, self).send(prepared_request, **kwargs)
+            return super(CourtesySleepAdapterMixin, self).send(prepared_request, config, **kwargs)
         finally:
             if courtesy_seconds:
                 self.last_request_time[key] = time()
