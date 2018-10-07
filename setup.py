@@ -16,7 +16,7 @@ with open(path.join(path.dirname(__file__), 'README.md'), 'rb') as file_in:
 
 setuptools.setup(
     name='alcazar',
-    version='0.3.3',
+    version='0.4.0',
     author='Herv\u00e9 Saint-Amand',
     author_email='alcazar@saintamh.org',
     description='Web scraper framework',
