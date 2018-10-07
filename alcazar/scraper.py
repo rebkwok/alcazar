@@ -129,24 +129,28 @@ class Scraper(object):
         )
 
     def download(self, request_or_query, local_file_path, overwrite=False, **kwargs):
-        query = self.query(request_or_query, **kwargs)
+        query = self.query(
+            request_or_query,
+            stream=True,
+            **kwargs
+        )
         if overwrite or not path.exists(local_file_path):
-            kwargs['stream'] = True
             self.scrape(
                 query,
-                record_payload=self._save_to_disk,
+                record_payload=lambda page, _payload_unused: self._save_to_disk(local_file_path, page),
                 extras={'local_file_path': local_file_path},
             )
             logging.info('%s saved', local_file_path)
         else:
             logging.info('%s already exists', local_file_path)
 
-    def _save_to_disk(self, page, _payload_unused):
-        part_file_path = page.extras['local_file_path'] + '.part'
+    @staticmethod
+    def _save_to_disk(local_file_path, page):
+        part_file_path = local_file_path + '.part'
         with open(part_file_path, 'wb') as file_out:
             for chunk in page.response.iter_content():
                 file_out.write(chunk)
-        rename(part_file_path, page.extras['local_file_path'])
+        rename(part_file_path, local_file_path)
 
     def request(self, *args, **kwargs):
         # A convenience shortcut. The list of parameters, and the returned type, are up to the fetcher.
