@@ -162,7 +162,8 @@ class Query(object):
         # for implementations to use however they need.
         self.extras = extras
 
-        # How far from the start query we are. This is maintained by `scraper.link_query`
+        # How far from the start query we are. The Scraper will keep track of this automatically if the `base` parameter is given
+        # to `fetch()`, `scrape()` or `query()`.
         self.depth = depth
 
     def replace(self, **fields):

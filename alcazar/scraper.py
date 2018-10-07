@@ -10,18 +10,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 import logging
 from os import path, rename
-import re
 from time import sleep
 from traceback import format_exc
 from types import GeneratorType
 
 # alcazar
 from .config import ScraperConfig
-from .datastructures import Query, QueryMethods, Request
+from .datastructures import Page, Query, QueryMethods
 from .exceptions import ScraperError, SkipThisPage
 from .fetcher import Fetcher
-from .utils.compatibility import string_types, text_type
-from .utils.urls import join_urls
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -99,33 +96,6 @@ class Scraper(object):
             else:
                 return methods.record_payload(page, payload)
 
-    def link_url(self, page, url):
-        base_url = page.url
-        if not base_url:
-            return url
-        if not url:
-            return base_url
-        if not isinstance(url, string_types):
-            url = text_type(url)
-        url = re.sub(r'#.*', '', url)
-        return join_urls(base_url, url)
-
-    def link_request(self, page, request):
-        if isinstance(request, Request):
-            return request.modify_url(self.link_url(page, request.url))
-        else:
-            return Request(self.link_url(page, request))
-
-    def link_query(self, page, request, **kwargs):
-        merged_extras = dict(page.query.extras)
-        merged_extras.update(kwargs.pop('extras', {}))
-        kwargs['extras'] = merged_extras
-        kwargs['depth'] = page.query.depth + 1
-        return self.query(
-            self.link_request(page, request),
-            **kwargs
-        )
-
     def download(self, request_or_query, local_file_path, overwrite=False, **kwargs):
         query = self.query(
             request_or_query,
@@ -158,20 +128,33 @@ class Scraper(object):
         if isinstance(request_or_query, Query):
             assert not kwargs, "Can't specify kwargs when a Query is used: %r" % kwargs
             return request_or_query
-        else:
-            return Query(
-                self.request(request_or_query),
-                methods=QueryMethods({
-                    name: kwargs.pop(name, getattr(self, name))
-                    for name in QueryMethods.method_names
-                }),
-                extras=kwargs.pop('extras', {}),
-                config=ScraperConfig.from_kwargs(
-                    kwargs,
-                    self.base_config,
-                    consume_all_kwargs_for='query',
-                ),
-            )
+        methods = QueryMethods({
+            name: kwargs.pop(name, getattr(self, name))
+            for name in QueryMethods.method_names
+        })
+        base_config = self.base_config
+        extras = kwargs.pop('extras', {})
+        depth = 0
+        base = kwargs.pop('base', None)
+        if base is not None:
+            if isinstance(base, Page):
+                base = base.query
+            extras = dict(extras)
+            extras.update(base.extras)
+            base_config = base.config
+            depth += 1
+        config = ScraperConfig.from_kwargs(
+            kwargs,
+            base_config,
+            consume_all_kwargs_for='query',
+        )
+        return Query(
+            request=self.request(request_or_query),
+            methods=methods,
+            config=config,
+            extras=extras,
+            depth=depth,
+        )
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # config utils
