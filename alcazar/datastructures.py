@@ -204,7 +204,7 @@ class QueryMethods(object):
         'record_error',
     )
 
-    def __init__(self, **methods):
+    def __init__(self, methods):
         for name in self.method_names:
             setattr(self, name, methods.pop(name))
         assert not methods, repr(methods)

@@ -8,7 +8,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
-from functools import partial
 import logging
 from os import path, rename
 import re
@@ -159,21 +158,20 @@ class Scraper(object):
         if isinstance(request_or_query, Query):
             assert not kwargs, "Can't specify kwargs when a Query is used: %r" % kwargs
             return request_or_query
-        methods = {
-            name: kwargs.pop(name, getattr(self, name))
-            for name in QueryMethods.method_names
-        }
-        fetcher_kwargs = _extract_fetcher_kwargs(kwargs)
-        if fetcher_kwargs:
-            methods['fetch'] = partial(methods['fetch'], **fetcher_kwargs)
-        extras = kwargs.pop('extras', {})
-        config = ScraperConfig.from_kwargs(kwargs, self.default_config, consume_all_kwargs_for='query')
-        return Query(
-            self.request(request_or_query),
-            methods=QueryMethods(**methods),
-            config=config,
-            extras=extras,
-        )
+        else:
+            return Query(
+                self.request(request_or_query),
+                methods=QueryMethods({
+                    name: kwargs.pop(name, getattr(self, name))
+                    for name in QueryMethods.method_names
+                }),
+                extras=kwargs.pop('extras', {}),
+                config=ScraperConfig.from_kwargs(
+                    kwargs,
+                    self.default_config,
+                    consume_all_kwargs_for='query',
+                ),
+            )
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # config utils
