@@ -21,7 +21,6 @@ from .config import ScraperConfig
 from .datastructures import Query, QueryMethods, Request
 from .exceptions import ScraperError, SkipThisPage
 from .fetcher import Fetcher
-from .forms import Form
 from .utils.compatibility import string_types, text_type
 from .utils.urls import join_urls
 
@@ -172,9 +171,6 @@ class Scraper(object):
             config=config,
             extras=extras,
         )
-
-    def parse_form(self, husker):
-        return Form(husker)
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # config utils
