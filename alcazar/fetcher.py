@@ -33,8 +33,6 @@ class Fetcher(object):
 
     def fetch_response(self, request, config=None, **kwargs):
         request = self.request(request)
-        if kwargs.pop('attempt_i', 0) > 0:
-            kwargs['force_cache_stale'] = True
         if config is None:
             config = ScraperConfig.from_kwargs(kwargs, self.default_config)
         return self.http.submit(request, config, **kwargs)

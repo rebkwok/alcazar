@@ -51,11 +51,10 @@ class CacheAdapterMixin(object):
     Mixin for the AlcazarHttpClient that adds caching capabilities.
     """
 
-    def __init__(self, max_cache_life=None, **kwargs):
+    def __init__(self, default_config, **kwargs):
         self.cache, rest = self._build_cache_from_kwargs(**kwargs)
-        super(CacheAdapterMixin, self).__init__(**rest)
-        self.max_cache_life = max_cache_life
-        self.needs_purge = max_cache_life is not None
+        super(CacheAdapterMixin, self).__init__(default_config, **rest)
+        self.needs_purge = default_config.max_cache_life is not None
 
     @staticmethod
     def _build_cache_from_kwargs(**kwargs):
@@ -74,23 +73,13 @@ class CacheAdapterMixin(object):
                 cache = NullCache()
         return cache, kwargs
 
-    def send(
-            self,
-            prepared_request,
-            config,
-            use_cache=True,
-            max_cache_life=None,
-            cache_key=None,
-            cache_key_salt=None,
-            force_cache_stale=False,
-            **rest
-            ):
-        if not use_cache:
+    def send(self, prepared_request, config, **rest):
+        if not config.use_cache:
             return super(CacheAdapterMixin, self).send(prepared_request, config, **rest)
         stream = rest.get('stream', False)
         rest['stream'] = True
         log = rest['log']
-        cache_key, entry = self._get(prepared_request, max_cache_life, cache_key, cache_key_salt, force_cache_stale)
+        cache_key, entry = self._get(prepared_request, config)
         log['cache_key'] = cache_key
         if entry is None:
             log['cache_or_courtesy'] = ''
@@ -109,20 +98,17 @@ class CacheAdapterMixin(object):
         else:
             return entry.response
 
-    def _get(self, prepared_request, max_cache_life, cache_key, cache_key_salt, force_cache_stale):
+    def _get(self, prepared_request, config):
         now = time()
         if self.needs_purge:
-            # NB the per-request max_cache_life is never used to purge the whole cache
-            self.cache.purge(now - self.max_cache_life)
+            # NB the per-request config.max_cache_life is never used to purge the whole cache
+            self.cache.purge(now - self.default_config.max_cache_life)
             self.needs_purge = False
-        if cache_key is None:
-            cache_key = self.compute_cache_key(prepared_request, cache_key_salt)
-        if force_cache_stale:
+        cache_key = config.cache_key or self.compute_cache_key(prepared_request, config.cache_key_salt)
+        if config.force_cache_stale:
             entry = None
         else:
-            if max_cache_life is None:
-                max_cache_life = self.max_cache_life
-            min_timestamp = 0 if max_cache_life is None else (now - max_cache_life)
+            min_timestamp = 0 if config.max_cache_life is None else (now - config.max_cache_life)
             entry = self.cache.get(cache_key, min_timestamp)
         return cache_key, entry
 

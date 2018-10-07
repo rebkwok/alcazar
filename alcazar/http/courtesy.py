@@ -26,8 +26,8 @@ class CourtesySleepAdapterMixin(object):
         'https': 443,
     }
 
-    def __init__(self, **rest):
-        super(CourtesySleepAdapterMixin, self).__init__(**rest)
+    def __init__(self, default_config, **rest):
+        super(CourtesySleepAdapterMixin, self).__init__(default_config, **rest)
         self.last_request_time = OrderedDict()
 
     def send(self, prepared_request, config, **kwargs):

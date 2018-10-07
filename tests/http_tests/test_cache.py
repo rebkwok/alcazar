@@ -21,7 +21,7 @@ from tempfile import mkdtemp
 import requests
 
 # alcazar
-from alcazar.config import DEFAULT_CONFIG
+from alcazar.config import DEFAULT_CONFIG, ScraperConfig
 from alcazar.datastructures import GET, POST
 from alcazar.exceptions import HttpError
 from alcazar.http import HttpClient
@@ -164,7 +164,8 @@ class CachedTests(object):
 
     def fetch(self, path, **kwargs):
         client = kwargs.pop('client', self.client)
-        return client.submit(GET(self.server_url(path)), DEFAULT_CONFIG, **kwargs)
+        config = ScraperConfig.from_kwargs(kwargs)
+        return client.submit(GET(self.server_url(path)), config, **kwargs)
 
     def test_counter_is_frozen(self):
         for _ in ('live', 'from-cache'):
@@ -521,7 +522,7 @@ class ErrorHandlingTests(object):
             scraper.scrape(self.server_url('/five_hundred'))
         self.assertEqual(
             raised.exception.reason.response.text,
-            'I have failed %d times' % (scraper.num_attempts_per_scrape - 1),
+            'I have failed %d times' % (scraper.default_config.num_attempts_per_scrape - 1),
         )
 
     def test_scrape_doesnt_retry_if_constructor_num_attempts_is_one(self):

@@ -19,7 +19,11 @@ from .log import LogEntry, LoggingAdapterMixin
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-class AdapterBase(object):
+class AdapterBaseMixin(object):
+
+    def __init__(self, default_config):
+        super(AdapterBaseMixin, self).__init__()
+        self.default_config = default_config
 
     def send(self, prepared_request, _config_unused, **kwargs):
         return self.send_base(prepared_request, **kwargs)
@@ -27,14 +31,14 @@ class AdapterBase(object):
     def send_base(self, prepared_request, **kwargs):
         """ This is only here so that tests can override it """
         kwargs.pop('redirect_count', None) # this is for internal Alcazar use only
-        return super(AdapterBase, self).send(prepared_request, **kwargs)
+        return super(AdapterBaseMixin, self).send(prepared_request, **kwargs)
 
 
 class AlcazarHttpAdapter(
         CacheAdapterMixin,
         CourtesySleepAdapterMixin,
         LoggingAdapterMixin,
-        AdapterBase,
+        AdapterBaseMixin,
         requests.adapters.HTTPAdapter,
         ):
     pass
@@ -48,11 +52,11 @@ class AlcazarSession(requests.Session):
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     }
 
-    def __init__(self, headers={}, **kwargs):
+    def __init__(self, default_config, headers={}, **kwargs):
         super(AlcazarSession, self).__init__()
         self.headers.update(self.default_headers)
         self.headers.update(headers)
-        adapter = AlcazarHttpAdapter(**kwargs)
+        adapter = AlcazarHttpAdapter(default_config, **kwargs)
         self.mount('http://', adapter)
         self.mount('https://', adapter)
 
@@ -69,7 +73,7 @@ class HttpClient(object):
     def __init__(self, default_config=DEFAULT_CONFIG, **kwargs):
         kwargs.setdefault('headers', {}) \
             .setdefault('User-Agent', default_config.user_agent)
-        self.session = AlcazarSession(**kwargs)
+        self.session = AlcazarSession(default_config, **kwargs)
 
     def submit(self, request, config, **kwargs):
         try:

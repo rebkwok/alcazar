@@ -45,7 +45,6 @@ class Scraper(object):
             raise TypeError("Unknown kwargs: %s" % ','.join(sorted(kwargs)))
 
     def fetch(self, query, **kwargs):
-        # If you want to set fetcher kwargs for a request submitted via `scrape`, you'll need to override this.
         return self.fetcher.fetch(
             self.query(query),
             **kwargs
@@ -81,10 +80,10 @@ class Scraper(object):
         query = self.query(request_or_query, **kwargs)
         methods = query.methods
         for attempt_i in range(query.config.num_attempts_per_scrape):
+            if attempt_i > 0:
+                query = query.replace_config(force_cache_stale=True)
             try:
-                # NB it's up to the Fetcher implementation to translate this attempt_i kwarg into config options that disable the
-                # cache
-                page = methods.fetch(query, attempt_i=attempt_i)
+                page = methods.fetch(query)
                 payload = methods.parse(page)
                 if isinstance(payload, GeneratorType):
                     # consume the generator here so that we can catch any exceptions it might raise

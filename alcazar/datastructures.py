@@ -155,7 +155,7 @@ class Query(object):
         # callables, could be strings that name their respective methods on the crawler object, but that's still to be refined.
         self.methods = methods
 
-        # Immutable object that specifies the various user-set configuration options to be used for this query.
+        # `ScraperConfig` instance that specifies the various user-set configuration options to be used for this query.
         self.config = config
 
         # A dict of extra kwargs to be passed to the parse function. The framework doesn't care what goes in here, it's available
@@ -164,6 +164,20 @@ class Query(object):
 
         # How far from the start query we are. This is maintained by `scraper.link_query`
         self.depth = depth
+
+    def replace(self, **fields):
+        return Query(
+            request=fields.get('request', self.request),
+            methods=fields.get('methods', self.methods),
+            config=fields.get('config', self.config),
+            extras=fields.get('extras', self.extras),
+            depth=fields.get('depth', self.depth),
+        )
+
+    def replace_config(self, **fields):
+        return self.replace(
+            config=self.config._replace(**fields),
+        )
 
     @property
     def url(self):

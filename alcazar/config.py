@@ -16,14 +16,19 @@ from . import __version__
 #----------------------------------------------------------------------------------------------------------------------------------
 
 _DEFAULT_VALUES = {
-    'auto_raise_for_status': True,
     'auto_raise_for_redirect': False,
+    'auto_raise_for_status': True,
+    'cache_key': None,
+    'cache_key_salt': None,
     'courtesy_seconds': 5,
     'encoding': None,
     'encoding_errors': 'strict',
+    'force_cache_stale': False,
+    'max_cache_life': None,
     'num_attempts_per_scrape': 5,
     'strip_namespaces': True,
     'timeout': 30,
+    'use_cache': True,
     'user_agent': 'Alcazar/%s' % __version__,
 }
 
