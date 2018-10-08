@@ -23,7 +23,7 @@ from .utils.urls import join_urls
 
 class Request(object):
     # 2018-03-10 - for a while I resisted creating my own Request class, thinking requests already has one (2, even), why lengthen
-    # the daisy chain. But ther's a few things I wanted that requests.Request doesn't have -- here they are:
+    # the daisy chain. But there's a few things I wanted that requests.Request doesn't have -- here they are:
 
     def __init__(self, url, method=None, params=None, data=None, headers=None, json=None): # pylint: disable=redefined-outer-name
         if method:
@@ -135,8 +135,10 @@ class Request(object):
         else:
             return '<%s %s>' % (self.method, self.url)
 
+
 def GET(url, params=None, **kwargs): # pylint: disable=invalid-name
     return Request(url, method='GET', params=params, **kwargs)
+
 
 def POST(url, data=None, **kwargs): # pylint: disable=invalid-name
     return Request(url, method='POST', data=data, **kwargs)
@@ -219,10 +221,9 @@ class Page(object):
         # The Query object that was `fetch`ed
         self.query = query
 
-        # 2017-11-20 - the situation here mirrors that described above for Query.request -- at the moment the only Fetcher we have
-        # uses the `requests` library, and so this a `requests.Response` object. But eventually I intend to have other fetchers,
-        # and it would be up to the fetcher to determine the class of this object. I've not decided yet what the shared interface
-        # will be.
+        # 2017-11-20 - at the moment the only Fetcher we have uses the `requests` library, and so this a `requests.Response`
+        # object. But eventually I intend to have other fetchers, and it would be up to the fetcher to determine the class of this
+        # object. I've not decided yet what the shared interface will be.
         self.response = response
 
         # A Husker for parsing the response data. Will be of the appropriate Husker subclass, depending on the content type of the
