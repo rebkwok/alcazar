@@ -12,7 +12,7 @@ from datetime import datetime
 from glob import glob
 import gzip
 from hashlib import md5
-from os import environ, makedirs, path
+from os import environ, makedirs, path, unlink
 import subprocess
 from shutil import move as move_file, rmtree
 from sys import argv, stderr, stdout, version_info
@@ -20,7 +20,7 @@ import webbrowser
 
 # alcazar
 from alcazar import MultiLineTextExtractor, Scraper, Skeleton, SkeletonItem
-from . import check
+import check
 
 # more 2+3 compat
 if version_info[0] == 2:
@@ -149,8 +149,8 @@ def parse_cmd_line():
                 for line in file_in
             ]
     else:
-        print("usage: %s <url>" % argv[0], file=stderr)
-        print("       %s -i <urls.txt>" % argv[0], file=stderr)
+        print("usage: %s <collection> <url>" % argv[0], file=stderr)
+        print("       %s <collection> -i <urls.txt>" % argv[0], file=stderr)
         exit(2)
     main(collection, selected_urls)
 
