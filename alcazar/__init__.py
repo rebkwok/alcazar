@@ -7,8 +7,6 @@
 # 2+3 compat
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-__version__ = '0.4.0'
-
 # alcazar
 from .bodytext import ArticleParser, parse_article, parse_body_text
 from .catalogparser import CatalogParser, CatalogResultList
@@ -21,6 +19,7 @@ from .http import HttpClient
 from .husker import Husker, HuskerError, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, husk
 from .scraper import Scraper
 from .skeleton import Skeleton, SkeletonItem
+from .version import alcazar_version
 from .tally import Tally
 from .utils import compatibility
 from .utils.etree import MultiLineTextExtractor, SingleLineTextExtractor, extract_multiline_text, extract_single_line_text

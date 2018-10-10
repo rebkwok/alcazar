@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import namedtuple
 
 # alcazar
-from . import __version__
+from .version import alcazar_version
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ _DEFAULT_VALUES = {
     'strip_namespaces': True,
     'timeout': 30,
     'use_cache': True,
-    'user_agent': 'Alcazar/%s' % __version__,
+    'user_agent': 'Alcazar/%s' % alcazar_version,
 }
 
 #----------------------------------------------------------------------------------------------------------------------------------

@@ -6,17 +6,24 @@
 from __future__ import unicode_literals
 
 # standards
-import setuptools
 from os import path
+import re
+import setuptools
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
 with open(path.join(path.dirname(__file__), 'README.md'), 'rb') as file_in:
     long_description = file_in.read().decode('UTF-8')
 
+with open(path.join(path.dirname(__file__), 'alcazar', 'version.py'), 'rb') as file_in:
+    alcazar_version = re.search(
+        r'alcazar_version = \'(.+)\'',
+        file_in.read().decode('UTF-8'),
+    ).group(1)
+
 setuptools.setup(
     name='alcazar',
-    version='0.4.0',
+    version=alcazar_version,
     author='Herv\u00e9 Saint-Amand',
     author_email='alcazar@saintamh.org',
     description='Web scraper framework',
