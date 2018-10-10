@@ -17,7 +17,7 @@ from types import GeneratorType
 
 # alcazar
 from .config import ScraperConfig
-from .datastructures import Page, Query, QueryMethods
+from .datastructures import Page, Query, QueryMethods, Request
 from .exceptions import ScraperError, SkipThisPage
 from .fetcher import Fetcher
 
@@ -121,14 +121,16 @@ class Scraper(object):
                 file_out.write(chunk)
         rename(part_file_path, local_file_path)
 
-    def request(self, *args, **kwargs):
-        # A convenience shortcut. The list of parameters, and the returned type, are up to the fetcher.
-        return self.fetcher.request(*args, **kwargs)
-
     def query(self, request_or_query, **kwargs):
         if isinstance(request_or_query, Query):
             assert not kwargs, "Can't specify kwargs when a Query is used: %r" % kwargs
             return request_or_query
+        if isinstance(request_or_query, Request):
+            request = request_or_query
+        else:
+            assert 'url' not in kwargs, (request_or_query, kwargs['url'])
+            kwargs['url'] = request_or_query
+            request = Request.from_kwargs(kwargs)
         methods = QueryMethods({
             name: kwargs.pop(name, getattr(self, name))
             for name in QueryMethods.method_names
@@ -149,7 +151,7 @@ class Scraper(object):
             consume_all_kwargs_for='query',
         )
         return Query(
-            request=self.request(request_or_query),
+            request=request,
             methods=methods,
             config=config,
             extras=extras,

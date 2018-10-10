@@ -37,6 +37,17 @@ class Request(object):
         self._headers = headers
         self._json = json
 
+    @classmethod
+    def from_kwargs(cls, kwargs):
+        return cls(
+            url=kwargs.pop('url'),
+            method=kwargs.pop('method', None),
+            params=kwargs.pop('params', None),
+            data=kwargs.pop('data', None),
+            headers=kwargs.pop('headers', None),
+            json=kwargs.pop('json', None),
+        )
+
     def to_requests_request(self):
         return requests.Request(**self._compile())
 
