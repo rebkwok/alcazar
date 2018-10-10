@@ -100,6 +100,7 @@ class HttpClient(object):
             'allow_redirects': config.allow_redirects,
             'stream': config.stream,
             'timeout': config.timeout,
+            'verify': config.ssl_verification,
         }
 
     def __enter__(self):
