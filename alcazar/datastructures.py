@@ -238,6 +238,17 @@ class Page(object):
         else:
             return self.response.url
 
+    @property
+    def bytes(self):
+        return self.response.content
+
+    @property
+    def text(self):
+        return self.response.text
+
+    def json(self):
+        return self.response.json()
+
     def link(self, url):
         return join_urls(self.url, url)
 
