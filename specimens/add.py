@@ -8,19 +8,24 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
+from argparse import ArgumentParser
 from datetime import datetime
 from glob import glob
 import gzip
 from hashlib import md5
+from itertools import chain
 from os import environ, makedirs, path, unlink
+import re
 import subprocess
-from shutil import move as move_file, rmtree
+from shutil import copyfile, copyfileobj, move as move_file, rmtree
 from sys import argv, stderr, stdout, version_info
+from traceback import print_exc
 import webbrowser
 
 # alcazar
 from alcazar import MultiLineTextExtractor, Scraper, Skeleton, SkeletonItem
-import check
+from alcazar.etree_parser import parse_html_etree
+from . import check
 
 # more 2+3 compat
 if version_info[0] == 2:
@@ -31,23 +36,32 @@ if version_info[0] == 2:
 
 def save_html_to_temp_file(key, page):
     temp_html_file = file_path('temp', key, 'html.gz')
+    html_str = page.response.text
     with gzip.open(temp_html_file, 'wb') as file_out:
-        file_out.write(page.response.text.encode('UTF-8'))
-    return temp_html_file
+        file_out.write(html_str.encode('UTF-8'))
+    return html_str
 
 
-def save_skeleton(url, key, page, temp_html_file):
+def let_user_edit_skeleton(url, key, html_str):
+    temp_html_file = file_path('temp', key, 'html.gz')
     temp_text_file = file_path('temp', key, 'txt')
     if not path.exists(temp_text_file):
-        raw_skeleton = extract_raw_skeleton(url, etree=page.husker.raw)
+        raw_skeleton = extract_raw_skeleton(url, parse_html_etree(html_str))
         with open(temp_text_file, 'wb') as file_out:
             for line in raw_skeleton.dump_to_lines():
                 file_out.write(line.encode('UTF-8') + b'\n')
     while True:
-        subprocess.check_call([
-            environ.get('EDITOR', 'emacsclient'),
-            temp_text_file,
-        ])
+        try:
+            subprocess.check_call([
+                environ.get('EDITOR', 'emacsclient'),
+                temp_text_file,
+            ])
+            skeleton = check.load_reference_skeleton(temp_text_file)
+            skeleton.validate()
+        except (ValueError, subprocess.CalledProcessError):
+            print_exc()
+            input('Press enter to continue... ')
+            continue
         check.run(
             temp_html_file,
             temp_text_file,
@@ -59,7 +73,7 @@ def save_skeleton(url, key, page, temp_html_file):
             except UnicodeError:
                 print("File is not UTF-8. Save again")
             else:
-                return temp_text_file, text
+                return text
 
 
 def extract_raw_skeleton(url, etree):
@@ -73,7 +87,8 @@ def extract_raw_skeleton(url, etree):
     return Skeleton.build(items)
 
 
-def save_specimen(collection, key, temp_html_file, temp_text_file, skeleton_text):
+def save_specimen(collection, key, skeleton_text):
+    temp_html_file = file_path('temp', key, 'html.gz')
     real_html_file = file_path(collection, key, 'html.gz')
     real_skel_file = file_path(collection, key, 'skel.gz')
     move_file(
@@ -82,7 +97,7 @@ def save_specimen(collection, key, temp_html_file, temp_text_file, skeleton_text
     )
     with gzip.open(real_skel_file, 'wb') as file_out:
         file_out.write(skeleton_text.encode('UTF-8'))
-    unlink(temp_text_file)
+    unlink(file_path('temp', key, 'txt'))
     print("Saved %s" % real_html_file)
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -93,10 +108,10 @@ def url_to_key(url):
 
 
 def collection_path(collection):
-    return path.join(
-        path.dirname(__file__),
-        collection,
-    )
+    if collection == 'temp':
+        return path.join(path.dirname(__file__), collection)
+    else:
+        return path.join(path.dirname(__file__), 'reference', collection)
 
 
 def file_path(collection, key, extension):
@@ -116,46 +131,96 @@ def write_gzip_file(path, content):
     with gzip.open(path, 'wb') as file_out:
         file_out.write(content)
 
+
+def gunzip_file(from_gzipped_path, to_text_path):
+    with gzip.open(from_gzipped_path, 'rb') as file_in:
+        with open(to_text_path, 'wb') as file_out:
+            copyfileobj(file_in, file_out)
+
 #----------------------------------------------------------------------------------------------------------------------------------
 # main
         
-def main(collection, selected_urls):
+def main(inputs, collection, inputs_are_files=False, force_refresh=False):
     ensure_collection_dir_exists('temp')
     ensure_collection_dir_exists(collection)
     scraper = Scraper()
-    for url in selected_urls:
+    for url in iter_urls_from_args(inputs, inputs_are_files):
         key = url_to_key(url)
-        existing_files = glob(file_path(collection, key, '*'))
+        existing_files = {
+            re.sub(r'^[^\.]+\.', '', path.basename(f)): f
+            for f in (
+                glob(file_path(collection, key, '*'))
+                or sorted(glob(file_path('*', key, '*')))
+            )
+        }
         if existing_files:
-            print("%s exists - %s already fetched" % (existing_files[0], url))
-            continue
-        page = scraper.fetch(url)
-        temp_html_file = save_html_to_temp_file(key, page)
+            if not force_refresh:
+                print("%s exists - %s already fetched" % (existing_files['skel.gz'], url))
+                continue
+            else:
+                gunzip_file(
+                    existing_files['skel.gz'],
+                    file_path('temp', key, 'txt'),
+                )
+                copyfile(existing_files['html.gz'], file_path('temp', key, 'html.gz'))
+                with gzip.open(existing_files['html.gz'], 'rb') as file_in:
+                    html_str = file_in.read().decode('UTF-8')
+        else:
+            page = scraper.fetch(url)
+            html_str = save_html_to_temp_file(key, page)
         webbrowser.open(url, new=2)
-        temp_text_file, skeleton_text = save_skeleton(url, key, page, temp_html_file)
-        save_specimen(collection, key, temp_html_file, temp_text_file, skeleton_text)
+        skeleton_text = let_user_edit_skeleton(url, key, html_str)
+        save_specimen(collection, key, skeleton_text)
+
+
+def iter_urls_from_args(inputs, inputs_are_files):
+    if inputs_are_files:
+        for urls_file_path in inputs:
+            for url in load_urls_from_file(urls_file_path):
+                yield url
+    else:
+        for url in inputs:
+            yield url
+
+
+def load_urls_from_file(urls_file_path):
+    with open(urls_file_path, 'rb') as file_in:
+        for line in file_in:
+            line = line.decode('us-ascii').strip()
+            if line:
+                yield line
 
 
 def parse_cmd_line():
-    if len(argv) == 3:
-        collection = argv[1]
-        selected_urls = [argv[2]]
-    elif len(argv) == 4 and argv[2] == '-i':
-        collection = argv[1]
-        url_list_file = argv[3]
-        with open(url_list_file, 'rb') as file_in:
-            selected_urls = [
-                line.strip().decode('us-ascii')
-                for line in file_in
-            ]
-    else:
-        print("usage: %s <collection> <url>" % argv[0], file=stderr)
-        print("       %s <collection> -i <urls.txt>" % argv[0], file=stderr)
-        exit(2)
-    main(collection, selected_urls)
+    parser = ArgumentParser(description='Add one or more documents to the specimen corpus')
+    parser.add_argument(
+        'inputs',
+        nargs='+',
+    )
+    parser.add_argument(
+        '-i',
+        '--input-file',
+        dest='inputs_are_files',
+        action='store_true',
+        help='When present, the URLs are interpreted as paths to local files that must contain URLs, one per line',
+    )
+    parser.add_argument(
+        '-f',
+        '--force-refresh',
+        dest='force_refresh',
+        action='store_true',
+        help="By default, URLs already in store won't be re-fetched; this option flips that",
+    )
+    parser.add_argument(
+        '-c',
+        '--collection',
+        default='misc',
+        help='Name of the collection under which to store the specimens',
+    )
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
-    parse_cmd_line()
+    main(**parse_cmd_line().__dict__)
 
 #----------------------------------------------------------------------------------------------------------------------------------

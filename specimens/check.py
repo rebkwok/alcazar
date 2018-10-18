@@ -27,8 +27,8 @@ from alcazar.skeleton import Skeleton, align_skeletons
 
 def run(html_file_path, skel_file_path, silent=False):
     file_name = path.basename(html_file_path)
-    reference_skeleton = _load_reference_skeleton(skel_file_path)
-    extracted_skeleton = _load_extracted_skeleton(html_file_path)
+    reference_skeleton = load_reference_skeleton(skel_file_path)
+    extracted_skeleton = load_extracted_skeleton(html_file_path)
     alignment_steps = align_skeletons(reference_skeleton, extracted_skeleton)
     is_same = True
     output_lines = []
@@ -55,7 +55,7 @@ def run(html_file_path, skel_file_path, silent=False):
     return is_same
 
 
-def _load_extracted_skeleton(html_file_path):
+def load_extracted_skeleton(html_file_path):
     with gzip.open(html_file_path, 'rb') as file_in:
         html_text = file_in.read().decode('UTF-8')
     return ArticleParser() \
@@ -63,7 +63,7 @@ def _load_extracted_skeleton(html_file_path):
         .skeleton
 
 
-def _load_reference_skeleton(skel_file_path):
+def load_reference_skeleton(skel_file_path):
     opener = gzip.open if '.gz' in skel_file_path else open
     with opener(skel_file_path, 'rb') as file_in:
         return Skeleton.load_from_lines(
@@ -72,7 +72,7 @@ def _load_reference_skeleton(skel_file_path):
         )
 
 
-def _find_skel_file(html_file_path):
+def find_skel_file(html_file_path):
     skel_file_path = html_file_path.replace('.html.gz', '') + '.skel'
     print(skel_file_path)
     if path.isfile(skel_file_path):
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     if 2 <= len(argv) <= 3:
         run(
             html_file_path=argv[1],
-            skel_file_path=argv[2] if len(argv) > 2 else _find_skel_file(argv[1]),
+            skel_file_path=argv[2] if len(argv) > 2 else find_skel_file(argv[1]),
         )
     else:
         print("usage: %s <specimen.html.gz>" % argv[0], file=stderr)

@@ -23,10 +23,30 @@ HEADER_TAGS = frozenset((
 ))
 
 BODY_TAGS = frozenset((
-    'p',
-    'figure',
     'caption',
+    'figure',
+    'footer',
+    'heading',
+    'lede',
+    'meta', # e.g. author, date
+    'paragraph',
+    'quote'
 ))
+
+AMBIGUOUS = object()
+
+def _compile_tag_abbreviations():
+    abbreviations = {}
+    for full_tag in chain(HEADER_TAGS, BODY_TAGS):
+        for n in range(1, len(full_tag)):
+            prefix = full_tag[:n]
+            if prefix in abbreviations:
+                abbreviations[prefix] = AMBIGUOUS
+            else:
+                abbreviations[prefix] = full_tag
+    return abbreviations
+
+TAG_ABBREVIATIONS = _compile_tag_abbreviations()
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # data struc
@@ -69,6 +89,7 @@ class Skeleton(object):
     def build(cls, iter_items):
         available_header_tags = set(HEADER_TAGS)
         head = OrderedDict()
+        iter_items = iter(iter_items)
         for item in iter_items:
             if item.tag in available_header_tags:
                 available_header_tags.remove(item.tag)
@@ -101,7 +122,9 @@ class Skeleton(object):
                 assert match, repr(line)
                 if tag and match:
                     items.append(SkeletonItem(tag.lower(), text))
-                tag = match.group(1)
+                tag = TAG_ABBREVIATIONS.get(match.group(1), match.group(1))
+                if tag is AMBIGUOUS:
+                    raise ValueError("Tag %r is ambiguous" % match.group(1))
                 text = match.group(2) or ''
         return cls.build(items)
 
