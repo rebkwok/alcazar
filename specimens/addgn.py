@@ -25,11 +25,13 @@ ALL_FEED_IDS = [
     'google-news-ca',
     'google-news-fr',
     'google-news-in',
-    'google-news-is',
     'google-news-it',
     'google-news-ru',
-    'google-news-sa',
     'google-news-uk',
+
+    # Excluding these two because frankly I'm not qualified to build the skeleton files for right-to-left languages.
+    #'google-news-is',
+    #'google-news-sa',
 ]
 
 #----------------------------------------------------------------------------------------------------------------------------------
