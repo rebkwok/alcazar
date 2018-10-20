@@ -104,7 +104,7 @@ class Skeleton(object):
             yield '%s %s' % item
         for item in self.body:
             yield item.tag
-            for line in wrap(item.text):
+            for line in wrap(item.text, break_on_hyphens=False):
                 yield '    %s' % line
 
     @classmethod
