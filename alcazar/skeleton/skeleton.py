@@ -90,14 +90,16 @@ class Skeleton(object):
         available_header_tags = set(HEADER_TAGS)
         head = OrderedDict()
         iter_items = iter(iter_items)
+        body = []
         for item in iter_items:
             if item.tag in available_header_tags:
                 available_header_tags.remove(item.tag)
                 head[item.tag] = item
             else:
+                body.append(item)
                 break
-        body = tuple(iter_items)
-        return cls(head, body)
+        body.extend(iter_items)
+        return cls(head, tuple(body))
 
     def dump_to_lines(self):
         for item in self.head.values():
