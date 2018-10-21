@@ -66,7 +66,8 @@ def let_user_edit_skeleton(url, key, html_str):
             temp_html_file,
             temp_text_file,
         )
-        if input('Save? [y/N] ').strip().lower().startswith('y'):
+        choice = input('Save? [y/N/s] ').strip().lower()
+        if choice.startswith('y'):
             try:
                 with open(temp_text_file, 'rb') as file_in:
                     text = file_in.read().decode('UTF-8')
@@ -74,6 +75,8 @@ def let_user_edit_skeleton(url, key, html_str):
                 print("File is not UTF-8. Save again")
             else:
                 return text
+        elif choice.startswith('s'):
+            return None
 
 
 def extract_raw_skeleton(url, etree):
@@ -172,7 +175,8 @@ def main(inputs, collection, inputs_are_files=False, force_refresh=False):
             html_str = save_html_to_temp_file(key, page)
         webbrowser.open(url, new=2)
         skeleton_text = let_user_edit_skeleton(url, key, html_str)
-        save_specimen(collection, key, skeleton_text)
+        if skeleton_text is not None:
+            save_specimen(collection, key, skeleton_text)
 
 
 def iter_urls_from_args(inputs, inputs_are_files):
