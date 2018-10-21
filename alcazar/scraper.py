@@ -164,6 +164,7 @@ class Scraper(object):
 FETCHER_KWARGS = (
     'cache_id',
     'cache_root_path',
+    'headers',
     'http_client',
 )
 
