@@ -143,7 +143,9 @@ def gunzip_file(from_gzipped_path, to_text_path):
 def main(inputs, collection, inputs_are_files=False, force_refresh=False):
     ensure_collection_dir_exists('temp')
     ensure_collection_dir_exists(collection)
-    scraper = Scraper()
+    scraper = Scraper(
+        user_agent='Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:62.0) Gecko/20100101 Firefox/62.0',
+    )
     for url in iter_urls_from_args(inputs, inputs_are_files):
         key = url_to_key(url)
         existing_files = {
@@ -186,7 +188,7 @@ def iter_urls_from_args(inputs, inputs_are_files):
 def load_urls_from_file(urls_file_path):
     with open(urls_file_path, 'rb') as file_in:
         for line in file_in:
-            line = line.decode('us-ascii').strip()
+            line = re.sub(r'#.*', '', line.decode('us-ascii')).strip()
             if line:
                 yield line
 
