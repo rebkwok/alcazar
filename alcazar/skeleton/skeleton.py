@@ -28,6 +28,7 @@ BODY_TAGS = frozenset((
     'footer',
     'heading',
     'lede',
+    'listitem',
     'meta', # e.g. author, date
     'paragraph',
     'quote'
