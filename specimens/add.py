@@ -45,12 +45,14 @@ def save_html_to_temp_file(key, page):
 def let_user_edit_skeleton(url, key, html_str):
     temp_html_file = file_path('temp', key, 'html.gz')
     temp_text_file = file_path('temp', key, 'txt')
-    if not path.exists(temp_text_file):
-        raw_skeleton = extract_raw_skeleton(url, parse_html_etree(html_str))
-        with open(temp_text_file, 'wb') as file_out:
-            for line in raw_skeleton.dump_to_lines():
-                file_out.write(line.encode('UTF-8') + b'\n')
+    raw_skeleton = None
     while True:
+        if raw_skeleton is None:
+            if not path.exists(temp_text_file):
+                raw_skeleton = extract_raw_skeleton(url, parse_html_etree(html_str))
+                with open(temp_text_file, 'wb') as file_out:
+                    for line in raw_skeleton.dump_to_lines():
+                        file_out.write(line.encode('UTF-8') + b'\n')
         try:
             subprocess.check_call([
                 environ.get('EDITOR', 'emacsclient'),
@@ -66,8 +68,14 @@ def let_user_edit_skeleton(url, key, html_str):
             temp_html_file,
             temp_text_file,
         )
-        choice = input('Save? [y/N/s] ').strip().lower()
-        if choice.startswith('y'):
+        print()
+        print("What do we do now?")
+        print(" [c]ontinue editing")
+        print(" [s]ave")
+        print(" [r]eload the HTML file")
+        print(" s[k]ip this article")
+        choice = input('> ').strip().lower()
+        if choice.startswith('s'):
             try:
                 with open(temp_text_file, 'rb') as file_in:
                     text = file_in.read().decode('UTF-8')
@@ -75,8 +83,13 @@ def let_user_edit_skeleton(url, key, html_str):
                 print("File is not UTF-8. Save again")
             else:
                 return text
-        elif choice.startswith('s'):
+        elif choice.startswith('r'):
+            raw_skeleton = None
+            continue
+        elif choice.startswith('k'):
             return None
+        else:
+            continue
 
 
 def extract_raw_skeleton(url, etree):
