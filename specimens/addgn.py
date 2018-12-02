@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 import random
 import re
+from sys import argv
 
 # alcazar
 import alcazar
@@ -36,8 +37,9 @@ ALL_FEED_IDS = [
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
-def main():
-    feed_id = random.choice(ALL_FEED_IDS)
+def main(feed_id=None):
+    if feed_id is None:
+        feed_id = random.choice(ALL_FEED_IDS)
     scraper = alcazar.Scraper()
     json_url = scraper.scrape(
         'https://newsapi.org/s/%s-api' % feed_id,
@@ -56,6 +58,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(*argv[1:])
 
 #----------------------------------------------------------------------------------------------------------------------------------
