@@ -17,7 +17,7 @@ with open(path.join(path.dirname(__file__), 'README.md'), 'rb') as file_in:
 
 with open(path.join(path.dirname(__file__), 'alcazar', 'version.py'), 'rb') as file_in:
     alcazar_version = re.search(
-        r'alcazar_version = \'(.+)\'',
+        r'ALCAZAR_VERSION = \'(.+)\'',
         file_in.read().decode('UTF-8'),
     ).group(1)
 
