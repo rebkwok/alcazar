@@ -8,7 +8,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # alcazar
-from alcazar.xml_parser import strip_xml_namespaces
+from alcazar.etree_parser import strip_xml_namespaces
 
 # tests
 from .plumbing import AlcazarTest
