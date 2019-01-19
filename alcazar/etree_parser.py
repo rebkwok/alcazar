@@ -103,20 +103,41 @@ def _repair_self_closing_html_tag(html_string):
 #----------------------------------------------------------------------------------------------------------------------------------
 
 def strip_xml_namespaces(xml_bytes):
-    return re.sub(
-        br'(<[\?/]?\s*)(?:[\w\-]+:)?([\w\-\.]+)(?=[>\s/])([^>]*)',
-        lambda m1: (
-            m1.group(1)
-            + m1.group(2)
+    def handle_tag(match):
+        group = match.groupdict()
+        return (
+            group['bracket']
+            + group['tag_name']
             + re.sub(
-                # noice
-                br'(\s+)(?:[\w\-]+:(?=\w))?([\w\-]*)([^\s\'\"]*(?:\"(?:[^\\\"]|\\.)*\"|\'(?:[^\\\']|\\.)*\')?)',
-                lambda m2: b'' if m2.group(2) == b'xmlns' else (m2.group(1) + m2.group(2) + m2.group(3)),
-                m1.group(3),
+                br'''
+                    (?P<space>      \s+ )
+                    (?P<namespace>  [\w\-]+: (?=\w) )?
+                    (?P<attr_name>  [\w\-]* )
+                    (?P<attr_value> [^\s\'\"]* (?: \"(?:[^\\\"]|\\.)*\"
+                                                 | \'(?:[^\\\']|\\.)*\' )? )
+                ''',
+                handle_tag_attributes,
+                group['tag_attr'],
+                flags=re.X,
             )
-        ),
+        )
+    def handle_tag_attributes(match):
+        group = match.groupdict()
+        if group['namespace'] == b'xmlns:' or (not group['namespace'] and group['attr_name'] == b'xmlns'):
+            return b''
+        else:
+            return group['space'] + group['attr_name'] + group['attr_value']
+    return re.sub(
+        br'''
+            (?P<bracket>   < [\?/]? \s* )
+            (?P<namespace> [\w\-]+ : )?
+            (?P<tag_name>  [\w\-\.]+ ) (?=[>\s/])
+            (?P<tag_attr>  [^>]*)
+        ''',
+        handle_tag,
         xml_bytes,
-    )
+        flags=re.X
+)
 
 def parse_xml_etree(xml_bytes, strip_namespaces=False):
     if strip_namespaces:
