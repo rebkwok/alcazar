@@ -56,6 +56,8 @@ for v in ${supported_versions[@]}; do
 
         # clean up
         deactivate
+        find alcazar -name '*.pyc' -delete
+        find alcazar -name '__pycache__' -delete
         if [ $exit_status == 1 ]; then
             break
         fi
