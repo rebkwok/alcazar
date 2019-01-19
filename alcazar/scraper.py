@@ -8,7 +8,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 # standards
-from collections import ChainMap
 import logging
 from os import path, rename
 from time import sleep
@@ -142,7 +141,7 @@ class Scraper(object):
         if base is not None:
             if isinstance(base, Page):
                 base = base.query
-            extras = dict(ChainMap(base.extras, extras))
+            extras = dict(base.extras, **extras)
             base_config = base.config
             depth += 1
         config = ScraperConfig.from_kwargs(
