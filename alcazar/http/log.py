@@ -28,11 +28,11 @@ class LogEntry(object):
         ), (
             'prepared_request',
             lambda prepared_request: (
-                prepared_request.url
-                + '' if prepared_request.body is None else ' [{} {} bytes]'.format(
+                prepared_request.url +
+                ('' if prepared_request.body is None else ' [{} {} bytes]'.format(
                     prepared_request.method,
                     len(prepared_request.body) if callable(getattr(prepared_request.body, '__len__', None)) else '??',
-                )
+                ))
             ),
         ), (
             'elapsed',
