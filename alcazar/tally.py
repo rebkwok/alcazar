@@ -13,6 +13,7 @@ import logging
 
 # alcazar
 from .exceptions import AlcazarException
+from .husker import Husker
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -35,6 +36,8 @@ class Tally(object):
         self._count_by_request_type = {}
 
     def set_expected(self, expected):
+        if isinstance(expected, Husker):
+            expected = expected.int
         if not isinstance(expected, (int, None.__class__)):
             raise ValueError(repr(expected))
         if self._expected not in (None, expected):
