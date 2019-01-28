@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 import logging
 from os import path
-from sys import argv, stdout
+from sys import argv, stderr, stdout
 
 # this library
 from alcazar.etree_parser import parse_html_etree
@@ -39,6 +39,12 @@ class AlcazarCli(object):
             print("HTTP %s" % (response.status_code,))
             for item in sorted(response.headers.items()):
                 print("%s: %s" % item)
+
+    def dump(self, cache_file_path):
+        response = self._lookup_response(cache_file_path)
+        if response is not None and response.content:
+            stdout.buffer.write(response.content)
+            print()
 
     def text(self, cache_file_path):
         response = self._lookup_response(cache_file_path)
@@ -88,11 +94,11 @@ def main():
     else:
         command_name = command_args = method = None
     if method is None:
-        print("usage: %s <command> [args...]" % argv[0])
-        print("Available commands:")
+        print("usage: %s <command> [args...]" % argv[0], file=stderr)
+        print("Available commands:", file=stderr)
         for command in sorted(dir(cli)):
             if not command.startswith('_'):
-                print("    %s" % command)
+                print("    %s" % command, file=stderr)
         exit(2)
     else:
         method(*command_args)
