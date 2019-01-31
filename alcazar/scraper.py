@@ -10,8 +10,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 import logging
 from os import path, rename
+from sys import exc_info
 from time import sleep
-from traceback import format_exc
 from types import GeneratorType
 
 # alcazar
@@ -62,8 +62,8 @@ class Scraper(object):
         Called when an error has been encountered but the request will be re-attempted.
         """
         delay = 5 ** attempt_i
-        logging.error(format_exc())
-        logging.info("sleeping %d sec%s", delay, '' if delay == 1 else 's')
+        _unused_type, exc_value, _unused_traceback = exc_info()
+        logging.info("%s - sleeping %d sec%s", exc_value, delay, '' if delay == 1 else 's')
         sleep(delay)
 
     def record_skipped_page(self, query, reason):
