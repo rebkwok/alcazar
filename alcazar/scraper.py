@@ -157,6 +157,9 @@ class Scraper(object):
             depth=depth,
         )
 
+    def release_resources(self):
+        self.fetcher.release_resources()
+
 #----------------------------------------------------------------------------------------------------------------------------------
 # config utils
 

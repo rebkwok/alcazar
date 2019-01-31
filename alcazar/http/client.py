@@ -110,7 +110,7 @@ class HttpClient(object):
         self.close()
 
     def close(self):
-        self.session.close()
+        self.session.close() # this will call close on the AlcazarHttpAdapter instance
 
     @property
     def default_headers(self):

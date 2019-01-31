@@ -111,4 +111,7 @@ class Fetcher(object):
         # NB this should return the original, modifyable header dict
         return self.http.default_headers
 
+    def release_resources(self):
+        self.http.close()
+
 #----------------------------------------------------------------------------------------------------------------------------------

@@ -329,7 +329,9 @@ class ShelfIndex(object):
             yield self._string_to_key(key_string)
 
     def close(self):
-        self.db.close()
+        if self._db is not None:
+            self._db.close()
+            self._db = None
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
