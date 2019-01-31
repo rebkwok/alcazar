@@ -244,10 +244,12 @@ class Page(object):
     @property
     def url(self):
         # NB this is the URL after redirections, so it could be different from query.url
-        if self.response is None:
+        if self.response is not None:
+            return self.response.url
+        elif self.query is not None:
             return self.query.url
         else:
-            return self.response.url
+            return None
 
     @property
     def bytes(self):
