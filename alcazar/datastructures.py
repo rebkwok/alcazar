@@ -16,7 +16,7 @@ import requests
 
 # alcazar
 from .config import DEFAULT_CONFIG
-from .utils.compatibility import parse_qsl, urlencode, urlparse
+from .utils.compatibility import parse_qsl, string_types, text_type, urlencode, urlparse
 from .utils.urls import join_urls
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -263,6 +263,8 @@ class Page(object):
         return self.response.json()
 
     def link(self, url):
+        if not isinstance(url, string_types):
+            url = text_type(url)
         return join_urls(self.url, url)
 
     @property
