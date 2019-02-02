@@ -12,6 +12,7 @@ import logging
 from os import path, rename
 from sys import exc_info
 from time import sleep
+from traceback import format_exc
 from types import GeneratorType
 
 # alcazar
@@ -62,7 +63,7 @@ class Scraper(object):
         Called when an error has been encountered but the request will be re-attempted.
         """
         delay = 5 ** attempt_i
-        _unused_type, exc_value, _unused_traceback = exc_info()
+        _, exc_value, _ = exc_info()
         logging.info("%s - sleeping %d sec%s", exc_value, delay, '' if delay == 1 else 's')
         sleep(delay)
 
