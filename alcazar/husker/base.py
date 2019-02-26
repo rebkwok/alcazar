@@ -550,6 +550,8 @@ class NullHusker(Husker):
     filter = _returns_null
     lookup = _returns_none
 
+    __iter__ = lambda self: iter([])
+
     __eq__ = lambda self, other: other is None
     __ne__ = lambda self, other: other is not None
     __lt__ = lambda self, other: False

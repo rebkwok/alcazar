@@ -581,7 +581,19 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
             'p#five',
             'p#six',
         )
+        # root is now an empty ListHusker
         self.assertEqual(root, [])
+        self.assertEqual(list(root), [])
+        self.assertFalse(root)
+
+    def test_selection_of_on_null_husker(self):
+        root = self.husker.some('#bogus').selection_of(
+            'p#four',
+            'p#five',
+            'p#six',
+        )
+        # root is now a NullHusker
+        self.assertEqual(list(root), [])
         self.assertFalse(root)
 
 
