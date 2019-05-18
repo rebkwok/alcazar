@@ -38,11 +38,11 @@ setuptools.setup(
         ],
     },
     install_requires=[
-        'lxml>=3',
-        'cssselect>=1.0',
-        'jmespath>=0.9.3',
-        'requests>=2',
-        'urllib3>=1.17',
+        'lxml>=4,<5',
+        'cssselect>=1.0,<2',
+        'jmespath>=0.9.3,<1',
+        'requests>=2,<3',
+        'urllib3>=1.17,<2',
     ],
     classifiers=[
         'License :: OSI Approved :: MIT License',
