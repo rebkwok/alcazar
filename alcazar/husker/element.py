@@ -15,6 +15,7 @@ import re
 # 3rd parties
 import lxml.etree as ET
 try:
+    import cssselect
     from lxml.cssselect import CSSSelector
 except ImportError:
     CSSSelector = NotImplemented # pylint: disable=invalid-name
@@ -177,7 +178,10 @@ class ElementHusker(Husker):
     def _css_path_to_xpath(path):
         if CSSSelector is NotImplemented:
             raise NotImplementedError("lxml.cssselect module not found")
-        return CSSSelector(path).path
+        try:
+            return CSSSelector(path).path
+        except cssselect.parser.SelectorSyntaxError:
+            raise ValueError("%r is not a valid CSS selector" % (path,))
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # utils
