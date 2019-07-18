@@ -65,6 +65,9 @@ class ElementHusker(Husker):
     def children(self):
         return ListHusker(map(ElementHusker, self._value))
 
+    def child(self, index):
+        return ElementHusker(self._value[index])
+
     def descendants(self):
         for descendant in self._value.iter():
             yield ElementHusker(descendant)
