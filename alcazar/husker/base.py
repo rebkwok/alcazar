@@ -252,7 +252,7 @@ class Husker(SelectorMixin):
             return table[self.str]
         except KeyError:
             if default is _unspecified:
-                raise HuskerLookupError(repr(self.raw))
+                raise HuskerLookupError("%r not found in lookup table" % (self.raw,))
             else:
                 return default
 
