@@ -544,6 +544,7 @@ class NullHusker(Husker):
     decimal = property(_returns_none)
     date = _returns_none
     datetime = _returns_none
+    strftime = _returns_none
 
     map = _returns_null
     map_raw = _returns_none
