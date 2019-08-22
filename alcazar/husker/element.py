@@ -150,6 +150,7 @@ class ElementHusker(Husker):
 
     def detach(self, reattach_tail=True):
         detach_node(self._value, reattach_tail=reattach_tail)
+        return self
 
     def repr_spec(self, path):
         return "'%s'" % path
