@@ -31,7 +31,12 @@ BODY_TAGS = frozenset((
     'listitem',
     'meta', # e.g. author, date
     'paragraph',
-    'quote'
+    'quote',
+    'rule', # i.e. <hr>
+))
+
+NO_CONTENT = frozenset((
+    'rule',
 ))
 
 AMBIGUOUS = object()
@@ -83,8 +88,10 @@ class Skeleton(object):
                     raise ValueError("Header tag in body: %r" % (item.tag,))
             elif item.tag not in BODY_TAGS:
                 raise ValueError("Unknown tag: %r" % (item.tag,))
-            if not item.text:
+            if item.tag not in NO_CONTENT and not item.text:
                 raise ValueError("Empty item: %r" % (item,))
+            if item.tag in NO_CONTENT and item.text:
+                raise ValueError("Item shouldn't have content: %r" % (item,))
 
     @classmethod
     def build(cls, iter_items):
