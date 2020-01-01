@@ -16,7 +16,7 @@ import re
 import lxml.etree as ET
 try:
     import cssselect
-    from lxml.cssselect import CSSSelector
+    from lxml.cssselect import CSSSelector # pylint: disable=ungrouped-imports
 except ImportError:
     CSSSelector = NotImplemented # pylint: disable=invalid-name
 

@@ -27,6 +27,8 @@ _DEFAULT_VALUES = {
     'force_cache_stale': False,
     'max_cache_life': None,
     'num_attempts_per_scrape': 5,
+    'http_proxy': None,
+    'https_proxy': None,
     'ssl_verification': True,
     'stream': False,
     'strip_namespaces': True,

@@ -96,12 +96,18 @@ class HttpClient(object):
 
     @staticmethod
     def _requests_kwargs_from_config(config):
-        return {
+        requests_kwargs = {
             'allow_redirects': config.allow_redirects,
             'stream': config.stream,
             'timeout': config.timeout,
             'verify': config.ssl_verification,
         }
+        if config.http_proxy:
+            requests_kwargs['proxies'] = {
+                'http': config.http_proxy,
+                'https': config.https_proxy,
+            }
+        return requests_kwargs
 
     def __enter__(self):
         return self
