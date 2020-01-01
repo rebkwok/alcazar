@@ -1,2 +1,2 @@
 # NB a regex in setup.py parses the following line
-ALCAZAR_VERSION = '0.5.1'
+ALCAZAR_VERSION = '0.5.2'

@@ -15,7 +15,7 @@ function python_full_version {
 
 cd $(dirname $0)
 
-supported_versions=(2.7 3.3 3.4 3.5 3.6 3.7)
+supported_versions=(2.7 3.4 3.5 3.6 3.7)
 tested_versions=()
 summary=""
 exit_status=0
