@@ -12,7 +12,7 @@ import requests
 
 # alcazar
 from ..config import DEFAULT_CONFIG
-from ..exceptions import HttpError, HttpRedirect, ScraperError
+from ..exceptions import HttpError, HttpRedirect
 from .cache import CacheAdapterMixin
 from .courtesy import CourtesySleepAdapterMixin
 from .log import LogEntry, LoggingAdapterMixin
@@ -92,7 +92,7 @@ class HttpClient(object):
             error_class = getattr(HttpError, 'Http%d' % error.response.status_code, HttpError)
             raise error_class(str(error), reason=error)
         except requests.RequestException as exception:
-            raise ScraperError(str(exception), reason=exception)
+            raise HttpError(str(exception), reason=exception)
 
     @staticmethod
     def _requests_kwargs_from_config(config):

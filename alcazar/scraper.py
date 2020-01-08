@@ -18,7 +18,7 @@ from types import GeneratorType
 # alcazar
 from .config import ScraperConfig
 from .datastructures import Page, Query, QueryMethods, Request
-from .exceptions import ScraperError, SkipThisPage
+from .exceptions import HttpError, ScraperError, SkipThisPage
 from .fetcher import Fetcher
 
 #----------------------------------------------------------------------------------------------------------------------------------
@@ -56,7 +56,10 @@ class Scraper(object):
 
     def record_error(self, query, error): # pylint: disable=unused-argument
         # Same as record_payload. The error will be raised unless this returns a truthy value.
-        logging.error(format_exc())
+        if isinstance(error, HttpError):
+            logging.error(str(error))
+        else:
+            logging.error(format_exc())
 
     def handle_error(self, _query_unused, _error_unused, attempt_i):
         """
