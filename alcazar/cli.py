@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # standards
 import logging
 from os import path
-from sys import argv, stderr, stdout
+from sys import argv, exit, stderr, stdout
 
 # this library
 from alcazar.etree_parser import parse_html_etree

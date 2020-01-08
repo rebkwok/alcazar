@@ -14,6 +14,8 @@ disable=
     locally-disabled,
     maybe-no-member,
     missing-docstring,
+    no-else-break,
+    no-else-raise,
     no-else-return,
     no-name-in-module, 
     no-self-use,
