@@ -11,7 +11,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 
 # alcazar
-from .datastructures import Request
+from .datastructures import Page, Query, Request
+from .utils.urls import join_urls
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -54,9 +55,12 @@ class Form(object):
             if name in override_dict:
                 yield name, value
 
-    def request(self, override={}):
+    def request(self, override={}, base=None):
         """
         Like `fields`, but the fields are further compiled into a `Request` object. See `fields` for details.
+
+        If specified, `base` is an absolute URL that will be used to make the form's action URL absolute, if it isn't already. It
+        can be a URL (string), or a Request, Query, or Page object.
         """
         method = (self.husker.attrib('method').str or 'GET').upper()
         url = self.husker.attrib('action').str
@@ -68,6 +72,10 @@ class Form(object):
         else:
             # FIXME this is where we'd need to honour self.encoding
             data = key_value_pairs
+        if isinstance(base, (Query, Page, Request)):
+            base = base.url
+        if base:
+            url = join_urls(base, url)
         return Request(
             url,
             method=method,

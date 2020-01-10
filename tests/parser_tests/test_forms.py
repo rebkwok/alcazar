@@ -25,15 +25,6 @@ class TestFormParser(unittest.TestCase):
     def _parse_form(self, html_str, **kwargs):
         html = parse_html_etree(html_str)
         husker = husk(html).one('form')
-        page = Page(
-            query=Query(
-                Request(self.base_url),
-                methods={},
-                extras={}
-            ),
-            response=None,
-            husker=husker,
-        )
         return Form(husker).request(**kwargs)
 
     def test_put_method(self):
@@ -327,5 +318,52 @@ class TestFormParser(unittest.TestCase):
            </form>
         ''')
         self.assertEqual(request.data, {'input': 'value'})
+
+    def test_base_url_relative_link(self):
+        html_str = '''
+           <form action="relative/link" />
+        '''
+        self.assertEqual(
+            self._parse_form(html_str).url,
+            'relative/link',
+        )
+        self.assertEqual(
+            self._parse_form(html_str, base=self.base_url).url,
+            'http://example.com/test/relative/link',
+        )
+
+    def test_base_url_absolute_link(self):
+        html_str = '''
+           <form action="http://absolute/link" />
+        '''
+        self.assertEqual(
+            self._parse_form(html_str).url,
+            'http://absolute/link',
+        )
+        self.assertEqual(
+            self._parse_form(html_str, base=self.base_url).url,
+            'http://absolute/link',
+        )
+
+    def test_base_url_using_data_structures(self):
+        html_str = '''
+           <form action="relative/link" />
+        '''
+        request = Request(self.base_url)
+        self.assertEqual(self._parse_form(html_str, base=request).url,
+            'http://example.com/test/relative/link',
+        )
+        query = Query(request)
+        self.assertEqual(self._parse_form(html_str, base=query).url,
+            'http://example.com/test/relative/link',
+        )
+        page = Page(
+            query=query,
+            response=None,
+            husker=None,
+        )
+        self.assertEqual(self._parse_form(html_str, base=page).url,
+            'http://example.com/test/relative/link',
+        )
 
 #----------------------------------------------------------------------------------------------------------------------------------
