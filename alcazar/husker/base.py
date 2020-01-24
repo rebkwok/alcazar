@@ -227,11 +227,7 @@ class Husker(SelectorMixin):
 
     @_value_errors_as_husker_errors()
     def datetime(self, fmt='%Y-%m-%dT%H:%M:%S'):
-        text = self.text.sub(
-            r'(?:\.\d+|[\+\-]\d\d?(?::\d\d?)?|Z)*$',
-            '',
-        )
-        return datetime.strptime(text.str, fmt)
+        return datetime.strptime(self.text.str, fmt)
 
     # NB method `json` is moneky-patched into here from JmesPathHusker
 
