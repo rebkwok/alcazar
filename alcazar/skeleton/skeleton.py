@@ -26,7 +26,7 @@ BODY_TAGS = frozenset((
     'caption',
     'figure',
     'footer',
-    'heading',
+    'heading', # i.e. <h1> etc
     'lede',
     'listitem',
     'meta', # e.g. author, date
