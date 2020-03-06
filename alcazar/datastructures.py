@@ -25,7 +25,16 @@ class Request(object):
     # 2018-03-10 - for a while I resisted creating my own Request class, thinking requests already has one (2, even), why lengthen
     # the daisy chain. But there's a few things I wanted that requests.Request doesn't have -- here they are:
 
-    def __init__(self, url, method=None, params=None, data=None, headers=None, json=None): # pylint: disable=redefined-outer-name
+    def __init__(
+            self,
+            url,
+            method=None,
+            params=None,
+            data=None,
+            headers=None,
+            json=None,
+            use_multipart_encoding=False,
+            ): # pylint: disable=redefined-outer-name
         if method:
             assert method.isupper(), repr(method) # just to make sure caller doesn't swap method and url
         else:
@@ -36,6 +45,7 @@ class Request(object):
         self._data = data
         self._headers = headers
         self._json = json
+        self._use_multipart_encoding = use_multipart_encoding
 
     @classmethod
     def from_kwargs(cls, kwargs):
@@ -46,6 +56,7 @@ class Request(object):
             data=kwargs.pop('data', None),
             headers=kwargs.pop('headers', None),
             json=kwargs.pop('json', None),
+            use_multipart_encoding=kwargs.pop('use_multipart_encoding', False),
         )
 
     def to_requests_request(self):
@@ -70,7 +81,7 @@ class Request(object):
             'method': self._method,
             'url': self._url,
             'params': params,
-            'data': data,
+            ('files' if self._use_multipart_encoding else 'data'): data,
             'headers': headers,
         }
 
@@ -82,6 +93,7 @@ class Request(object):
             data=self._data,
             headers=self._headers,
             json=self._json,
+            use_multipart_encoding=self._use_multipart_encoding,
         )
 
     def add_header(self, key, value):
@@ -92,6 +104,7 @@ class Request(object):
             data=self._data,
             headers=dict(self._headers or {}, **{key: value}),
             json=self._json,
+            use_multipart_encoding=self._use_multipart_encoding,
         )
 
     def modify_method(self, method):
@@ -102,6 +115,7 @@ class Request(object):
             data=self._data,
             headers=self._headers,
             json=self._json,
+            use_multipart_encoding=self._use_multipart_encoding,
         )
 
     def modify_url(self, url):
@@ -112,6 +126,7 @@ class Request(object):
             data=self._data,
             headers=self._headers,
             json=self._json,
+            use_multipart_encoding=self._use_multipart_encoding,
         )
 
     @property
