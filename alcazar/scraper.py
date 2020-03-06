@@ -20,6 +20,7 @@ from .config import ScraperConfig
 from .datastructures import Page, Query, QueryMethods, Request
 from .exceptions import HttpError, ScraperError, SkipThisPage
 from .fetcher import Fetcher
+from .utils.urls import join_urls
 
 #----------------------------------------------------------------------------------------------------------------------------------
 
@@ -148,6 +149,7 @@ class Scraper(object):
             extras = dict(base.extras, **extras)
             base_config = base.config
             depth += 1
+            request = request.modify_url(join_urls(base.url, request.url))
         config = ScraperConfig.from_kwargs(
             kwargs,
             base_config,
