@@ -45,7 +45,7 @@ class Fetcher(object):
             content_type = re.sub(r'\s*;.*', '', response.headers.get('Content-Type') or '')
             if content_type == 'text/html':
                 return self.html_page(query, response)
-            elif content_type == 'text/xml':
+            elif content_type in ('text/xml', 'application/xml'):
                 return self.xml_page(query, response)
             elif content_type == 'application/json':
                 return self.json_page(query, response)
