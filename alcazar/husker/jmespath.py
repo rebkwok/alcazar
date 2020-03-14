@@ -19,6 +19,7 @@ import jmespath
 from ..utils.compatibility import native_string, text_type
 from ..utils.jsonutils import lenient_json_loads
 from .base import Husker, ListHusker, NULL_HUSKER, ScalarHusker, TextHusker
+from .exceptions import HuskerValueError
 
 #----------------------------------------------------------------------------------------------------------------------------------
 # Here we play with JmesPathHusker's internals so that we have a way of distinguishing between lists that JmesPath creates (such as
@@ -126,6 +127,13 @@ def _husk(value):
 #----------------------------------------------------------------------------------------------------------------------------------
 # Monkey-patching
 
-Husker.json = lambda self: JmesPathHusker(lenient_json_loads(self.str))
+def _husker_json(self):
+    try:
+        json_obj = lenient_json_loads(self.str)
+    except json.decoder.JSONDecodeError:
+        raise HuskerValueError("Invalid JSON")
+    return JmesPathHusker(json_obj)
+
+Husker.json = _husker_json
 
 #----------------------------------------------------------------------------------------------------------------------------------

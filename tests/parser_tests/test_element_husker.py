@@ -11,7 +11,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from datetime import date, datetime
 from decimal import Decimal
 import re
-from unittest import expectedFailure
 
 # alcazar
 from alcazar.husker import ElementHusker, HuskerMismatch, HuskerMultipleSpecMatch, HuskerNotUnique, HuskerValueError

@@ -12,7 +12,7 @@ import json
 from os import path
 
 # alcazar
-from alcazar.husker import HuskerNotUnique, JmesPathHusker, ListHusker, ScalarHusker, TextHusker
+from alcazar.husker import HuskerNotUnique, HuskerValueError, JmesPathHusker, ListHusker, ScalarHusker, TextHusker
 
 # tests
 from .plumbing import AlcazarTest
@@ -251,5 +251,14 @@ class ComprehensiveJmesPathTests(JmesPathHuskerTest):
     #         self.husker.one("`funny chars in key: '\\\"\\`!#$%^&*()_=-+[{}];:\\|/?,<>.`"),
     #         "boom",
     #     )
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+class InvalidDataJmesPathTests(AlcazarTest):
+
+    def test_invalid_json_data_raises_husker_value_error(self):
+        assert TextHusker('{"x": 37}').json().one('x') == 37
+        with self.assertRaises(HuskerValueError):
+            assert TextHusker('{"x: 37}').json()
 
 #----------------------------------------------------------------------------------------------------------------------------------
