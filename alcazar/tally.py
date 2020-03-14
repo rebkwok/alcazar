@@ -42,7 +42,7 @@ class Tally(object):
             raise ValueError(repr(expected))
         if self._expected is None:
             self.log.debug('Expected result count set to %d', expected)
-        elif 0.95 * self._expected < expected < 1.05 * self._expected:
+        elif 0.95 * self._expected <= expected <= 1.05 * self._expected:
             if expected != self._expected:
                 self.log.debug('Expected result count adjusted from %d to %d', self._expected, expected)
         else:
