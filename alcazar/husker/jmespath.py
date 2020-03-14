@@ -130,7 +130,7 @@ def _husk(value):
 def _husker_json(self):
     try:
         json_obj = lenient_json_loads(self.str)
-    except json.decoder.JSONDecodeError:
+    except ValueError:
         raise HuskerValueError("Invalid JSON")
     return JmesPathHusker(json_obj)
 
