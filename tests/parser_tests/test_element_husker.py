@@ -710,7 +710,7 @@ class ComprehensiveTest(HtmlHuskerTest, AlcazarTest):
         self.assertEqual(self.husker.one('#json').text.json(), [24])
 
     def test_json_on_valued_but_empty_text(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(HuskerValueError):
             self.husker.one('#empty').json()
 
     def test_json_on_null_text(self):
