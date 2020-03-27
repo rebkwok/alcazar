@@ -170,6 +170,7 @@ class Scraper(object):
 # config utils
 
 FETCHER_KWARGS = (
+    'cache',
     'cache_id',
     'cache_root_path',
     'headers',
