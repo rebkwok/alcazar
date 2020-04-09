@@ -60,6 +60,7 @@ class CacheAdapterMixin(object):
     def _build_cache_from_kwargs(**kwargs):
         if 'cache' in kwargs:
             cache = kwargs.pop('cache')
+            kwargs.pop('cache_id', None)
             if cache is None:
                 cache = NullCache()
         else:
